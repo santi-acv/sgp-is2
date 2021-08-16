@@ -23,3 +23,6 @@ media
 
 # Ambiente virtual
 venv/
+
+# Documentación
+docs/build
