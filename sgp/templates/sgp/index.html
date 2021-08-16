@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio - SGP</title>
+</head>
+<body>
+
+<h3>Bienvenido al Sistema Gestor de Proyectos.</h3>
+<div>Por favor, inicie sesión mediante el siguiente botón. Cuando desee terminar su sesión, haga click <a href="#" onclick="signOut();">aquí</a>.</div>
+
+<br/>
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+<meta name="google-signin-client_id" content="995502643398-16c9uqsedvqktsolf042evsqqij1m9ks.apps.googleusercontent.com">
+<div class="g-signin2" data-onsuccess="onSignIn"></div>
+<script>
+  function signOut() {
+    var auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then(function () {
+      console.log('User signed out.');
+    });
+  }
+</script>
+
+</body>
+</html>
