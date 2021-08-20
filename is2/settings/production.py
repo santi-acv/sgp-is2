@@ -8,10 +8,14 @@ DEBUG = False
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'is2-sgp-production',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'NAME': 'is2_sgp_production',
+        'USER': 'is2_sgp',
+        'PASSWORD': 'is2_sgp',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+
+STATIC_ROOT = BASE_DIR / 'static'
+
+MEDIA_ROOT = BASE_DIR / 'media'
