@@ -7,7 +7,7 @@
       <imported>true</imported>
       <remarks>Configurada para el ambiente de desarrollo</remarks>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://127.0.0.1:5432/is2-sgp-development</jdbc-url>
+      <jdbc-url>jdbc:postgresql://127.0.0.1:5432/is2_sgp_development</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>

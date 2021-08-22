@@ -11,9 +11,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import sys
-sys.path.insert(0, os.path.abspath('../..'))
-sys.path.insert(0, os.path.abspath('../../sgp'))
+import django
+os.environ['DJANGO_SETTINGS_MODULE'] = 'is2.settings.default'
+django.setup()
 
 
 # -- Project information -----------------------------------------------------

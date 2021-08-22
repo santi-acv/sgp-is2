@@ -18,7 +18,7 @@ OWNER=$(stat -c '%U' $PR_DIR)
 
 
 # Instala las dependencias
-apt install -y nginx uwsgi uwsgi-plugin-python3 python3-virtualenv libpq-dev
+apt install -y nginx uwsgi uwsgi-plugin-python3 python3-virtualenv postgresql libpq-dev
 
 
 # Conecta a postgres y crea las bases de datos
@@ -27,6 +27,7 @@ if ! systemctl is-active --quiet postgresql.service; then
 fi
 sudo -u postgres psql << EOF
 CREATE USER is2_sgp WITH PASSWORD 'is2_sgp';
+ALTER USER is2_sgp CREATEDB;
 CREATE DATABASE is2_sgp_development;
 CREATE DATABASE is2_sgp_production;
 EOF
