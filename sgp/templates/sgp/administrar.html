@@ -3,26 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+        td { padding: 0 10px; }
+        .chk { text-align: center }
+        .prm { padding: 0 10px; }
+    </style>
 </head>
 <body>
 <h3>SGP: Administración de usuarios</h3>
 <p>En esta página puede ver qué usuarios están registrados y sus respectivos permisos. Para volver a la página de inicio, haga click <a href="{% url 'sgp:index' %}">aquí</a>.</p>
-<style>
-    td {
-        padding: 0px 10px;
-    }
-</style>
 <table>
     <tr>
-        <th>Nombre</th>
-        <th>Apellido</th>
-        <th>E-Mail</th>
+        <th rowspan="2">Nombre</th>
+        <th rowspan="2">Apellido</th>
+        <th rowspan="2">E-Mail</th>
+        <th colspan="3">Permisos</th>
+    </tr>
+    <tr>
+        <th class="prm">Crear Proyecto</th>
+        <th class="prm">Administrar</th>
+        <th class="prm">Auditar sistema</th>
     </tr>
     {% for u in users.all %}
         <tr>
             <td>{{ u.nombre }}</td>
             <td>{{ u.apellido }}</td>
             <td>{{ u.email }}</td>
+            <td class="chk"><label><input type="checkbox"></label></td>
+            <td class="chk"><label><input type="checkbox"></label></td>
+            <td class="chk"><label><input type="checkbox"></label></td>
         </tr>
     {% endfor %}
 </table>

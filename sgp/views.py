@@ -45,4 +45,7 @@ def administrar(request):
     Fecha: 24/08/21\n
     Artefacto: Módulo de seguridad
     """
-    return render(request, 'sgp/administrar.html', {'users': User.objects.all()})
+    if request.method == 'POST':
+        return render(request, 'sgp/administrar.html', {'users': User.objects.all()})
+    else:
+        return render(request, 'sgp/administrar.html', {'users': User.objects.all()})

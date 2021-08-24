@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 
 class UserManager(BaseUserManager):
@@ -28,12 +28,12 @@ class UserManager(BaseUserManager):
             email=email,
             nombre=nombre,
             apellido=apellido)
-        user.is_admin = True
+        user.is_superuser = True
         user.save()
         return user
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     """
     Describe a un usuario con correo, nombre, y apellido.\n
     Fecha: 21/08/21\n
@@ -44,15 +44,17 @@ class User(AbstractBaseUser):
     nombre = models.CharField(max_length=60)
     apellido = models.CharField(max_length=60)
     is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
 
     USERNAME_FIELD = 'user_id'
     REQUIRED_FIELDS = ['email', 'nombre', 'apellido']
 
-    @property
-    def is_staff(self):
-        "Is the user a member of staff?"
-        # Simplest possible answer: All admins are staff
-        return self.is_admin
+    class Meta:
+        default_permissions = ()
+        permissions = [
+            ('administrar', 'Permite asignar permisos a los usuarios'),
+            ('auditar', 'Permite auditar la información del sistema'),
+            ('crear_proyecto', 'Permite crear proyectos nuevos')
+        ]

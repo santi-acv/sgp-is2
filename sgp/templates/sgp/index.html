@@ -21,9 +21,13 @@
         <li>Projecto 1</li>
         <li>Projecto 2</li>
         <li>Projecto 3</li>
-        <a href="#">Crear proyecto</a>
+        {% if perms.sgp.crear_proyecto %}
+            <a href="#">Crear proyecto</a>
+        {% endif %}
     </ul>
-    <p>Adicionalmente, puede administrar los usuarios haciendo click <a href="{% url 'sgp:administrar' %}">aquí</a>.</p>
+    {% if perms.sgp.administracion %}
+        <p>Adicionalmente, puede administrar los usuarios haciendo click <a href="{% url 'sgp:administrar' %}">aquí</a>.</p>
+    {% endif %}
 {% else %}
     <p>Por favor, inicie sesión.</p>
 {% endif %}
