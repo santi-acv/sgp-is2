@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h3>SGP: Administración de usuarios</h3>
+<p>En esta página puede ver qué usuarios están registrados y sus respectivos permisos. Para volver a la página de inicio, haga click <a href="{% url 'sgp:index' %}">aquí</a>.</p>
+<style>
+    td {
+        padding: 0px 10px;
+    }
+</style>
+<table>
+    <tr>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>E-Mail</th>
+    </tr>
+    {% for u in users.all %}
+        <tr>
+            <td>{{ u.nombre }}</td>
+            <td>{{ u.apellido }}</td>
+            <td>{{ u.email }}</td>
+        </tr>
+    {% endfor %}
+</table>
+<p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
+</body>
+</html>

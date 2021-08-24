@@ -40,7 +40,7 @@ class User(AbstractBaseUser):
     Artefacto: Usuario
     """
     user_id = models.CharField(max_length=150, unique=True)
-    email = models.EmailField(verbose_name='email address', max_length=254)
+    email = models.EmailField(max_length=254, unique=True)
     nombre = models.CharField(max_length=60)
     apellido = models.CharField(max_length=60)
     is_active = models.BooleanField(default=True)
@@ -50,16 +50,6 @@ class User(AbstractBaseUser):
 
     USERNAME_FIELD = 'user_id'
     REQUIRED_FIELDS = ['email', 'nombre', 'apellido']
-
-    def has_perm(self, perm, obj=None):
-        "Does the user have a specific permission?"
-        # Simplest possible answer: Yes, always
-        return True
-
-    def has_module_perms(self, app_label):
-        "Does the user have permissions to view the app `app_label`?"
-        # Simplest possible answer: Yes, always
-        return True
 
     @property
     def is_staff(self):

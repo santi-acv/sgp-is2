@@ -3,6 +3,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
+from .models import User
+
 
 def index(request):
     """
@@ -35,3 +37,12 @@ def logout_view(request):
     """
     logout(request)
     return HttpResponseRedirect(reverse('sgp:index'))
+
+
+def administrar(request):
+    """
+    Muestra una página que perimite controlar los permisos de los usuarios registrados.\n
+    Fecha: 24/08/21\n
+    Artefacto: Módulo de seguridad
+    """
+    return render(request, 'sgp/administrar.html', {'users': User.objects.all()})
