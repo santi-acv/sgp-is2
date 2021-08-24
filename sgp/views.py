@@ -24,7 +24,7 @@ def login_view(request):
         login(request, user)
         return HttpResponse("User logged in")
     else:
-        return HttpResponse("Login error!!!")
+        return HttpResponse("Login error!!!", status=401)
 
 
 def logout_view(request):
