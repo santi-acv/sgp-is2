@@ -1,9 +1,11 @@
+from django.forms import modelformset_factory
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
 from .models import User
+from .forms import UserForm
 
 
 def index(request):
@@ -45,7 +47,14 @@ def administrar(request):
     Fecha: 24/08/21\n
     Artefacto: Módulo de seguridad
     """
+    UserFormSet = modelformset_factory(User, form=UserForm, extra=0)
     if request.method == 'POST':
-        return render(request, 'sgp/administrar.html', {'users': User.objects.all()})
+        formset = UserFormSet(request.POST)
+        if formset.is_valid():
+            formset.save()
+        else:
+            return HttpResponse(str(formset))
+        HttpResponseRedirect(reverse('sgp:index'))
     else:
-        return render(request, 'sgp/administrar.html', {'users': User.objects.all()})
+        formset = UserFormSet()
+    return render(request, 'sgp/administrar.html', {'formset': formset})

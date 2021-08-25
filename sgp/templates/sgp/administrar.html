@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>SGP - Administrar Usuarios</title>
     <style>
-        td { padding: 0 10px; }
+        .str { padding: 0 10px; }
         .chk { text-align: center }
-        .prm { padding: 0 10px; }
     </style>
 </head>
 <body>
 <h3>SGP: Administración de usuarios</h3>
 <p>En esta página puede ver qué usuarios están registrados y sus respectivos permisos. Para volver a la página de inicio, haga click <a href="{% url 'sgp:index' %}">aquí</a>.</p>
+<form action="{% url 'sgp:administrar' %}" method="post">
+{% csrf_token %}
 <table>
     <tr>
         <th rowspan="2">Nombre</th>
@@ -24,17 +25,19 @@
         <th class="prm">Administrar</th>
         <th class="prm">Auditar sistema</th>
     </tr>
-    {% for u in users.all %}
+    {% for form in formset %}
         <tr>
-            <td>{{ u.nombre }}</td>
-            <td>{{ u.apellido }}</td>
-            <td>{{ u.email }}</td>
-            <td class="chk"><label><input type="checkbox"></label></td>
-            <td class="chk"><label><input type="checkbox"></label></td>
-            <td class="chk"><label><input type="checkbox"></label></td>
+            <td class="str">{{ form.nombre }}</td>
+            <td class="str">{{ form.apellido }}</td>
+            <td class="str">{{ form.email }}</td>
+            <td class="chk">{{ form.crear_proyecto }}</td>
+            <td class="chk">{{ form.administrar }}</td>
+            <td class="chk">{{ form.auditar }}</td>
         </tr>
     {% endfor %}
 </table>
+<p><input type="submit" value="Guardar"></p>
+</form>
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 </body>
 </html>
