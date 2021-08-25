@@ -25,8 +25,12 @@
         <th class="prm">Administrar</th>
         <th class="prm">Auditar sistema</th>
     </tr>
+    {{ formset.management_form }}
     {% for form in formset %}
         <tr>
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
             <td class="str">{{ form.nombre }}</td>
             <td class="str">{{ form.apellido }}</td>
             <td class="str">{{ form.email }}</td>

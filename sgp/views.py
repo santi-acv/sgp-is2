@@ -52,9 +52,9 @@ def administrar(request):
         formset = UserFormSet(request.POST)
         if formset.is_valid():
             formset.save()
+            return HttpResponseRedirect(reverse('sgp:index'))
         else:
             return HttpResponse(str(formset))
-        HttpResponseRedirect(reverse('sgp:index'))
     else:
         formset = UserFormSet()
     return render(request, 'sgp/administrar.html', {'formset': formset})

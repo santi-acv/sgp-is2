@@ -7,9 +7,9 @@ from .models import User
 
 
 class UserForm(ModelForm):
-    crear_proyecto = forms.BooleanField()
-    administrar = forms.BooleanField()
-    auditar = forms.BooleanField()
+    crear_proyecto = forms.BooleanField(required=False)
+    administrar = forms.BooleanField(required=False)
+    auditar = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
@@ -19,13 +19,13 @@ class UserForm(ModelForm):
 
     def save(self, commit=True):
         ct = ContentType.objects.get_for_model(User)
-        p = self.instance.user_permissions
-        if self.fields['crear_proyecto']:
-            p.add(Permission.objects.get(content_type=ct, codename='crear_proyecto'))
-        if self.fields['administrar']:
-            p.add(Permission.objects.get(content_type=ct, codename='administrar'))
-        if self.fields['auditar']:
-            p.add(Permission.objects.get(content_type=ct, codename='auditar'))
+        permisos = ['crear_proyecto', 'administrar', 'auditar']
+        up = self.instance.user_permissions
+        for p in permisos:
+            if self.cleaned_data[p]:
+                up.add(Permission.objects.get(content_type=ct, codename=p))
+            else:
+                up.remove(Permission.objects.get(content_type=ct, codename=p))
         super(UserForm, self).save(commit)
 
     class Meta:
