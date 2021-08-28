@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.forms import ModelForm
 
 
 class UserManager(BaseUserManager):
@@ -58,3 +59,28 @@ class User(AbstractBaseUser, PermissionsMixin):
             ('auditar', 'Permite auditar la información del sistema'),
             ('crear_proyecto', 'Permite crear proyectos nuevos')
         ]
+
+
+class proyecto(models.Model):
+    """
+    Crea proyectos nuevos, si el usuario tiene el permiso crear_proyecto.\n
+    Fecha: 26/08/21\n
+    Artefacto: Módulo de proyecto
+    """
+    nombre_proyecto = models.CharField(max_length=100)
+    descripcion = models.CharField(max_length=300)
+    Duracion_sprint = models.DurationField
+    fecha_inicio = models.DateTimeField('Fecha de inicio del proyecto')
+    fecha_fin = models.DateTimeField('Fecha de fin del proyecto')
+
+
+class equipo(models.Model):
+    """
+    Crea un equipo de trabajo asociado a un proyecto.\n
+    Fecha: 28/08/21\n
+    Artefacto: Módulo de proyecto
+    """
+    equipo = models.ManyToManyField(user)
+
+
+class ProjectForm(ModelForm):

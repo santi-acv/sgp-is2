@@ -41,7 +41,7 @@ def logout_view(request):
 
 def administrar(request):
     """
-    Muestra una página que perimite controlar los permisos de los usuarios registrados.\n
+    Muestra una página que permite controlar los permisos de los usuarios registrados.\n
     Fecha: 24/08/21\n
     Artefacto: Módulo de seguridad
     """
@@ -49,3 +49,12 @@ def administrar(request):
         return render(request, 'sgp/administrar.html', {'users': User.objects.all()})
     else:
         return render(request, 'sgp/administrar.html', {'users': User.objects.all()})
+
+
+def proyecto(request):
+    """
+    Muestra una página con los parámetros para crear un proyecto nuevo.\n
+    Fecha: 25/08/21\n
+    Artefacto: Módulo de proyecto
+    """
+    return render(request, 'sgp/proyecto.html')
