@@ -6,6 +6,7 @@ from django.urls import reverse
 from .models import User
 
 
+
 def index(request):
     """
     Retorna la págino de inicio. Sujeto a cambios.\n
@@ -57,4 +58,5 @@ def proyecto(request):
     Fecha: 25/08/21\n
     Artefacto: Módulo de proyecto
     """
-    return render(request, 'sgp/proyecto.html')
+    context = {}
+    return render(request, 'sgp/proyecto.html',context)

@@ -61,26 +61,33 @@ class User(AbstractBaseUser, PermissionsMixin):
         ]
 
 
-class proyecto(models.Model):
+class Proyecto(models.Model):
     """
     Crea proyectos nuevos, si el usuario tiene el permiso crear_proyecto.\n
     Fecha: 26/08/21\n
     Artefacto: Módulo de proyecto
     """
-    nombre_proyecto = models.CharField(max_length=100)
-    descripcion = models.CharField(max_length=300)
+    STATUS = (
+        ('pendiente', 'Pendiente'),
+        ('iniciado', 'Iniciado'),
+        ('finalizado', 'Finalizado'),
+        ('cancelado', 'Cancelado'),
+    )
+    nombre_proyecto = models.CharField(max_length=200)
+    descripcion = models.CharField(max_length=400, null=True)
+    # creador = models.CharField(max_length=200)
     Duracion_sprint = models.DurationField
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_inicio = models.DateTimeField('Fecha de inicio del proyecto')
     fecha_fin = models.DateTimeField('Fecha de fin del proyecto')
+    status = models.CharField(max_length=200, null=True, choices=STATUS)
+
+    def __str__(self):
+        return self.nombre_proyecto
 
 
-class equipo(models.Model):
-    """
-    Crea un equipo de trabajo asociado a un proyecto.\n
-    Fecha: 28/08/21\n
-    Artefacto: Módulo de proyecto
-    """
-    equipo = models.ManyToManyField(user)
 
 
-class ProjectForm(ModelForm):
+
+
+
