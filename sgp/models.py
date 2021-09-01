@@ -74,12 +74,12 @@ class Proyecto(models.Model):
         ('cancelado', 'Cancelado'),
     )
     nombre_proyecto = models.CharField(max_length=200)
-    descripcion = models.CharField(max_length=400, null=True)
-    # creador = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True)
+    creador = models.CharField(max_length=200, null=True)
     Duracion_sprint = models.DurationField
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_inicio = models.DateTimeField('Fecha de inicio del proyecto')
-    fecha_fin = models.DateTimeField('Fecha de fin del proyecto')
+    fecha_creacion = models.DateTimeField(auto_now_add=True, null=True)
+    fecha_inicio = models.DateTimeField()
+    fecha_fin = models.DateTimeField()
     status = models.CharField(max_length=200, null=True, choices=STATUS)
 
     def __str__(self):

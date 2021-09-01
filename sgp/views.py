@@ -4,6 +4,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
 from .models import User
+from .models import Proyecto
+from .forms import ProyectoForm
 
 
 
@@ -58,5 +60,19 @@ def proyecto(request):
     Fecha: 25/08/21\n
     Artefacto: Módulo de proyecto
     """
-    context = {}
-    return render(request, 'sgp/proyecto.html',context)
+    submitted = False
+    #if they filled out the form and clicked the button, they posted it
+    #if they did then take whatever they posted, request.POST, and pass it into our ProyectoFrom
+    if request.method == "POST":
+        form = ProyectoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/proyecto?submitted=True')
+    #if they didn't fill out the form, they just came to the web page
+    #they are getting the web page
+    else:
+        form = ProyectoForm
+        if 'submitted' in request.GET:
+            submitted = True
+    context = {'form': form, 'submitted': submitted}
+    return render(request, 'sgp/proyecto.html', context)

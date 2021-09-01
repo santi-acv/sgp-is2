@@ -11,32 +11,22 @@
 </head>
 <body>
 <h3>SGP: Modulo de Proyecto</h3>
-<p>En esta página puede crear y configurar un proyecto. Para volver a la página de inicio, haga click <a href="{% url 'sgp:index' %}">aquí</a>.</p>
+<p>En esta página puede crear un proyecto.</p>
 <table>
-    <tr>
-        <th rowspan="2">Nombre del Proyecto</th>
-        <th rowspan="2">Descripcion</th>
-        <th rowspan="2">Duracion de un sprint</th>
-        <th rowspan="2">Fecha de inicio del proyecto</th>
-        <th rowspan="2">Fecha de fin del proyecto</th>
-        <th colspan="4">Estado</th>
-    </tr>
-    <tr>
-        <th class="prm">Pendiente</th>
-        <th class="prm">Iniciado</th>
-        <th class="prm">Finalizado</th>
-        <th class="prm">Cancelado</th>
-    </tr>
-    {% for u in users.all %}
-        <tr>
-            <td>{{ u.nombre }}</td>
-            <td>{{ u.apellido }}</td>
-            <td>{{ u.email }}</td>
-            <td class="chk"><label><input type="checkbox"></label></td>
-            <td class="chk"><label><input type="checkbox"></label></td>
-            <td class="chk"><label><input type="checkbox"></label></td>
-        </tr>
-    {% endfor %}
+    <!---if submitted is true--->
+    {% if submitted %}
+        Tu proyecto fue creado exitosamente!!!
+    <!---if submitted is false--->
+    {% else %}
+        <form action="" method=POST>
+        <!---Procedimiento estandar de seguridad--->
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <a href="#">Crear</a>
+        </form>
+    {% endif %}
 </table>
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 </body>
