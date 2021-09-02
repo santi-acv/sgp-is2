@@ -74,7 +74,7 @@ class Proyecto(models.Model):
         ('cancelado', 'Cancelado'),
     )
     nombre_proyecto = models.CharField(max_length=200)
-    descripcion = models.TextField(blank=True)
+    descripcion = models.TextField(blank=True, default='')
     creador = models.CharField(max_length=200, blank=True)
     duracion_sprint = models.CharField(max_length=30, blank=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True, null=True)

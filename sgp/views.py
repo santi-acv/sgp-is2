@@ -75,6 +75,9 @@ def proyecto(request):
         if form.is_valid():
             form.save()
             return HttpResponseRedirect('/proyecto?submitted=True')
+        else:
+            return HttpResponse(str(form))
+
     #if they didn't fill out the form, they just came to the web page
     #they are getting the web page
     else:
