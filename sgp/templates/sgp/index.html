@@ -25,7 +25,7 @@
             <a href="{% url 'sgp:proyecto' %}">Crear proyecto</a>
         {% endif %}
     </ul>
-    {% if perms.sgp.administracion %}
+    {% if perms.sgp.administrar %}
         <p>Adicionalmente, puede administrar los usuarios haciendo click <a href="{% url 'sgp:administrar' %}">aquí</a>.</p>
     {% endif %}
 {% else %}
@@ -36,8 +36,8 @@
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     function onSignIn(googleUser) {
-        var id_token = googleUser.getAuthResponse().id_token;
-        var xhr = new XMLHttpRequest();
+        const id_token = googleUser.getAuthResponse().id_token;
+        const xhr = new XMLHttpRequest();
         xhr.open('POST', '{% url 'sgp:login' %}');
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         xhr.setRequestHeader('X-CSRFToken', csrftoken);
@@ -52,7 +52,7 @@
     }
 
     function signOut() {
-        var auth2 = gapi.auth2.getAuthInstance();
+        const auth2 = gapi.auth2.getAuthInstance();
         auth2.signOut();
         window.location.href = '{% url 'sgp:logout' %}';
     }

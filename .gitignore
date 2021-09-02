@@ -4,10 +4,14 @@
 *.pyc
 __pycache__
 db.sqlite3
-media
 
 # Ambiente virtual
 venv/
 
 # Documentación
 docs/build
+
+# Archivos estáticos
+media
+static
+is2/static/
