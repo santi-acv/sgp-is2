@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.forms import ModelForm
+
 
 
 class UserManager(BaseUserManager):
@@ -75,12 +75,12 @@ class Proyecto(models.Model):
     )
     nombre_proyecto = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True)
-    creador = models.CharField(max_length=200, null=True)
-    Duracion_sprint = models.DurationField
+    creador = models.CharField(max_length=200, blank=True)
+    duracion_sprint = models.CharField(max_length=30, blank=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True, null=True)
-    fecha_inicio = models.DateTimeField()
-    fecha_fin = models.DateTimeField()
-    status = models.CharField(max_length=200, null=True, choices=STATUS)
+    fecha_inicio = models.DateTimeField(blank=True, null=True)
+    fecha_fin = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=50, null=True, choices=STATUS)
 
     def __str__(self):
         return self.nombre_proyecto

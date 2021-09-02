@@ -1,3 +1,4 @@
+
 from django import forms
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -33,10 +34,8 @@ class UserForm(ModelForm):
         fields = ['nombre', 'apellido', 'email', 'crear_proyecto', 'administrar', 'auditar']
 
 
-# Create a Project Form
-
+# Create the form class
 class ProyectoForm(ModelForm):
     class Meta:
         model = Proyecto
-        fields = ('nombre_proyecto', 'fecha_inicio', 'fecha_fin')
-
+        fields = ('nombre_proyecto', 'descripcion', 'fecha_inicio', 'fecha_fin', 'duracion_sprint')
