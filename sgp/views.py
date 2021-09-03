@@ -4,9 +4,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
-from .models import User
-from .models import Proyecto
-from .forms import ProyectoForm, UserForm
+from .models import User, Proyecto, Role
+from .forms import ProyectoForm, UserForm, RoleForm
 
 
 def index(request):
@@ -68,19 +67,19 @@ def crear_proyecto(request):
     Artefacto: Módulo de proyecto
     """
     submitted = False
-    #if they filled out the form and clicked the button, they posted it
-    #if they did then take whatever they posted, request.POST, and pass it into our ProyectoFrom
+    # if they filled out the form and clicked the button, they posted it
+    # if they did then take whatever they posted, request.POST, and pass it into our ProyectoFrom
     if request.method == "POST":
         form = ProyectoForm(request.POST)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('sgp:index'))
-            #return HttpResponseRedirect('sgp:proyecto?submitted=True')
+            # return HttpResponseRedirect('sgp:proyecto?submitted=True')
         else:
             return HttpResponse(str(form))
 
-    #if they didn't fill out the form, they just came to the web page
-    #they are getting the web page
+    # if they didn't fill out the form, they just came to the web page
+    # they are getting the web page
     else:
         form = ProyectoForm
         if 'submitted' in request.GET:
@@ -115,3 +114,19 @@ def eliminar_proyecto(request, proyecto_id):
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     proyecto.delete()
     return HttpResponseRedirect(reverse('sgp:proyectos'))
+
+
+def administrar_roles(request, proyecto_id):
+
+    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=0)
+    if request.method == 'POST':
+        formset = RoleFormSet(request.POST)
+        if formset.is_valid():
+            formset.save()
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+        else:
+            return HttpResponse(str(formset))
+    else:
+        formset = RoleFormSet()
+
+    return render(request, 'sgp/administrar_roles.html', {'proyecto_id':proyecto_id, 'formset': formset})
