@@ -32,7 +32,7 @@ class UserForm(ModelForm):
 class ProyectoForm(ModelForm):
     class Meta:
         model = Proyecto
-        fields = ('nombre_proyecto', 'descripcion', 'fecha_inicio', 'fecha_fin', 'duracion_sprint')
+        fields = ('nombre', 'descripcion', 'fecha_inicio', 'fecha_fin', 'duracion_sprint')
 
 
 class RoleForm(ModelForm):

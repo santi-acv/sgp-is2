@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ proyecto.nombre_proyecto }} - SGP</title>
+    <title>{{ proyecto.nombre }} - SGP</title>
     <style>
         th { text-align: left; padding-right: 25px }
     </style>
 </head>
 <body>
-<h3>Información de {{ proyecto.nombre_proyecto }}</h3>
+<h3>Información de {{ proyecto.nombre }}</h3>
 <table>
-    <tr><th>Nombre:</th><td>{{ proyecto.nombre_proyecto }}</td></tr>
+    <tr><th>Nombre:</th><td>{{ proyecto.nombre }}</td></tr>
     <tr><th>Descripcion:</th><td>{{ proyecto.descripcion }}</td></tr>
     <tr><th>Creador:</th><td>{{ proyecto.creador.nombre }} {{ proyecto.creador.apellido }} ({{ proyecto.creador.email }})</td></tr>
     <tr><th>Fecha de creación:</th><td>{{ proyecto.fecha_creacion }}</td></tr>

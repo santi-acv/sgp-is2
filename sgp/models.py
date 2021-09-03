@@ -75,7 +75,7 @@ class Proyecto(models.Model):
         ('finalizado', 'Finalizado'),
         ('cancelado', 'Cancelado'),
     )
-    nombre_proyecto = models.CharField(max_length=200)
+    nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, default='')
     creador = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
     duracion_sprint = models.CharField(max_length=30, null=True)
@@ -85,7 +85,7 @@ class Proyecto(models.Model):
     status = models.CharField(max_length=50, null=True, choices=STATUS, default='pendiente')
 
     def __str__(self):
-        return self.nombre_proyecto
+        return self.nombre
 
     def crear_roles_predeterminados(self):
 

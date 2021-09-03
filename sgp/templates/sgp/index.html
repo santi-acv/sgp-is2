@@ -19,7 +19,7 @@
     <p>Hola, {{ user.nombre }}. Usted forma parte de los siguientes projectos:</p>
     <ul>
         {% for p in proyectos %}
-            <li><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=p.pk %}">{{ p.nombre_proyecto }}</a></li>
+            <li><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=p.pk %}">{{ p.nombre }}</a></li>
         {% endfor %}
     </ul>
     {% if perms.sgp.crear_proyecto %}
