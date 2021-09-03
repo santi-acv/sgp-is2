@@ -10,4 +10,5 @@ urlpatterns = [
     path('crear_proyecto/', views.crear_proyecto, name='crear_proyecto'),
     path('proyectos/', views.proyectos, name='proyectos'),
     path('mostrar_proyecto/<proyecto_id>', views.mostrar_proyecto, name='mostrar_proyecto'),
+    path('administrar_roles/<proyecto_id>', views.administrar_roles, name='administrar_roles'),
 ]

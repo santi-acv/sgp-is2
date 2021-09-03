@@ -4,9 +4,8 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
-from .models import User
-from .models import Proyecto
-from .forms import ProyectoForm, UserForm
+from .models import User, Proyecto, Role
+from .forms import ProyectoForm, UserForm, RoleForm
 
 
 def index(request):
@@ -94,7 +93,24 @@ def proyectos(request):
     context = {'proyecto_lista': proyecto_lista}
     return render(request, 'sgp/proyectos.html', context)
 
+
 def mostrar_proyecto(request, proyecto_id):
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     context = {'proyecto': proyecto}
     return render(request, 'sgp/mostrar_proyecto.html', context)
+
+
+def administrar_roles(request, proyecto_id):
+
+    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=0)
+    if request.method == 'POST':
+        formset = RoleFormSet(request.POST)
+        if formset.is_valid():
+            formset.save()
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+        else:
+            return HttpResponse(str(formset))
+    else:
+        formset = RoleFormSet()
+
+    return render(request, 'sgp/administrar_roles.html', {'proyecto_id':proyecto_id, 'formset': formset})
