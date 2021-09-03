@@ -61,7 +61,7 @@ def administrar(request):
     return render(request, 'sgp/administrar.html', {'formset': formset})
 
 
-def proyecto(request):
+def crear_proyecto(request):
     """
     Muestra una página con los parámetros para crear un proyecto nuevo.\n
     Fecha: 25/08/21\n
@@ -74,7 +74,8 @@ def proyecto(request):
         form = ProyectoForm(request.POST)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect('/proyecto?submitted=True')
+            return HttpResponseRedirect(reverse('sgp:index'))
+            #return HttpResponseRedirect('sgp:proyecto?submitted=True')
         else:
             return HttpResponse(str(form))
 
@@ -85,4 +86,10 @@ def proyecto(request):
         if 'submitted' in request.GET:
             submitted = True
     context = {'form': form, 'submitted': submitted}
+    return render(request, 'sgp/crear_proyecto.html', context)
+
+
+def lista_proyectos(request):
+    proyecto_lista = Proyecto.objects.all()
+    context = {'proyecto_lista': proyecto_lista}
     return render(request, 'sgp/proyecto.html', context)

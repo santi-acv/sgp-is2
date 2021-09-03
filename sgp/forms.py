@@ -34,7 +34,6 @@ class UserForm(ModelForm):
         fields = ['nombre', 'apellido', 'email', 'crear_proyecto', 'administrar', 'auditar']
 
 
-# Create the form class
 class ProyectoForm(ModelForm):
     class Meta:
         model = Proyecto
