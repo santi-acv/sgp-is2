@@ -51,11 +51,14 @@ def administrar(request):
     Fecha: 24/08/21\n
     Artefacto: Módulo de seguridad
     """
-    UserFormSet = modelformset_factory(User, form=UserForm, extra=0)
+    UserFormSet = modelformset_factory(User, form=UserForm, extra=0, can_delete=True)
     if request.method == 'POST':
         formset = UserFormSet(request.POST)
         if formset.is_valid():
             formset.save()
+            for form in formset:
+                if form.cleaned_data.get('DELETE'):
+                    return HttpResponseRedirect(reverse('sgp:administrar'))
             return HttpResponseRedirect(reverse('sgp:index'))
         else:
             return HttpResponse(str(formset))

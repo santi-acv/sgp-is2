@@ -36,7 +36,7 @@
             <td class="chk">{{ form.gestionar_proyecto }}</td>
             <td class="chk">{{ form.pila_producto }}</td>
             <td class="chk">{{ form.desarrollo }}</td>
-            <td><input type="submit" value="Borrar" onclick="borrar(event, {{ forloop.counter }})"></td>
+            <td class="str"><input type="submit" value="Borrar" onclick="borrar(event, {{ forloop.counter }})"></td>
             <td class="del">{{ form.DELETE }}</td>
         </tr>
     {% endfor %}

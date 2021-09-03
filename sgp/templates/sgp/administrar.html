@@ -6,6 +6,7 @@
     <style>
         .str { padding: 0 10px; }
         .chk { text-align: center }
+        td.del input { display: none }
     </style>
 </head>
 <body>
@@ -37,11 +38,24 @@
             <td class="chk">{{ form.crear_proyecto }}</td>
             <td class="chk">{{ form.administrar }}</td>
             <td class="chk">{{ form.auditar }}</td>
+            <td class="str"><input type="submit" value="Borrar" onclick="borrar(event, {{ forloop.counter }})"></td>
+            <td class="del">{{ form.DELETE }}</td>
         </tr>
     {% endfor %}
 </table>
 <p><input type="submit" value="Guardar"></p>
 </form>
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
+<script type="text/javascript">
+    function borrar(event, form) {
+        if (!confirm('Esto borrará toda la información del usuario. ¿Desea continuar?')) {
+            event.preventDefault();
+        } else {
+            console.log("id_form-"+(form-1)+"-DELETE")
+            let box = document.getElementById("id_form-"+(form-1)+"-DELETE");
+            box.checked = true;
+        }
+    }
+</script>
 </body>
 </html>
