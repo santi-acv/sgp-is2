@@ -2,16 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-    <style>
-        td { padding: 0 10px; }
-        .chk { text-align: center }
-        .prm { padding: 0 10px; }
-    </style>
+    <title>Crear proyecto - SGP</title>
 </head>
 <body>
-<h3>SGP: Modulo de Proyecto</h3>
-<p>En esta página puede crear un proyecto.</p>
+<h3>Crear proyecto</h3>
+<p>Por favor, ingrese la información de su proyecto.</p>
 <table>
     <!---if submitted is true--->
     {% if submitted %}
@@ -24,7 +19,7 @@
 
             {{ form.as_p }}
 
-            <p><input type="submit" value="Guardar"></p>
+            <p><input type="submit" value="Crear proyecto"></p>
         </form>
     {% endif %}
 </table>

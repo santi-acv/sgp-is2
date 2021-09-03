@@ -2,26 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>{{ proyecto.nombre_proyecto }} - SGP</title>
     <style>
-        td { padding: 0 10px; }
-        .chk { text-align: center }
-        .prm { padding: 0 10px; }
+        th { text-align: left; padding-right: 25px }
     </style>
 </head>
 <body>
-<h3>SGP: Modulo de Proyecto</h3>
-    <br/>
-    <p>{{ proyecto }}</p>
-    <br/>
-    {{ proyecto.descripcion }}<br/>
-    {{ proyecto.creador }}<br/>
-    {{ proyecto.fecha_creacion }}<br/>
-    {{ proyecto.fecha_inicio }}<br/>
-    {{ proyecto.fecha_fin }}<br/>
-    {{ proyecto.duracion_sprint }}<br/>
-    {{ proyecto.status }}<br/>
-
-<p><a href="{% url 'sgp:proyectos' %}">&#8592; Volver</a></p>
+<h3>Información de {{ proyecto.nombre_proyecto }}</h3>
+<table>
+    <tr><th>Nombre:</th><td>{{ proyecto.nombre_proyecto }}</td></tr>
+    <tr><th>Descripcion:</th><td>{{ proyecto.descripcion }}</td></tr>
+    <tr><th>Creador:</th><td>{{ proyecto.creador.nombre }} {{ proyecto.creador.apellido }} ({{ proyecto.creador.email }})</td></tr>
+    <tr><th>Fecha de creación:</th><td>{{ proyecto.fecha_creacion }}</td></tr>
+    <tr><th>Fecha de inicio:</th><td>{{ proyecto.fecha_inicio }}</td></tr>
+    <tr><th>Fecha de fin:</th><td>{{ proyecto.fecha_fin }}</td></tr>
+    <tr><th>Duración de los sprints:</th><td>{{ proyecto.duracion_sprint }}</td></tr>
+    <tr><th>Estado:</th><td>{{ proyecto.status }}</td></tr>
+</table>
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+{% if "gestionar_proyecto" in proyecto_perms %}
+    <p>Si desea editar el proyecto, haga click <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">aquí</a>.</p>
+{% endif %}
+{% if "administrar_equipo" in proyecto_perms %}
+    <p>Si desea administrar los roles, haga click <a href="{% url 'sgp:administrar_roles' proyecto.id %}">aquí</a>.</p>
+{% endif %}
+{% if "gestionar_proyecto" in proyecto_perms %}
+    <p>Si desea eliminar el proyecto, haga click <a href="{% url 'sgp:eliminar_proyecto' proyecto.id %}" onclick="confirmar(event)">aquí</a>.</p>
+{% endif %}
+<p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
+<script type="text/javascript">
+    function confirmar(e) {
+       if (!confirm('Esto eliminará el proyecto de manera permanente. ¿Está seguro de que desea elimiarlo?')) {
+           e.preventDefault();
+       }
+    }
+</script>
 </body>
 </html>

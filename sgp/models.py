@@ -77,7 +77,7 @@ class Proyecto(models.Model):
     )
     nombre_proyecto = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, default='')
-    creador = models.CharField(max_length=200, null=True)
+    creador = models.ForeignKey(User, blank=True, null=True, on_delete=models.SET_NULL)
     duracion_sprint = models.CharField(max_length=30, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True, auto_now=False)
     fecha_inicio = models.DateField("Inicio (mm/dd/yy)", auto_now_add=False, auto_now=False, null=True)
@@ -89,17 +89,21 @@ class Proyecto(models.Model):
 
     def crear_roles_predeterminados(self):
 
-        rol = self.role_set.create(name='Scrum master')
+        rol = self.group_set.create(name='Scrum master')
         assign_perm('administrar_equipo', rol, self)
         assign_perm('gestionar_proyecto', rol, self)
+        assign_perm('vista', rol, self)
 
-        rol = self.role_set.create(name='Product owner')
+        rol = self.group_set.create(name='Product owner')
         assign_perm('pila_producto', rol, self)
+        assign_perm('vista', rol, self)
 
-        rol = self.role_set.create(name='Desarrolador')
+        rol = self.group_set.create(name='Desarrolador')
         assign_perm('desarrollo', rol, self)
+        assign_perm('vista', rol, self)
 
-        self.role_set.create(name='Interesado')
+        self.group_set.create(name='Interesado')
+        assign_perm('vista', rol, self)
 
     class Meta:
         permissions = [
@@ -107,8 +111,18 @@ class Proyecto(models.Model):
             ('gestionar_proyecto', 'Permite auditar la información del sistema'),
             ('pila_producto', 'Permite crear proyectos nuevos'),
             ('desarrollo', 'Permite crear proyectos nuevos'),
+            ('vista', 'Permite ver información del proyecto'),
         ]
 
 
+if not hasattr(Group, 'proyecto'):
+    field = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
+    field.contribute_to_class(Group, 'proyecto')
+
+
 class Role(Group):
-    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
+    class Meta:
+        proxy = True
+
+    def __str__(self):
+        return self.name + ' | ' + str(self.proyecto)

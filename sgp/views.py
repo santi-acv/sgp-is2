@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
+from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role
 from .forms import ProyectoForm, UserForm, RoleForm
@@ -14,7 +15,10 @@ def index(request):
     Fecha: 15/08/21\n
     Artefacto: Página de inicio
     """
-    return render(request, 'sgp/index.html')
+    context = None
+    if request.user.is_authenticated:
+        context = {'proyectos': get_objects_for_user(request.user, 'sgp.vista')}
+    return render(request, 'sgp/index.html', context)
 
 
 def login_view(request):
@@ -56,7 +60,7 @@ def administrar(request):
         else:
             return HttpResponse(str(formset))
     else:
-        formset = UserFormSet()
+        formset = UserFormSet(queryset=User.objects.exclude(user_id='AnonymousUser'))
     return render(request, 'sgp/administrar.html', {'formset': formset})
 
 
@@ -72,9 +76,12 @@ def crear_proyecto(request):
     if request.method == "POST":
         form = ProyectoForm(request.POST)
         if form.is_valid():
+            form.instance.creador = request.user
             form.save()
+            proyecto = form.instance
+            proyecto.crear_roles_predeterminados()
+            request.user.groups.add(proyecto.group_set.get(name='Scrum master'))
             return HttpResponseRedirect(reverse('sgp:index'))
-            # return HttpResponseRedirect('sgp:proyecto?submitted=True')
         else:
             return HttpResponse(str(form))
 
@@ -88,12 +95,6 @@ def crear_proyecto(request):
     return render(request, 'sgp/crear_proyecto.html', context)
 
 
-def proyectos(request):
-    proyecto_lista = Proyecto.objects.all()
-    context = {'proyecto_lista': proyecto_lista}
-    return render(request, 'sgp/proyectos.html', context)
-
-
 def mostrar_proyecto(request, proyecto_id):
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     context = {'proyecto': proyecto}
@@ -105,7 +106,7 @@ def editar_proyecto(request, proyecto_id):
     form = ProyectoForm(request.POST or None, instance=proyecto)
     if form.is_valid():
         form.save()
-        return HttpResponseRedirect(reverse('sgp:proyectos'))
+        return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
     context = {'proyecto': proyecto, 'form': form}
     return render(request, 'sgp/editar_proyecto.html', context)
 
@@ -113,11 +114,10 @@ def editar_proyecto(request, proyecto_id):
 def eliminar_proyecto(request, proyecto_id):
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     proyecto.delete()
-    return HttpResponseRedirect(reverse('sgp:proyectos'))
+    return HttpResponseRedirect(reverse('sgp:index'))
 
 
 def administrar_roles(request, proyecto_id):
-
     RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=0)
     if request.method == 'POST':
         formset = RoleFormSet(request.POST)
@@ -127,6 +127,6 @@ def administrar_roles(request, proyecto_id):
         else:
             return HttpResponse(str(formset))
     else:
-        formset = RoleFormSet()
+        formset = RoleFormSet(queryset=Role.objects.filter(proyecto=proyecto_id))
 
-    return render(request, 'sgp/administrar_roles.html', {'proyecto_id':proyecto_id, 'formset': formset})
+    return render(request, 'sgp/administrar_roles.html', {'proyecto_id': proyecto_id, 'formset': formset})
