@@ -1,7 +1,7 @@
 
 from django import forms
 from django.forms import ModelForm
-from guardian.shortcuts import assign_perm, remove_perm, get_group_perms
+from guardian.shortcuts import assign_perm, remove_perm, get_perms_for_model
 
 from .models import User, Proyecto, Role
 
@@ -43,17 +43,19 @@ class RoleForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(RoleForm, self).__init__(*args, **kwargs)
-        for permiso in self.Meta.fields:
-            self.fields[permiso].initial = permiso in get_group_perms(self.instance, self.instance.proyecto)
+        permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
+        for perm in permisos:
+            self.fields[perm.codename].initial = self.instance.permisos.filter(id=perm.id).exists()
 
     def save(self, commit=True):
-        for permiso in ['administrar_equipo', 'gestionar_proyecto', 'pila_producto', 'desarrollo']:
-            if self.cleaned_data[permiso]:
-                assign_perm(permiso, self.instance, self.instance.proyecto)
+        permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
+        for perm in permisos:
+            if self.cleaned_data[perm.codename]:
+                self.instance.asignar_permiso(perm)
             else:
-                remove_perm(permiso, self.instance, self.instance.proyecto)
+                self.instance.quitar_permiso(perm)
         super(RoleForm, self).save(commit)
 
     class Meta:
         model = Role
-        fields = ['name', 'administrar_equipo', 'gestionar_proyecto', 'pila_producto', 'desarrollo']
+        fields = ['nombre', 'administrar_equipo', 'gestionar_proyecto', 'pila_producto', 'desarrollo']

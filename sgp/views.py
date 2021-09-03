@@ -80,7 +80,7 @@ def crear_proyecto(request):
             form.save()
             proyecto = form.instance
             proyecto.crear_roles_predeterminados()
-            request.user.groups.add(proyecto.group_set.get(name='Scrum master'))
+            proyecto.asignar_rol(request.user, 'Scrum master')
             return HttpResponseRedirect(reverse('sgp:index'))
         else:
             return HttpResponse(str(form))
