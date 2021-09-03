@@ -21,6 +21,7 @@
         <li>Projecto 1</li>
         <li>Projecto 2</li>
         <li>Projecto 3</li>
+
         {% if perms.sgp.crear_proyecto %}
             <a href="{% url 'sgp:proyecto' %}">Crear proyecto</a>
         {% endif %}

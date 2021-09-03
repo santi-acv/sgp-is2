@@ -11,23 +11,12 @@
 </head>
 <body>
 <h3>SGP: Modulo de Proyecto</h3>
-<p>En esta página puede crear un proyecto.</p>
-<table>
-    <!---if submitted is true--->
-    {% if submitted %}
-        Tu proyecto fue creado exitosamente!!!
-    <!---if submitted is false--->
-    {% else %}
-        <form action="" method=POST>
-        <!---Procedimiento estandar de seguridad--->
-            {% csrf_token %}
+<p>Usted forma parte de los siguientes proyectos:</p>
 
-            {{ form.as_p }}
+    {% for proyecto in proyecto_lista %}
+        {{ proyecto }}
+    {% endfor %}
 
-            <p><input type="submit" value="Guardar"></p>
-        </form>
-    {% endif %}
-</table>
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 </body>
 </html>
