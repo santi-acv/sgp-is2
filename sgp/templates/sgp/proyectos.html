@@ -22,6 +22,9 @@
             <td align = "right">
                 <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">editar</a>
             </td>
+            <td align = "right">
+                <a href="{% url 'sgp:eliminar_proyecto' proyecto.id %}">eliminar</a>
+            </td>
         </tr>
     {% endfor %}
 </table>

@@ -109,3 +109,9 @@ def editar_proyecto(request, proyecto_id):
         return HttpResponseRedirect(reverse('sgp:proyectos'))
     context = {'proyecto': proyecto, 'form': form}
     return render(request, 'sgp/editar_proyecto.html', context)
+
+
+def eliminar_proyecto(request, proyecto_id):
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
+    proyecto.delete()
+    return HttpResponseRedirect(reverse('sgp:proyectos'))
