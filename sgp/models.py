@@ -80,7 +80,7 @@ class Proyecto(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True, auto_now=False)
     fecha_inicio = models.DateField("Inicio (mm/dd/yy)", auto_now_add=False, auto_now=False)
     fecha_fin = models.DateField("Fin (mm/dd/yy)", auto_now_add=False, auto_now=False, null=True)
-    status = models.CharField(max_length=50, null=True, choices=STATUS)
+    status = models.CharField(max_length=50, null=True, choices=STATUS, default='pendiente')
 
     def __str__(self):
         return self.nombre_proyecto
