@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'guardian',
     'sgp.apps.SgpConfig',
 ]
 
@@ -130,4 +131,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom user model and backend
 # https://docs.djangoproject.com/en/dev/topics/auth/customizing/#substituting-a-custom-user-model
 AUTH_USER_MODEL = 'sgp.User'
-AUTHENTICATION_BACKENDS = ['sgp.backends.OAuth2Backend']
+AUTHENTICATION_BACKENDS = (
+    'sgp.backends.OAuth2Backend',
+    'guardian.backends.ObjectPermissionBackend',
+)

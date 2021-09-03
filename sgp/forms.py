@@ -1,8 +1,7 @@
 
 from django import forms
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
 from django.forms import ModelForm
+from guardian.shortcuts import assign_perm, remove_perm
 
 from .models import User, Proyecto
 
@@ -19,14 +18,12 @@ class UserForm(ModelForm):
         self.fields['auditar'].initial = kwargs['instance'].has_perm('sgp.auditar')
 
     def save(self, commit=True):
-        ct = ContentType.objects.get_for_model(User)
         permisos = ['crear_proyecto', 'administrar', 'auditar']
-        up = self.instance.user_permissions
         for p in permisos:
             if self.cleaned_data[p]:
-                up.add(Permission.objects.get(content_type=ct, codename=p))
+                assign_perm('sgp.' + p, self.instance)
             else:
-                up.remove(Permission.objects.get(content_type=ct, codename=p))
+                remove_perm('sgp.' + p, self.instance)
         super(UserForm, self).save(commit)
 
     class Meta:

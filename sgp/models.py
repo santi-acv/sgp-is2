@@ -1,10 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group
+from guardian.shortcuts import assign_perm
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, user_id, email, nombre, apellido, password=None):
+    def create_user(self, user_id, email, nombre, apellido):
         """
         Crea un usuario con los datos proveidos.\n
         Fecha: 21/08/21\n
@@ -15,10 +15,11 @@ class UserManager(BaseUserManager):
             email=email,
             nombre=nombre,
             apellido=apellido)
+        user.set_unusable_password()
         user.save()
         return user
 
-    def create_superuser(self, user_id, email, nombre, apellido, password=None):
+    def create_superuser(self, user_id, email, nombre, apellido):
         """
         Crea un administrador con los datos proveidos.\n
         Fecha: 21/08/21\n
@@ -30,6 +31,7 @@ class UserManager(BaseUserManager):
             nombre=nombre,
             apellido=apellido)
         user.is_superuser = True
+        user.set_unusable_password()
         user.save()
         return user
 
@@ -85,9 +87,28 @@ class Proyecto(models.Model):
     def __str__(self):
         return self.nombre_proyecto
 
+    def crear_roles_predeterminados(self):
+
+        rol = self.role_set.create(name='Scrum master')
+        assign_perm('administrar_equipo', rol, self)
+        assign_perm('gestionar_proyecto', rol, self)
+
+        rol = self.role_set.create(name='Product owner')
+        assign_perm('pila_producto', rol, self)
+
+        rol = self.role_set.create(name='Desarrolador')
+        assign_perm('desarrollo', rol, self)
+
+        self.role_set.create(name='Interesado')
+
+    class Meta:
+        permissions = [
+            ('administrar_equipo', 'Permite asignar permisos a los usuarios'),
+            ('gestionar_proyecto', 'Permite auditar la información del sistema'),
+            ('pila_producto', 'Permite crear proyectos nuevos'),
+            ('desarrollo', 'Permite crear proyectos nuevos'),
+        ]
 
 
-
-
-
-
+class Role(Group):
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
