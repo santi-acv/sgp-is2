@@ -117,10 +117,13 @@ def eliminar_proyecto(request, proyecto_id):
     return HttpResponseRedirect(reverse('sgp:index'))
 
 
-def administrar_roles(request, proyecto_id):
-    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=0)
+def administrar_roles(request, proyecto_id, extra=0):
+    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=extra)
     if request.method == 'POST':
         formset = RoleFormSet(request.POST)
+        for form in formset:
+            if not form.instance.pk:
+                form.instance.proyecto = Proyecto.objects.get(pk=proyecto_id)
         if formset.is_valid():
             formset.save()
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
@@ -129,4 +132,5 @@ def administrar_roles(request, proyecto_id):
     else:
         formset = RoleFormSet(queryset=Role.objects.filter(proyecto=proyecto_id))
 
-    return render(request, 'sgp/administrar_roles.html', {'proyecto_id': proyecto_id, 'formset': formset})
+    return render(request, 'sgp/administrar_roles.html',
+                  {'proyecto_id': proyecto_id, 'formset': formset, 'extra': extra+1})

@@ -38,6 +38,7 @@
         </tr>
     {% endfor %}
 </table>
+<p><a href="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id extra=extra %}">+ Agregar rol</a></p>
 <p><input type="submit" value="Guardar"></p>
 </form>
 <p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto_id %}">&#8592; Volver</a></p>

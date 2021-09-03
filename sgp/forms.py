@@ -43,18 +43,25 @@ class RoleForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(RoleForm, self).__init__(*args, **kwargs)
-        permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
-        for perm in permisos:
-            self.fields[perm.codename].initial = self.instance.permisos.filter(id=perm.id).exists()
+        if self.instance.pk:
+            permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
+            for perm in permisos:
+                self.fields[perm.codename].initial = self.instance.permisos.filter(id=perm.id).exists()
 
     def save(self, commit=True):
         permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
-        for perm in permisos:
-            if self.cleaned_data[perm.codename]:
-                self.instance.asignar_permiso(perm)
-            else:
-                self.instance.quitar_permiso(perm)
-        super(RoleForm, self).save(commit)
+        if self.instance.pk:
+            for perm in permisos:
+                if self.cleaned_data[perm.codename]:
+                    self.instance.asignar_permiso(perm)
+                else:
+                    self.instance.quitar_permiso(perm)
+            super(RoleForm, self).save(commit)
+        else:
+            super(RoleForm, self).save(commit)
+            for perm in permisos:
+                if self.cleaned_data[perm.codename]:
+                    self.instance.permisos.add(perm)
 
     class Meta:
         model = Role
