@@ -113,7 +113,7 @@ class Proyecto(models.Model):
         rol = Role.objects.create(nombre='Product owner', proyecto=self)
         rol.permisos.add(perms.get(codename='pila_producto'))
 
-        rol = Role.objects.create(nombre='Desarrolador', proyecto=self)
+        rol = Role.objects.create(nombre='Desarrollador', proyecto=self)
         rol.permisos.add(perms.get(codename='desarrollo'))
 
         rol = Role.objects.create(nombre='Interesado', proyecto=self)

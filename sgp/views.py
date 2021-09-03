@@ -118,19 +118,35 @@ def eliminar_proyecto(request, proyecto_id):
 
 
 def administrar_roles(request, proyecto_id, extra=0):
-    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=extra)
+    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=extra, can_delete=True)
+
+    # Si el request es de tipo POST, procesar los datos
     if request.method == 'POST':
         formset = RoleFormSet(request.POST)
+
+        # Si uno de los roles es nuevo, apuntarlo al proyecto actual
         for form in formset:
             if not form.instance.pk:
                 form.instance.proyecto = Proyecto.objects.get(pk=proyecto_id)
+
+        # Valida los datos
         if formset.is_valid():
             formset.save()
+
+            # Si se borró un rol, regresar a la misma página
+            for form in formset:
+                if form.cleaned_data.get('DELETE'):
+                    return HttpResponseRedirect(reverse('sgp:administrar_roles', kwargs={'proyecto_id': proyecto_id}))
+
+            # Si no, regresar a la página del proyecto
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+
+        # Ocurrió un error
         else:
             return HttpResponse(str(formset))
+
+    # Si el request es de tipo GET, mostrar la lista de permisos
     else:
         formset = RoleFormSet(queryset=Role.objects.filter(proyecto=proyecto_id))
-
-    return render(request, 'sgp/administrar_roles.html',
-                  {'proyecto_id': proyecto_id, 'formset': formset, 'extra': extra+1})
+        return render(request, 'sgp/administrar_roles.html',
+                      {'proyecto_id': proyecto_id, 'formset': formset, 'extra': extra+1})

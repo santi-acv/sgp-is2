@@ -6,12 +6,13 @@
     <style>
         .prm { padding: 0 5px }
         .chk { text-align: center }
+        td.del input { display: none }
     </style>
 </head>
 <body>
 <h3>SGP: Administración de roles</h3>
 <p>En esta página puede ver los roles asociados al proyecto.</p>
-<form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id %}" method="post">
+<form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id %}" method="post", name="form">
 {% csrf_token %}
 <table>
     <tr>
@@ -35,6 +36,8 @@
             <td class="chk">{{ form.gestionar_proyecto }}</td>
             <td class="chk">{{ form.pila_producto }}</td>
             <td class="chk">{{ form.desarrollo }}</td>
+            <td><input type="submit" value="Borrar" onclick="borrar(event, {{ forloop.counter }})"></td>
+            <td class="del">{{ form.DELETE }}</td>
         </tr>
     {% endfor %}
 </table>
@@ -42,5 +45,16 @@
 <p><input type="submit" value="Guardar"></p>
 </form>
 <p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto_id %}">&#8592; Volver</a></p>
+<script type="text/javascript">
+    function borrar(event, form) {
+        if (!confirm('Esto eliminará el rol de manera permanente. ¿Está seguro de que desea elimiarlo?')) {
+            event.preventDefault();
+        } else {
+            console.log("id_form-"+(form-1)+"-DELETE")
+            let box = document.getElementById("id_form-"+(form-1)+"-DELETE");
+            box.checked = true;
+        }
+    }
+</script>
 </body>
 </html>
