@@ -89,7 +89,12 @@ def crear_proyecto(request):
     return render(request, 'sgp/crear_proyecto.html', context)
 
 
-def lista_proyectos(request):
+def proyectos(request):
     proyecto_lista = Proyecto.objects.all()
     context = {'proyecto_lista': proyecto_lista}
-    return render(request, 'sgp/proyecto.html', context)
+    return render(request, 'sgp/proyectos.html', context)
+
+def mostrar_proyecto(request, proyecto_id):
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
+    context = {'proyecto': proyecto}
+    return render(request, 'sgp/mostrar_proyecto.html', context)
