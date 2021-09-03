@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        td { padding: 0 10px; }
+        .chk { text-align: center }
+        .prm { padding: 0 10px; }
+    </style>
+</head>
+<body>
+<h3>SGP: Modulo de Proyecto</h3>
+<p>En esta página puede crear un proyecto.</p>
+<table>
+    <!---if submitted is true--->
+    {% if submitted %}
+        Tu proyecto fue creado exitosamente!!!
+    <!---if submitted is false--->
+    {% else %}
+        <form action="" method=POST>
+        <!---Procedimiento estandar de seguridad--->
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <p><input type="submit" value="Guardar"></p>
+        </form>
+    {% endif %}
+</table>
+<p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
+</body>
+</html>

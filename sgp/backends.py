@@ -1,4 +1,4 @@
-from django.contrib.auth.backends import BaseBackend
+from django.contrib.auth.backends import ModelBackend
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -9,14 +9,14 @@ from .models import User
 CLIENT_ID = "995502643398-16c9uqsedvqktsolf042evsqqij1m9ks.apps.googleusercontent.com"
 
 
-class OAuth2Backend(BaseBackend):
+class OAuth2Backend(ModelBackend):
     """
     Autentica el usuario usando la librería OAuth 2.0 de Google.\n
     Fecha: 21/08/21\n
     Artefacto: Usuario
     """
 
-    def authenticate(self, request, token=None):
+    def authenticate(self, request, token=None, **kwargs):
         """
         Verifica la validez del token de ID y extrae los datos del usuario.\n
         Si el usuario no existe en la base de datos, crea una entrada.\n
