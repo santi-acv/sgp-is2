@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
+from django.utils.datetime_safe import date
 from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role
@@ -105,6 +106,11 @@ def mostrar_proyecto(request, proyecto_id):
     Artefacto: Módulo de proyecto
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
+    if request.method == 'POST':
+        proyecto.status = 'Iniciado'
+        proyecto.fecha_inicio = date.today()
+        proyecto.save()
+        return HttpResponse("Proyecto iniciado")
     context = {'proyecto': proyecto}
     return render(request, 'sgp/mostrar_proyecto.html', context)
 
