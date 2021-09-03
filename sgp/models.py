@@ -86,7 +86,11 @@ class Proyecto(models.Model):
     equipo = models.ManyToManyField(User, through='Participa', related_name="equipo_users")
 
     def asignar_rol(self, user, rol):
-
+        """
+        Asigna roles de proyecto a usuarios que pertenecen al equipo de un proyecto.\n
+        Fecha: 02/09/21\n
+        Artefacto: Roles de proyecto
+        """
         if user in self.equipo.all():
             participa = Participa.objects.get(usuario=user, proyecto=self)
             for perm in participa.rol.permisos.all():
@@ -103,6 +107,11 @@ class Proyecto(models.Model):
         return self.nombre
 
     def crear_roles_predeterminados(self):
+        """
+        Crea roles predeterminados de proyecto.\n
+        Fecha: 02/09/21\n
+        Artefacto: Roles de proyecto
+        """
         perms = get_perms_for_model(Proyecto)
 
         rol = Role.objects.create(nombre='Scrum master', proyecto=self)
@@ -130,16 +139,31 @@ class Proyecto(models.Model):
 
 
 class Role(models.Model):
+    """
+     Representa un rol en la base de datos.\n
+     Fecha: 02/09/21\n
+     Artefacto: Roles de proyecto
+     """
     nombre = models.CharField(max_length=100)
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
     permisos = models.ManyToManyField(Permission)
 
     def asignar_permiso(self, permiso):
+        """
+        Asigna un permiso a un rol creado.\n
+        Fecha: 02/09/21\n
+        Artefacto: Roles de proyecto
+        """
         self.permisos.add(permiso)
         for p in self.participa_set.select_related('usuario'):
             assign_perm(permiso, p.usuario, self.proyecto)
 
     def quitar_permiso(self, permiso):
+        """
+        Quita un permiso asignado a un rol creado.\n
+        Fecha: 02/09/21\n
+        Artefacto: Roles de proyecto
+        """
         self.permisos.remove(permiso)
         for p in self.participa_set.select_related('usuario'):
             remove_perm(permiso, p.usuario, self.proyecto)
@@ -149,6 +173,11 @@ class Role(models.Model):
 
 
 class Participa(models.Model):
+    """
+    Define los usuarios que pertenecen al equipo de un proyecto, y el rol asignado al usuario.\n
+    Fecha: 02/09/21\n
+    Artefacto: Roles de proyecto
+    """
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
     rol = models.ForeignKey(Role, on_delete=models.CASCADE)

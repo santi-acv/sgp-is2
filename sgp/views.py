@@ -96,12 +96,22 @@ def crear_proyecto(request):
 
 
 def mostrar_proyecto(request, proyecto_id):
+    """
+    Muestra una página con la información de un proyecto.\n
+    Fecha: 02/09/21\n
+    Artefacto: Módulo de proyecto
+    """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     context = {'proyecto': proyecto}
     return render(request, 'sgp/mostrar_proyecto.html', context)
 
 
 def editar_proyecto(request, proyecto_id):
+    """
+    Muestra una página con los parámetros modificables de un proyecto creado.\n
+    Fecha: 02/09/21\n
+    Artefacto: Módulo de proyecto
+    """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     form = ProyectoForm(request.POST or None, instance=proyecto)
     if form.is_valid():
@@ -112,15 +122,23 @@ def editar_proyecto(request, proyecto_id):
 
 
 def eliminar_proyecto(request, proyecto_id):
+    """
+    Elimina un proyecto creado de la base de datos del sistema.\n
+    Fecha: 02/09/21\n
+    Artefacto: Módulo de proyecto
+    """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     proyecto.delete()
     return HttpResponseRedirect(reverse('sgp:index'))
 
 
 def administrar_roles(request, proyecto_id, extra=0):
+    """
+    Muestra una página que permite controlar los roles y permisos de los usuarios que pertenecen a un proyecto.\n
+    Fecha: 25/08/21\n
+    Artefacto: Roles de proyecto
+    """
     RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=extra, can_delete=True)
-
-    # Si el request es de tipo POST, procesar los datos
     if request.method == 'POST':
         formset = RoleFormSet(request.POST)
 
