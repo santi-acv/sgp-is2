@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        td { padding: 0 10px; }
+        .chk { text-align: center }
+        .prm { padding: 0 10px; }
+    </style>
+</head>
+<body>
+    <h3>SGP: Modulo de Proyecto</h3>
+    <p>Editar Proyecto:</p>
+    <br/>
+    <form action="" method=POST>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <br/>
+        <input type="submit" value="Guardar cambios">
+
+<p><a href="{% url 'sgp:proyectos' %}">&#8592; Volver</a></p>
+</body>
+</html>

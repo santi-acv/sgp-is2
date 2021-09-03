@@ -94,7 +94,18 @@ def proyectos(request):
     context = {'proyecto_lista': proyecto_lista}
     return render(request, 'sgp/proyectos.html', context)
 
+
 def mostrar_proyecto(request, proyecto_id):
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     context = {'proyecto': proyecto}
     return render(request, 'sgp/mostrar_proyecto.html', context)
+
+
+def editar_proyecto(request, proyecto_id):
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
+    form = ProyectoForm(request.POST or None, instance=proyecto)
+    if form.is_valid():
+        form.save()
+        return HttpResponseRedirect(reverse('sgp:proyectos'))
+    context = {'proyecto': proyecto, 'form': form}
+    return render(request, 'sgp/editar_proyecto.html', context)

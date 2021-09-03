@@ -12,10 +12,19 @@
 <body>
 <h3>SGP: Modulo de Proyecto</h3>
 <p>Proyectos:</p>
-    <br/>
+<br/>
+<table>
     {% for proyecto in proyecto_lista %}
-        <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">{{ proyecto }}</a><br/>
+        <tr>
+            <td>
+                <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">{{ proyecto }}</a>
+            </td>
+            <td align = "right">
+                <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">editar</a>
+            </td>
+        </tr>
     {% endfor %}
+</table>
 
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 </body>
