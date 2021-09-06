@@ -12,7 +12,7 @@
 <body>
 <h3>SGP: Administración de roles</h3>
 <p>En esta página puede ver los roles asociados al proyecto.</p>
-<form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id %}" method="post", name="form">
+<form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id %}" method="post" name="form">
 {% csrf_token %}
 <table>
     <tr>
@@ -41,7 +41,7 @@
         </tr>
     {% endfor %}
 </table>
-<p><a href="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id extra=extra %}">+ Agregar rol</a></p>
+<p><a href="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id%}?extra={{ extra }}">+ Agregar rol</a></p>
 <p><input type="submit" value="Guardar"></p>
 </form>
 <p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto_id %}">&#8592; Volver</a></p>

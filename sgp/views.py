@@ -196,7 +196,7 @@ def eliminar_proyecto(request, proyecto_id):
     return HttpResponseRedirect(reverse('sgp:index'))
 
 
-def administrar_roles(request, proyecto_id, extra=0):
+def administrar_roles(request, proyecto_id):
     """
     Permite modificar los roles asociados a un proyecto.
 
@@ -204,15 +204,19 @@ def administrar_roles(request, proyecto_id, extra=0):
     respectivos nombres y permisos. El usuario puede modificar estos roles,
     crear roles nuevos, o eliminar roles existentes.
 
+    Si la URL tiene el parámetro ``extra``, agrega ese número de campos vacíos
+    a la lista. Esto se utiliza para crear nuevos roles.
+
     **Fecha:** 02/09/21
 
     **Artefacto:** módulo de proyecto
 
-    :param extra: Indica cuantos campos en blanco se deben agregar a la lista.
-    :type extra: entero
-
     |
     """
+    try:
+        extra = int(request.GET.get('extra', ''))
+    except ValueError:
+        extra = 0
     RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=extra, can_delete=True)
     if request.method == 'POST':
         formset = RoleFormSet(request.POST)
