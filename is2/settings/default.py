@@ -135,3 +135,10 @@ AUTHENTICATION_BACKENDS = (
     'sgp.backends.OAuth2Backend',
     'guardian.backends.ObjectPermissionBackend',
 )
+
+# Migration modules
+# These need to be inside the project folder, otherwise django-guardian places
+# them in the virtual environment and cause dependency issues.
+MIGRATION_MODULES = {'auth': 'sgp.migrations.auth',
+                     'sgp': 'sgp.migrations',
+                     'guardian': 'sgp.migrations.guardian'}
