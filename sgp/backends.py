@@ -18,17 +18,24 @@ class OAuth2Backend(ModelBackend):
 
     def authenticate(self, request, token=None, **kwargs):
         """
-        Verifica la validez del token de ID y extrae los datos del usuario.\n
-        Si el usuario no existe en la base de datos, crea una entrada.\n
-        Fecha: 21/08/21\n
-        Artefacto: Usuario
+        Verifica la validez del token de ID y autentica al usuario.
+
+        Extrae la ID del usuario del token y comprueba si este existe en la
+        base de datos. Si no, también extrae sus datos personales y crea una
+        instancia del modelo User. Si el token es inválido, el procso falla.
+
+        :param request: Sesión que será autenticada si el token es válido.
+        :param token: Token a ser validado.
+        :type request: request
+        :type token: string
+
+        Fecha: 21/08/21
+
+        Artefacto: módulo de seguridad
         """
         try:
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
             userid = idinfo['sub']
-            email = idinfo['email']
-            nombre = idinfo['given_name']
-            apellido = idinfo['family_name']
         except ValueError:
             print("Could not verify token")
             return None
@@ -36,14 +43,26 @@ class OAuth2Backend(ModelBackend):
             user = User.objects.get(user_id=userid)
         except User.DoesNotExist:
             # Crear nuevo usuario
+            email = idinfo['email']
+            nombre = idinfo['given_name']
+            apellido = idinfo['family_name']
             user = User.objects.create_user(userid, email, nombre, apellido)
         return user
 
     def get_user(self, user_id):
         """
-        Comprueba si el usuario existe.\n
-        Fecha: 21/08/21\n
-        Artefacto: Usuario
+        Comprueba si existe un usuario con esa ID en la base de datos.
+
+        Si existe, lo retorna. Si no, retorna None.
+
+        :param user_id: ID del usuario que se desea comprobar.
+        :type user_id: string
+
+        Fecha: 21/08/21
+
+        Artefacto: módulo de seguridad
+
+        |
         """
         try:
             return User.objects.get(pk=user_id)

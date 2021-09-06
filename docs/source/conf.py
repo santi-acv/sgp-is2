@@ -50,6 +50,10 @@ language = 'es'
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+# Makes autodoc sort entries by their appearance in the source code instead of
+# alphabetically.
+autodoc_member_order = 'bysource'
+
 
 # -- Options for HTML output -------------------------------------------------
 

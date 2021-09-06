@@ -18,12 +18,12 @@
     <tr><th>Fecha de inicio:</th><td>{{ proyecto.fecha_inicio }}</td></tr>
     <tr><th>Fecha de fin:</th><td>{{ proyecto.fecha_fin }}</td></tr>
     <tr><th>Duración de los sprints:</th><td>{{ proyecto.duracion_sprint }}</td></tr>
-    <tr><th>Estado:</th><td>{{ proyecto.status }}</td></tr>
+    <tr><th>Estado:</th><td>{{ proyecto.estado }}</td></tr>
 </table>
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 {% if "gestionar_proyecto" in proyecto_perms %}
-    {% if proyecto.status == 'pendiente' %}
+    {% if proyecto.estado == 'pendiente' %}
         <p><input type="button" value="Iniciar Proyecto" onclick="iniciar()"></p>
     {% endif %}
     <p>Si desea editar el proyecto, haga click <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">aquí</a>.</p>

@@ -3,27 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Bienvenido a la documentación del Sistema Gestor de Proyectos
+Documentación del Sistema Gestor de Proyectos
 =============================================================
 El **Sistema Gestor de Proyectos** (SGP) es una aplicación en Django que
 facilita la gestión de proyectos ágiles utilizando las metodologías SCRUM
 y Kanban.
 
-.. note::
-
-   Este proyecto se encuentra en desarrollo.
-
 .. toctree::
    :maxdepth: 2
-   :caption: Contenidos:
+   :caption: Contenido:
 
-   modules
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   vistas
+   modelos
+   formularios
+   backends
+   pruebas

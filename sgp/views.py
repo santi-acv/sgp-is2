@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
-from django.utils.datetime_safe import date
+from django.utils.timezone import now
 from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role
@@ -12,9 +12,21 @@ from .forms import ProyectoForm, UserForm, RoleForm
 
 def index(request):
     """
-    Retorna la págino de inicio. Sujeto a cambios.\n
-    Fecha: 15/08/21\n
-    Artefacto: Página de inicio
+    Representa la página de inicio.
+
+    Para usuarios que no han iniciado sesión, da una bienvenida al sistema y
+    muestra un botón de acceso con Google.
+
+    Para usuarios que ya accedieron al sistema, muestra la lista de proyectos a
+    los que estos pertenecen. Si el usuario cuenta con el permiso de creación
+    de proyectos, presenta una opción para crear uno. Si el usuario cuenta con
+    el permiso de administración de usuarios, presenta una opción para hacerlo.
+
+    **Fecha:** 15/08/21
+
+    **Artefacto:** página de inicio
+
+    |
     """
     context = None
     if request.user.is_authenticated:
@@ -24,9 +36,17 @@ def index(request):
 
 def login_view(request):
     """
-    Inicia la sesión del usuario.\n
-    Fecha: 20/08/21\n
-    Artefacto: Página de inicio
+    Permite a los usuarios iniciar sesión.
+
+    Debe recibir un request del tipo POST con un atributo ``idtoken`` que
+    contenga el token de identidad retornado por el servicio de authenticación
+    de Google.
+
+    **Fecha:** 15/08/21
+
+    **Artefacto:** módulo de seguridad
+
+    |
     """
     user = authenticate(request, token=request.POST['idtoken'])
     if user is not None:
@@ -38,9 +58,15 @@ def login_view(request):
 
 def logout_view(request):
     """
-    Cierra la sesión del usuario.\n
-    Fecha: 20/08/21\n
-    Artefacto: Página de inicio
+    Permite a los usuarios cerrar sesión.
+
+    Si el usuario tiene una sesión abierta, la cierra.
+
+    **Fecha:** 15/08/21
+
+    **Artefacto:** módulo de seguridad
+
+    |
     """
     logout(request)
     return HttpResponseRedirect(reverse('sgp:index'))
@@ -48,9 +74,14 @@ def logout_view(request):
 
 def administrar(request):
     """
-    Muestra una página que permite controlar los permisos de los usuarios registrados.\n
-    Fecha: 24/08/21\n
-    Artefacto: Módulo de seguridad
+    Permite administrar los permisos de los usuarios registrados y eliminarlos
+    de la base de datos si es necesario.
+
+    **Fecha:** 24/08/21
+
+    **Artefacto:** módulo de seguridad
+
+    |
     """
     UserFormSet = modelformset_factory(User, form=UserForm, extra=0, can_delete=True)
     if request.method == 'POST':
@@ -70,9 +101,17 @@ def administrar(request):
 
 def crear_proyecto(request):
     """
-    Muestra una página con los parámetros para crear un proyecto nuevo.\n
-    Fecha: 25/08/21\n
-    Artefacto: Módulo de proyecto
+    Permite crear un proyecto nuevo.
+
+    Al acceder, muestra un formulario con los datos requeridos para crear un
+    proyecto. Si estos son válidos, lo agrega a la base de datos con los roles
+    predetermanidos y asigna el rol de Scrum Master al usuario que lo creó.
+
+    **Fecha:** 25/08/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
     """
     submitted = False
     # if they filled out the form and clicked the button, they posted it
@@ -101,14 +140,19 @@ def crear_proyecto(request):
 
 def mostrar_proyecto(request, proyecto_id):
     """
-    Muestra una página con la información de un proyecto.\n
-    Fecha: 02/09/21\n
-    Artefacto: Módulo de proyecto
+    Muestra una página con la información del proyecto, y además incluye
+    opciones para iniciar, modificar, o eliminar el proyecto.
+
+    **Fecha:** 02/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     if request.method == 'POST':
         proyecto.status = 'Iniciado'
-        proyecto.fecha_inicio = date.today()
+        proyecto.fecha_inicio = now()
         proyecto.save()
         return HttpResponse("Proyecto iniciado")
     context = {'proyecto': proyecto}
@@ -117,9 +161,16 @@ def mostrar_proyecto(request, proyecto_id):
 
 def editar_proyecto(request, proyecto_id):
     """
-    Muestra una página con los parámetros modificables de un proyecto creado.\n
-    Fecha: 02/09/21\n
-    Artefacto: Módulo de proyecto
+    Permite modificar el proyecto.
+
+    Muestra un formulario similar al de creación de proyectos. Si los datos
+    recibidos son válidos, actualiza la entrada en la base de datos.
+
+    **Fecha:** 02/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     form = ProyectoForm(request.POST or None, instance=proyecto)
@@ -132,9 +183,13 @@ def editar_proyecto(request, proyecto_id):
 
 def eliminar_proyecto(request, proyecto_id):
     """
-    Elimina un proyecto creado de la base de datos del sistema.\n
-    Fecha: 02/09/21\n
-    Artefacto: Módulo de proyecto
+    Permite eliminar el proyecto.
+
+    **Fecha:** 02/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     proyecto.delete()
@@ -143,9 +198,20 @@ def eliminar_proyecto(request, proyecto_id):
 
 def administrar_roles(request, proyecto_id, extra=0):
     """
-    Muestra una página que permite controlar los roles y permisos de los usuarios que pertenecen a un proyecto.\n
-    Fecha: 25/08/21\n
-    Artefacto: Roles de proyecto
+    Permite modificar los roles asociados a un proyecto.
+
+    Muestra una lista de los roles actuales del proyecto junto con sus
+    respectivos nombres y permisos. El usuario puede modificar estos roles,
+    crear roles nuevos, o eliminar roles existentes.
+
+    **Fecha:** 02/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    :param extra: Indica cuantos campos en blanco se deben agregar a la lista.
+    :type extra: entero
+
+    |
     """
     RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=extra, can_delete=True)
     if request.method == 'POST':
