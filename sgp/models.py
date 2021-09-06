@@ -1,3 +1,9 @@
+"""
+Los modelos corresponden a tablas en la base de datos, y cada instancia
+representa una entrada. A continuación se documentan los campos principales y
+los métodos adicionales de los modelos en uso por la aplicación.
+"""
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from guardian.shortcuts import assign_perm, get_perms_for_model, remove_perm

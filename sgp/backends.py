@@ -1,3 +1,11 @@
+"""
+Los backends de autorización manejan el proceso de autenticación. En esta
+aplicación se utilizacan dos de ellos: un backend personalizado que autentica
+a los usuarios utilizando el servicio de identidad de google, y el backend de
+la librería ``django-guardian`` que permite asignar permisos a instancias
+individuales de modelos.
+"""
+
 from django.contrib.auth.backends import ModelBackend
 
 from google.oauth2 import id_token
