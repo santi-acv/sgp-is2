@@ -102,8 +102,6 @@ def administrar(request):
                 if form.cleaned_data.get('DELETE'):
                     return HttpResponseRedirect(reverse('sgp:administrar'))
             return HttpResponseRedirect(reverse('sgp:index'))
-        else:
-            return HttpResponse(str(formset))
     else:
         formset = UserFormSet(queryset=User.objects.exclude(user_id='AnonymousUser'))
     return render(request, 'sgp/administrar.html', {'formset': formset})
@@ -123,9 +121,6 @@ def crear_proyecto(request):
 
     |
     """
-    submitted = False
-    # if they filled out the form and clicked the button, they posted it
-    # if they did then take whatever they posted, request.POST, and pass it into our ProyectoFrom
     if request.method == "POST":
         form = ProyectoForm(request.POST)
         if form.is_valid():
@@ -135,17 +130,9 @@ def crear_proyecto(request):
             proyecto.crear_roles_predeterminados()
             proyecto.asignar_rol(request.user, 'Scrum master')
             return HttpResponseRedirect(reverse('sgp:index'))
-        else:
-            return HttpResponse(str(form))
-
-    # if they didn't fill out the form, they just came to the web page
-    # they are getting the web page
     else:
         form = ProyectoForm
-        if 'submitted' in request.GET:
-            submitted = True
-    context = {'form': form, 'submitted': submitted}
-    return render(request, 'sgp/crear_proyecto.html', context)
+    return render(request, 'sgp/crear_proyecto.html', {'form': form})
 
 
 def mostrar_proyecto(request, proyecto_id):
@@ -161,7 +148,7 @@ def mostrar_proyecto(request, proyecto_id):
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     if request.method == 'POST':
-        proyecto.status = 'Iniciado'
+        proyecto.estado = proyecto.Estado.INICIADO
         proyecto.fecha_inicio = now()
         proyecto.save()
         return HttpResponse("Proyecto iniciado")
@@ -248,12 +235,10 @@ def administrar_roles(request, proyecto_id):
             # Si no, regresar a la página del proyecto
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
 
-        # Ocurrió un error
-        else:
-            return HttpResponse(str(formset))
+        # Si no, retornar el formulario con los errores
 
     # Si el request es de tipo GET, mostrar la lista de permisos
     else:
         formset = RoleFormSet(queryset=Role.objects.filter(proyecto=proyecto_id))
-        return render(request, 'sgp/administrar_roles.html',
-                      {'proyecto_id': proyecto_id, 'formset': formset, 'extra': extra+1})
+    return render(request, 'sgp/administrar_roles.html',
+                  {'proyecto_id': proyecto_id, 'formset': formset, 'extra': extra+1})

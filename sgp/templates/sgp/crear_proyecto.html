@@ -8,20 +8,13 @@
 <h3>Crear proyecto</h3>
 <p>Por favor, ingrese la información de su proyecto.</p>
 <table>
-    <!---if submitted is true--->
-    {% if submitted %}
-        Tu proyecto fue creado exitosamente!!!
-    <!---if submitted is false--->
-    {% else %}
-        <form action="" method=POST>
-        <!---Procedimiento estandar de seguridad--->
-            {% csrf_token %}
+    <form action="" method=POST>
+        {% csrf_token %}
 
-            {{ form.as_p }}
+        {{ form.as_p }}
 
-            <p><input type="submit" value="Crear proyecto"></p>
-        </form>
-    {% endif %}
+        <p><input type="submit" value="Crear proyecto"></p>
+    </form>
 </table>
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 </body>

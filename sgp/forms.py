@@ -8,8 +8,11 @@ Para todos los formularios, los argumentos de los constructores son los mismos
 que para su clase base.
 """
 
+import datetime
+
 from django import forms
 from django.forms import ModelForm
+from django.utils import timezone
 from guardian.shortcuts import assign_perm, remove_perm, get_perms_for_model
 
 from .models import User, Proyecto, Role
@@ -61,14 +64,51 @@ class ProyectoForm(ModelForm):
     Posee campos correspondientes a los atributos de nombre, descripción, fecha
     de inicio, fecha de fin, y duración predeterminada de los sprints.
 
-    **Fecha:** 02/09/21
+    **Fecha:** 06/09/21
 
     **Artefacto:** módulo de proyecto
-
-    |
     """
+    fecha_inicio = forms.DateField(label="Fecha de inicio",
+                                   error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
+    fecha_fin = forms.DateField(label="Fecha de fin",
+                                error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
+    duracion_sprint = forms.IntegerField(label="Duración de los sprints (en días)", min_value=0)
+
     def __init__(self, *args, **kwargs):
         super(ModelForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        """
+        Valida las fechas y la duración predeterminada del sprint.
+
+        Para que el formulario sea válido, las fechas no pueden haber ocurrido
+        en el pasado y la duración del sprint debe ser positiva. Además, debe
+        haber suficiente tiempo entre la fecha de inicio la fecha de fin para
+        realizar al menos un sprint.
+
+        |
+        """
+        cleaned_data = super(ModelForm, self).clean()
+
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_fin = cleaned_data.get('fecha_fin')
+        duracion_sprint = cleaned_data.get('duracion_sprint')
+
+        if fecha_inicio and fecha_inicio < timezone.localdate():
+            self.add_error('fecha_inicio', 'La fecha de inicio no puede ser en el pasado.')
+            fecha_inicio = None
+            if fecha_fin and fecha_fin < timezone.localdate():
+                self.add_error('fecha_fin', 'La fecha de fin no puede ser en el pasado.')
+        elif fecha_fin and fecha_inicio > fecha_fin:
+            self.add_error('fecha_fin', 'La fecha de fin debe ser después de la fecha de inicio.')
+            fecha_fin = None
+
+        if duracion_sprint and duracion_sprint < 0:
+            self.add_error('duracion_sprint', 'La duración de los sprints debe ser positiva.')
+        elif fecha_inicio and fecha_fin and fecha_inicio+datetime.timedelta(days=duracion_sprint) > fecha_fin:
+            self.add_error('duracion_sprint', 'El proyecto debe tener tiempo para al menos un sprint.')
+
+        return cleaned_data
 
     class Meta:
         model = Proyecto

@@ -73,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ]
 
     def __str__(self):
-        return str(self.nombre) + ' ' + str(self.apellido) + ' <' + str(self.email) + '>'
+        return str(self.nombre) + ' ' + str(self.apellido) + ' (' + str(self.email) + ')'
 
 
 class Proyecto(models.Model):
@@ -85,12 +85,12 @@ class Proyecto(models.Model):
 
     **Artefacto:** Módulo de proyecto
     """
-    STATUS = (
-        ('pendiente', 'Pendiente'),
-        ('iniciado', 'Iniciado'),
-        ('finalizado', 'Finalizado'),
-        ('cancelado', 'Cancelado'),
-    )
+
+    class Estado(models.TextChoices):
+        PENDIENTE = 'P', 'Pendiente'
+        INICIADO = 'I', 'Iniciado'
+        FINALIZADO = 'F', 'Finalizado'
+        CANCELADO = 'C', 'Cancelado'
 
     nombre = models.CharField(max_length=200)
     """Título del proyecto."""
@@ -102,23 +102,23 @@ class Proyecto(models.Model):
     """Almacena el usuario que creó el proyecto. Si el usuario es eliminado, el
      campo queda nulo."""
 
-    duracion_sprint = models.IntegerField(blank=True, null=True)
+    duracion_sprint = models.IntegerField("Duración de los sprints", blank=True, null=True)
     """Indica la duración en días de cada sprint dentro del proyecto. Opcional."""
 
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_creacion = models.DateTimeField("Fecha de creación", auto_now_add=True)
     """Almacena la hora a la que se creó el proyecto."""
 
-    fecha_inicio = models.DateField("Inicio (mm/dd/yy)", null=True)
+    fecha_inicio = models.DateField("Fecha de inicio", null=True)
     """Si el proyecto aún no ha iniciado, almacena una hora tentativa en la que
     se planea iniciarlo. Una vez que este inicia, almacena la hora en la que 
     inició."""
 
-    fecha_fin = models.DateField("Fin (mm/dd/yy)", auto_now_add=False, auto_now=False, null=True)
+    fecha_fin = models.DateField("Fecha de fin", auto_now_add=False, auto_now=False, null=True)
     """Si el proyecto aún no ha iniciado, almacena una hora tentativa en la que
     se planea terminarlo. Una vez que este acabe, almacena la hora en la que 
     acabó."""
 
-    estado = models.CharField(max_length=50, null=True, choices=STATUS, default='pendiente')
+    estado = models.CharField(max_length=50, choices=Estado.choices, default=Estado.PENDIENTE)
     """Indica en qué estado se encuentra el proyecto. Cuando este se crea, el
     estado predeterminado es pendiente."""
 
