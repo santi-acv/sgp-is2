@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Crear proyecto - SGP</title>
+    <style>
+        th { text-align: left; width: 8em }
+    </style>
 </head>
 <body>
 <h3>Crear proyecto</h3>
 <p>Por favor, ingrese la información de su proyecto.</p>
-<table>
-    <form action="" method=POST>
-        {% csrf_token %}
-
-        {{ form.as_p }}
-
-        <p><input type="submit" value="Crear proyecto"></p>
-    </form>
-</table>
+<form action="" method=POST>
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <p><input type="submit" value="Crear proyecto"></p>
+</form>
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 </body>
 </html>

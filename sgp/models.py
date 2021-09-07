@@ -150,6 +150,21 @@ class Proyecto(models.Model):
         for perm in participa.rol.permisos.all():
             assign_perm(perm.codename, user, self)
 
+    def crear_rol(self, nombre, permisos):
+        """
+        Crea un rol dentro del proyecto.
+
+        :param nombre: El nombre del rol a ser creado.
+        :param permisos: Los permisos del rol a ser creado.
+        :type nombre: string
+        :type permisos: [string]"""
+        rol = Role.objects.create(nombre=nombre, proyecto=self)
+        perms = get_perms_for_model(Proyecto)
+        for perm in permisos:
+            rol.permisos.add(perms.get(codename=perm))
+            rol.permisos.add(perms.get(codename=perm))
+            rol.permisos.add(perms.get(codename=perm))
+
     def crear_roles_predeterminados(self):
         """
         Crea los roles de scrum master, product owner, desarrollador, e
@@ -157,20 +172,10 @@ class Proyecto(models.Model):
 
         |
         """
-        perms = get_perms_for_model(Proyecto)
-
-        rol = Role.objects.create(nombre='Scrum master', proyecto=self)
-        rol.permisos.add(perms.get(codename='administrar_equipo'))
-        rol.permisos.add(perms.get(codename='gestionar_proyecto'))
-        rol.permisos.add(perms.get(codename='desarrollo'))
-
-        rol = Role.objects.create(nombre='Product owner', proyecto=self)
-        rol.permisos.add(perms.get(codename='pila_producto'))
-
-        rol = Role.objects.create(nombre='Desarrollador', proyecto=self)
-        rol.permisos.add(perms.get(codename='desarrollo'))
-
-        Role.objects.create(nombre='Interesado', proyecto=self)
+        self.crear_rol('Scrum master', ['administrar_equipo', 'gestionar_proyecto', 'desarrollo'])
+        self.crear_rol('Product owner', ['pila_producto'])
+        self.crear_rol('Desarrollador', ['desarrollo'])
+        self.crear_rol('Interesado', [])
 
     class Meta:
         default_permissions = ()

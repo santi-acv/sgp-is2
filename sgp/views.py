@@ -7,6 +7,7 @@ archivo ``urls.py``.
 
 A continuación se documentan todas las vistas de la aplicación SGP.
 """
+import json
 
 from django.forms import modelformset_factory
 from django.shortcuts import render
@@ -17,7 +18,7 @@ from django.utils.timezone import now
 from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role
-from .forms import ProyectoForm, UserForm, RoleForm
+from .forms import ProyectoForm, UserForm, RoleForm, UploadFileForm
 
 
 def index(request):
@@ -129,7 +130,7 @@ def crear_proyecto(request):
             proyecto = form.instance
             proyecto.crear_roles_predeterminados()
             proyecto.asignar_rol(request.user, 'Scrum master')
-            return HttpResponseRedirect(reverse('sgp:index'))
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
     else:
         form = ProyectoForm
     return render(request, 'sgp/crear_proyecto.html', {'form': form})
@@ -199,10 +200,9 @@ def administrar_roles(request, proyecto_id):
 
     Muestra una lista de los roles actuales del proyecto junto con sus
     respectivos nombres y permisos. El usuario puede modificar estos roles,
-    crear roles nuevos, o eliminar roles existentes.
-
-    Si la URL tiene el parámetro ``extra``, agrega ese número de campos vacíos
-    a la lista. Esto se utiliza para crear nuevos roles.
+    crear roles nuevos, o eliminar roles existentes. También presenta opciones
+    para exportar los roles actuales a un archivo JSON y para importar roles de
+    un archivo
 
     **Fecha:** 02/09/21
 
@@ -210,35 +210,79 @@ def administrar_roles(request, proyecto_id):
 
     |
     """
-    try:
-        extra = int(request.GET.get('extra', ''))
-    except ValueError:
-        extra = 0
-    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=extra, can_delete=True)
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
+    rol = Role.objects.get(proyecto=proyecto, participa__usuario=request.user)
+    RoleFormSet = modelformset_factory(Role, form=RoleForm, extra=0, can_delete=True)
+
+    # Si el request es de tipo POST, procesar los roles recibidos
     if request.method == 'POST':
-        formset = RoleFormSet(request.POST)
+        formset = RoleFormSet(request.POST, form_kwargs={'rol_actual': rol})
 
         # Si uno de los roles es nuevo, apuntarlo al proyecto actual
         for form in formset:
             if not form.instance.pk:
-                form.instance.proyecto = Proyecto.objects.get(pk=proyecto_id)
+                form.instance.proyecto = proyecto
 
-        # Valida los datos
+        # Guardar los roles
         if formset.is_valid():
             formset.save()
-
-            # Si se borró un rol, regresar a la misma página
-            for form in formset:
-                if form.cleaned_data.get('DELETE'):
-                    return HttpResponseRedirect(reverse('sgp:administrar_roles', kwargs={'proyecto_id': proyecto_id}))
-
-            # Si no, regresar a la página del proyecto
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
 
-        # Si no, retornar el formulario con los errores
-
-    # Si el request es de tipo GET, mostrar la lista de permisos
+    # Si el request es de tipo POST, enviar una lista de roles
     else:
-        formset = RoleFormSet(queryset=Role.objects.filter(proyecto=proyecto_id))
+        formset = RoleFormSet(queryset=Role.objects.filter(proyecto=proyecto_id),
+                              form_kwargs={'rol_actual': rol})
+
     return render(request, 'sgp/administrar_roles.html',
-                  {'proyecto_id': proyecto_id, 'formset': formset, 'extra': extra+1})
+                  {'proyecto': proyecto, 'formset': formset, 'rol': rol, 'file_form': UploadFileForm()})
+
+
+def importar_roles(request, proyecto_id):
+    """
+    Permite importar roles desde un archivo JSON.
+
+    Recibe un request POST con un atributo archivo que contenga los roles a
+    importar.
+
+    **Fecha:** 07/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
+    """
+    form = UploadFileForm(request.POST, request.FILES)
+    if form.is_valid():
+        proyecto = Proyecto.objects.get(pk=proyecto_id)
+        roles = json.load(request.FILES['archivo'])
+        for rol in roles:
+            proyecto.crear_rol(rol['nombre'], rol['permisos'])
+    else:
+        print(form)
+    return HttpResponseRedirect(reverse('sgp:administrar_roles', kwargs={'proyecto_id': proyecto_id}))
+
+
+def exportar_roles(request, proyecto_id):
+    """
+    Permite exportar roles hacia un archivo JSON.
+
+    Retorna un archivo con los roles del proyecto que puede ser descargado.
+
+    **Fecha:** 07/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
+    """
+    roles = []
+    for instance in Role.objects.filter(proyecto=proyecto_id):
+        rol = dict()
+        rol['nombre'] = instance.nombre
+        perms = []
+        for perm in instance.permisos.all():
+            perms.append(perm.codename)
+        rol['permisos'] = perms
+        roles.append(rol)
+    print(json.dumps(roles))
+    response = HttpResponse(json.dumps(roles), content_type='application/json')
+    response['Content-Disposition'] = 'attachment; filename=roles-proyecto-'+str(proyecto_id)+'.json'
+    return response

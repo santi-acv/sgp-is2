@@ -34,6 +34,7 @@ class UserForm(ModelForm):
 
     |
     """
+    email = forms.CharField(disabled=True)
     crear_proyecto = forms.BooleanField(required=False)
     administrar = forms.BooleanField(required=False)
     auditar = forms.BooleanField(required=False)
@@ -137,16 +138,22 @@ class RoleForm(ModelForm):
     pila_producto = forms.BooleanField(required=False)
     desarrollo = forms.BooleanField(required=False)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, rol_actual, **kwargs):
         super(RoleForm, self).__init__(*args, **kwargs)
         if self.instance.pk:
             permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
             for perm in permisos:
                 self.fields[perm.codename].initial = self.instance.permisos.filter(id=perm.id).exists()
+            self.rol_actual = rol_actual
+            if self.instance == rol_actual:
+                self.fields['administrar_equipo'].disabled = True
 
     def save(self, commit=True):
         permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
         if self.instance.pk:
+            print(self.instance, '==', self.rol_actual)
+            if self.instance == self.rol_actual:
+                self.cleaned_data['administrar_equipo'] = True
             for perm in permisos:
                 if self.cleaned_data[perm.codename]:
                     self.instance.asignar_permiso(perm)
@@ -162,3 +169,17 @@ class RoleForm(ModelForm):
     class Meta:
         model = Role
         fields = ['nombre', 'administrar_equipo', 'gestionar_proyecto', 'pila_producto', 'desarrollo']
+
+
+class UploadFileForm(forms.Form):
+    """
+    Permite enviar archivos al servidor.
+
+    **Fecha:** 07/09/21
+
+    |
+    """
+    archivo = forms.FileField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

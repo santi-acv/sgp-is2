@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SGP - Administrar Roles</title>
+    <title>{{ proyecto.nombre }} - SGP</title>
     <style>
         .prm { padding: 0 5px }
         .chk { text-align: center }
-        td.del input { display: none }
+        .str { text-align: center }
+        .hidden { display: none }
     </style>
 </head>
 <body>
-<h3>SGP: Administración de roles</h3>
-<p>En esta página puede ver los roles asociados al proyecto.</p>
-<form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id %}" method="post" name="form">
+<h3>Roles de {{ proyecto.nombre }}</h3>
+<p>En esta página puede ver y modificar los roles asociados al proyecto.</p>
+<form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto.id %}" method="post" name="form">
 {% csrf_token %}
 <table>
     <tr>
@@ -36,23 +37,70 @@
             <td class="chk">{{ form.gestionar_proyecto }}</td>
             <td class="chk">{{ form.pila_producto }}</td>
             <td class="chk">{{ form.desarrollo }}</td>
-            <td class="str"><input type="submit" value="Borrar" onclick="borrar(event, {{ forloop.counter }})"></td>
-            <td class="del">{{ form.DELETE }}</td>
+            <td class="hidden">{{ form.DELETE }}</td>
+            {% if form.instance != rol %}
+                <td class="str"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
+                                       type="button" value="Borrar"></td>
+            {% else %}
+                <td class="str">Rol actual</td>
+            {% endif %}
         </tr>
     {% endfor %}
+    <tr id="empty_form_row" class="hidden">
+        {% for field in formset.empty_form.hidden_fields %}
+            {{ field }}
+        {% endfor %}
+        <td class="str">{{ formset.empty_form.nombre }}</td>
+        <td class="chk">{{ formset.empty_form.administrar_equipo }}</td>
+        <td class="chk">{{ formset.empty_form.gestionar_proyecto }}</td>
+        <td class="chk">{{ formset.empty_form.pila_producto }}</td>
+        <td class="chk">{{ formset.empty_form.desarrollo }}</td>
+        <td class="hidden">{{ formset.empty_form.DELETE }}</td>
+        <td class="str"><input type="button" value="Borrar" onclick="borrar(__prefix__, this)"></td>
+    </tr>
 </table>
-<p><a href="{% url 'sgp:administrar_roles' proyecto_id=proyecto_id%}?extra={{ extra }}">+ Agregar rol</a></p>
-<p><input type="submit" value="Guardar"></p>
+    <a href="javascript:" onclick="agregar()">+ Agregar rol</a>
+    <p><input type="submit" value="Guardar"></p>
 </form>
-<p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto_id %}">&#8592; Volver</a></p>
+
+<form action="{% url 'sgp:importar_roles' proyecto_id=proyecto.id %}" method="post"
+      enctype="multipart/form-data" >
+    {% csrf_token %}
+    <p>También puede <a href="javascript:" onclick="parentNode.parentNode.submit()">importar</a> roles desde
+        un archivo externo o <a href="{% url 'sgp:exportar_roles' proyecto_id=proyecto.id %}">exportar</a>
+        los roles guardados.</p>
+    <p>{{ file_form.archivo }}</p>
+</form>
+
+<p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
+
 <script type="text/javascript">
-    function borrar(event, form) {
-        if (!confirm('Esto eliminará el rol de manera permanente. ¿Está seguro de que desea elimiarlo?')) {
-            event.preventDefault();
+    const form_idx = document.getElementById("id_form-TOTAL_FORMS")
+    let total_forms = parseInt(form_idx.value);
+
+    const table = document.querySelector('table');
+    const empty_row = document.getElementById("empty_form_row");
+
+    function agregar() {
+        const clone = empty_row.cloneNode(true);
+        clone.classList.remove("hidden");
+        clone.innerHTML = clone.innerHTML.replace(/__prefix__/g, total_forms++);
+        form_idx.value = total_forms.toString();
+        table.appendChild(clone);
+    }
+
+    function borrar(form, self) {
+        const del = document.getElementById("id_form-"+(form)+"-DELETE");
+        const status = ! del.checked;
+        del.checked = status;
+        {% for field in formset.empty_form.visible_fields %}
+            document.getElementById("id_form-"+(form)+"-{{ field.name }}").disabled = status;
+        {% endfor %}
+        del.disabled = false;
+        if (status) {
+            self.value = "Restaurar";
         } else {
-            console.log("id_form-"+(form-1)+"-DELETE")
-            let box = document.getElementById("id_form-"+(form-1)+"-DELETE");
-            box.checked = true;
+            self.value = "Borrar";
         }
     }
 </script>
