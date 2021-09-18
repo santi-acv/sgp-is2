@@ -186,32 +186,52 @@ class UserRoleForm(ModelForm):
 
     |
     """
-    rol = forms.ModelChoiceField(queryset=Role.objects.all())
 
     def __init__(self, *args, usuario_actual, proyecto_actual, **kwargs):
         super(UserRoleForm, self).__init__(*args, **kwargs)
-        if self.instance.pk:
-            self.fields['nombre'].disabled = True
-            self.fields['apellido'].disabled = True
-            self.fields['email'].disabled = True
-            self.fields['rol'].initial = self.instance.participa_set.get(proyecto=proyecto_actual).rol
+        self.fields['rol'] = forms.ModelChoiceField(
+            queryset=Role.objects.filter(proyecto=proyecto_actual),
+            initial=self.instance.participa_set.get(proyecto=proyecto_actual).rol,
+            disabled=self.instance == usuario_actual
+        )
+        self.fields['nombre'].disabled = True
+        self.fields['apellido'].disabled = True
+        self.fields['email'].disabled = True
 
-            self.usuario_actual = usuario_actual
-            self.proyecto_actual = proyecto_actual
-            # if self.instance == usuario_actual:
-            #     self.fields['rol'].disabled = True
+        self.usuario_actual = usuario_actual
+        self.proyecto_actual = proyecto_actual
+
+    def clean(self):
+        cleaned_data = super(ModelForm, self).clean()
+        if cleaned_data.get('DELETE'):
+            cleaned_data['DELETE'] = False
+            self.proyecto_actual.quitar_rol(self.instance)
+            cleaned_data.pop('rol')
+        return cleaned_data
 
     def save(self, commit=True):
-        if self.instance.pk:
+        if self.cleaned_data.get('rol'):
             self.proyecto_actual.asignar_rol(self.instance, self.cleaned_data['rol'].nombre)
-            super(UserRoleForm, self).save(commit)
-        else:
-            super(UserRoleForm, self).save(commit)
-            self.proyecto_actual.asignar_rol(self.instance, self.cleaned_data['rol'].nombre)
+        super(UserRoleForm, self).save(commit)
 
     class Meta:
         model = User
-        fields = ['nombre', 'apellido', 'email', 'rol']
+        fields = ['nombre', 'apellido', 'email']
+
+
+class AgregarMiembroForm(forms.Form):
+
+    def __init__(self, *args, proyecto_id, **kwargs):
+        self.proyecto = proyecto_id
+        super().__init__(*args, **kwargs)
+        self.fields['usuarios'] = \
+            forms.ModelChoiceField(queryset=User.objects.exclude(participa__proyecto=proyecto_id)
+                                   .exclude(pk='AnonymousUser'))
+        self.fields['roles'] = \
+            forms.ModelChoiceField(queryset=Role.objects.filter(proyecto=proyecto_id))
+
+    def save(self):
+        self.proyecto.asignar_rol(self.cleaned_data['usuarios'], self.cleaned_data['roles'].nombre)
 
 
 class UploadFileForm(forms.Form):

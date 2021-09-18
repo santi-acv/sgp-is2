@@ -150,6 +150,21 @@ class Proyecto(models.Model):
         for perm in participa.rol.permisos.all():
             assign_perm(perm.codename, user, self)
 
+    def quitar_rol(self, user):
+        """
+        Revoca a un usuario un rol dentro del proyecto, quitandole todos los
+        permisos que este incluye.
+
+        :param user: El usuario al que se le revocará el rol.
+        :type user: User
+        """
+        participa = user.participa_set.get(proyecto=self)
+        print(participa)
+        for perm in participa.rol.permisos.all():
+            remove_perm(perm.codename, user, self)
+        participa.delete()
+        print(participa)
+
     def crear_rol(self, nombre, permisos):
         """
         Crea un rol dentro del proyecto.
