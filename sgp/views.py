@@ -18,7 +18,7 @@ from django.utils.timezone import now
 from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role
-from .forms import ProyectoForm, UserForm, RoleForm, UploadFileForm
+from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, UploadFileForm
 
 
 def index(request):
@@ -286,3 +286,45 @@ def exportar_roles(request, proyecto_id):
     response = HttpResponse(json.dumps(roles), content_type='application/json')
     response['Content-Disposition'] = 'attachment; filename=roles-proyecto-'+str(proyecto_id)+'.json'
     return response
+
+
+def administrar_equipo(request, proyecto_id):
+    """
+    Permite modificar el equipo asociados a un proyecto.
+
+    Muestra una lista de los miembros actuales del proyecto junto con sus
+    respectivos roles. El usuario agregar miembros al equipo, removerlos, o
+    asignarles roles diferentes.
+
+    **Fecha:** 18/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
+    """
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
+    usuario = request.user
+    UserRoleFormSet = modelformset_factory(User, form=UserRoleForm, extra=0, can_delete=True)
+
+    # Si el request es de tipo POST, procesar los usuarios recibidos
+    if request.method == 'POST':
+        formset = UserRoleFormSet(request.POST,
+                                  form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
+
+        # TODO Si uno de los usuarios es nuevo, apuntarlo al proyecto actual
+        # for form in formset:
+        #     if not form.instance.pk:
+        #         form.instance.proyecto = proyecto
+
+        # Guardar los roles
+        if formset.is_valid():
+            formset.save()
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+
+    # Si el request es de tipo POST, enviar una lista de roles
+    else:
+        formset = UserRoleFormSet(queryset=User.objects.filter(participa__proyecto=proyecto_id),
+                                  form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
+
+    return render(request, 'sgp/administrar_equipo.html',
+                  {'proyecto': proyecto, 'formset': formset, 'usuario': usuario})

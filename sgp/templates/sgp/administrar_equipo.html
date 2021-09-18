@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        .prm { padding: 0 5px }
+        .chk { text-align: center }
+        .str { text-align: center }
+        .hidden { display: none }
+    </style>
+</head>
+<body>
+<h3>Equipo de {{ proyecto.nombre }}</h3>
+<p>En esta página puede ver y modificar el equipo asociado al proyecto.</p>
+<form action="{% url 'sgp:administrar_equipo' proyecto_id=proyecto.id %}" method="post" name="form">
+{% csrf_token %}
+<table>
+    <tr>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>E-Mail</th>
+        <th>Rol</th>
+    </tr>
+    {{ formset.management_form }}
+    {% for form in formset %}
+        <tr>
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+            <td class="str">{{ form.nombre }}</td>
+            <td class="str">{{ form.apellido }}</td>
+            <td class="str">{{ form.email }}</td>
+            <td class="str">{{ form.rol }}</td>
+            <td class="hidden">{{ form.DELETE }}</td>
+            {% if form.instance != rol %}
+                <td class="str"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
+                                       type="button" value="Borrar"></td>
+            {% else %}
+                <td class="str">Usuario actual</td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    <tr id="empty_form_row" class="hidden">
+        {% for field in formset.empty_form.hidden_fields %}
+            {{ field }}
+        {% endfor %}
+        <td class="str">{{ formset.empty_form.nombre }}</td>
+        <td class="str">{{ formset.empty_form.apellido }}</td>
+        <td class="str">{{ formset.empty_form.email }}</td>
+        <td class="str">{{ formset.empty_form.rol }}</td>
+        <td class="hidden">{{ formset.empty_form.DELETE }}</td>
+        <td class="str"><input type="button" value="Borrar" onclick="borrar(__prefix__, this)"></td>
+    </tr>
+</table>
+    <a href="javascript:" onclick="agregar()">+ Agregar rol</a>
+    <p><input type="submit" value="Guardar"></p>
+</form>
+
+<p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
+
+<script type="text/javascript">
+    const form_idx = document.getElementById("id_form-TOTAL_FORMS")
+    let total_forms = parseInt(form_idx.value);
+
+    const table = document.querySelector('table');
+    const empty_row = document.getElementById("empty_form_row");
+
+    function agregar() {
+        const clone = empty_row.cloneNode(true);
+        clone.classList.remove("hidden");
+        clone.innerHTML = clone.innerHTML.replace(/__prefix__/g, total_forms++);
+        form_idx.value = total_forms.toString();
+        table.appendChild(clone);
+    }
+
+    function borrar(form, self) {
+        const del = document.getElementById("id_form-"+(form)+"-DELETE");
+        const status = ! del.checked;
+        del.checked = status;
+        {% for field in formset.empty_form.visible_fields %}
+            document.getElementById("id_form-"+(form)+"-{{ field.name }}").disabled = status;
+        {% endfor %}
+        del.disabled = false;
+        if (status) {
+            self.value = "Restaurar";
+        } else {
+            self.value = "Borrar";
+        }
+    }
+</script>
+</body>
+</html>

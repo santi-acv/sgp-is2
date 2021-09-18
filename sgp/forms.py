@@ -171,6 +171,49 @@ class RoleForm(ModelForm):
         fields = ['nombre', 'administrar_equipo', 'gestionar_proyecto', 'pila_producto', 'desarrollo']
 
 
+class UserRoleForm(ModelForm):
+    """
+    Corresponde al modelo User. Se muestra un formulario por cada usuario
+    dentro de la página de administrar equipo, donde se pueden modificar qué
+    usuarios pertenecen a un proyecto y cuales son sus roles.
+
+    Posee campos correspondientes a los atributos de nombre, apellido, y correo
+    electrónico. Además, posee un campo adicional para el rol del usuario.
+
+    **Fecha:** 18/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
+    """
+    rol = forms.ModelChoiceField(queryset=Role.objects.all())
+
+    def __init__(self, *args, usuario_actual, proyecto_actual, **kwargs):
+        super(UserRoleForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['nombre'].disabled = True
+            self.fields['apellido'].disabled = True
+            self.fields['email'].disabled = True
+            self.fields['rol'].initial = self.instance.participa_set.get(proyecto=proyecto_actual).rol
+
+            self.usuario_actual = usuario_actual
+            self.proyecto_actual = proyecto_actual
+            # if self.instance == usuario_actual:
+            #     self.fields['rol'].disabled = True
+
+    def save(self, commit=True):
+        if self.instance.pk:
+            self.proyecto_actual.asignar_rol(self.instance, self.cleaned_data['rol'].nombre)
+            super(UserRoleForm, self).save(commit)
+        else:
+            super(UserRoleForm, self).save(commit)
+            self.proyecto_actual.asignar_rol(self.instance, self.cleaned_data['rol'].nombre)
+
+    class Meta:
+        model = User
+        fields = ['nombre', 'apellido', 'email', 'rol']
+
+
 class UploadFileForm(forms.Form):
     """
     Permite enviar archivos al servidor.

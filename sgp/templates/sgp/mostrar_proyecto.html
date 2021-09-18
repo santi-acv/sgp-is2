@@ -26,13 +26,18 @@
     {% if proyecto.estado == proyecto.Estado.PENDIENTE %}
         <p><input type="button" value="Iniciar Proyecto" onclick="iniciar()"></p>
     {% endif %}
-    <p>Si desea editar el proyecto, haga click <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">aquí</a>.</p>
+    <p>Si desea editar el proyecto, haga click
+        <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">aquí</a>.</p>
 {% endif %}
 {% if "administrar_equipo" in proyecto_perms %}
-    <p>Si desea administrar los roles, haga click <a href="{% url 'sgp:administrar_roles' proyecto.id %}">aquí</a>.</p>
+    <p>Si desea administrar los roles, haga click
+        <a href="{% url 'sgp:administrar_roles' proyecto.id %}">aquí</a>.</p>
+    <p>Si desea administrar el equipo, haga click
+        <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">aquí</a>.</p>
 {% endif %}
 {% if "gestionar_proyecto" in proyecto_perms %}
-    <p>Si desea eliminar el proyecto, haga click <a href="{% url 'sgp:eliminar_proyecto' proyecto.id %}" onclick="confirmar(event)">aquí</a>.</p>
+    <p>Si desea eliminar el proyecto, haga click
+        <a href="{% url 'sgp:eliminar_proyecto' proyecto.id %}" onclick="confirmar(event)">aquí</a>.</p>
 {% endif %}
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 <script type="text/javascript">

@@ -14,4 +14,5 @@ urlpatterns = [
     path('proyecto-<int:proyecto_id>/roles', views.administrar_roles, name='administrar_roles'),
     path('proyecto-<int:proyecto_id>/roles/importar', views.importar_roles, name='importar_roles'),
     path('proyecto-<int:proyecto_id>/roles/exportar', views.exportar_roles, name='exportar_roles'),
+    path('proyecto-<int:proyecto_id>/equipo', views.administrar_equipo, name='administrar_equipo'),
 ]
