@@ -139,10 +139,7 @@ class Proyecto(models.Model):
         :type role: string
         """
         if user in self.equipo.all():
-            participa = Participa.objects.get(usuario=user, proyecto=self)
-            for perm in participa.rol.permisos.all():
-                remove_perm(perm.codename, user, self)
-            participa.delete()
+            self.quitar_rol(user)
         else:
             assign_perm('vista', user, self)
 
@@ -159,11 +156,9 @@ class Proyecto(models.Model):
         :type user: User
         """
         participa = user.participa_set.get(proyecto=self)
-        print(participa)
         for perm in participa.rol.permisos.all():
             remove_perm(perm.codename, user, self)
         participa.delete()
-        print(participa)
 
     def crear_rol(self, nombre, permisos):
         """

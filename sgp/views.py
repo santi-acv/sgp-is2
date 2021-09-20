@@ -290,7 +290,7 @@ def exportar_roles(request, proyecto_id):
 
 def administrar_equipo(request, proyecto_id):
     """
-    Permite modificar el equipo asociados a un proyecto.
+    Permite modificar el equipo asociado a un proyecto.
 
     Muestra una lista de los miembros actuales del proyecto junto con sus
     respectivos roles. El usuario agregar miembros al equipo, removerlos, o

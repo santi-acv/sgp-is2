@@ -127,9 +127,17 @@ class RoleForm(ModelForm):
     administración de equipo, gestión de proyecto, modificación de la pila de
     producto, y desarrollo.
 
+    Posee un parámetro para el rol actual del usuario. Este rol no podrá ser
+    eliminado ni se le podrá revocar el permiso de administración de equipo,
+    para evitar una situación en la que no se pueda modificar la configuración
+    del proyecto.
+
     **Fecha:** 02/09/21
 
     **Artefacto:** módulo de proyecto
+
+    :param rol_actual: El rol actual del usuario.
+    :type rol_actual: Role
 
     |
     """
@@ -174,25 +182,39 @@ class RoleForm(ModelForm):
 class UserRoleForm(ModelForm):
     """
     Corresponde al modelo User. Se muestra un formulario por cada usuario
-    dentro de la página de administrar equipo, donde se pueden modificar qué
-    usuarios pertenecen a un proyecto y cuales son sus roles.
+    dentro de la página de administrar equipo, donde muestra la información
+    principal y se puede asignar un rol a cada usuario.
 
-    Posee campos correspondientes a los atributos de nombre, apellido, y correo
-    electrónico. Además, posee un campo adicional para el rol del usuario.
+    Posee campos desactivados correspondientes a los atributos de nombre,
+    apellido, y correo electrónico. Además, posee un campo activado para
+    seleccionar el rol del usuario.
+
+    Posee un parámetro para el usuario actual. Este usuario no se podrá asignar
+    un rol sin el permiso de administración de equipo para evitar una situación
+    donde no pueda acceder a la vista de administración de equipo.
 
     **Fecha:** 18/09/21
 
     **Artefacto:** módulo de proyecto
 
-    |
+    :param proyecto_actual: El proyecto cuyos roles se muestran.
+    :param usuario_actual: El usuario accediendo a la vista.
+    :type proyecto_actual: Proyecto
+    :type usuario_actual: User
     """
 
     def __init__(self, *args, usuario_actual, proyecto_actual, **kwargs):
         super(UserRoleForm, self).__init__(*args, **kwargs)
+
+        if self.instance == usuario_actual:
+            perm = get_perms_for_model(Proyecto).get(codename='administrar_equipo')
+            queryset = Role.objects.filter(proyecto=proyecto_actual, permisos__in=[perm])
+        else:
+            queryset = Role.objects.filter(proyecto=proyecto_actual)
+
         self.fields['rol'] = forms.ModelChoiceField(
-            queryset=Role.objects.filter(proyecto=proyecto_actual),
-            initial=self.instance.participa_set.get(proyecto=proyecto_actual).rol,
-            disabled=self.instance == usuario_actual
+            queryset=queryset,
+            initial=self.instance.participa_set.get(proyecto=proyecto_actual).rol
         )
         self.fields['nombre'].disabled = True
         self.fields['apellido'].disabled = True
@@ -202,6 +224,12 @@ class UserRoleForm(ModelForm):
         self.proyecto_actual = proyecto_actual
 
     def clean(self):
+        """
+        Además de validar los datos, se asegura de que al marcar un formulario
+        para borrarlo, esto quite al usuario del equipo en vez de eliminarlo.
+
+        |
+        """
         cleaned_data = super(ModelForm, self).clean()
         if cleaned_data.get('DELETE'):
             cleaned_data['DELETE'] = False
@@ -220,6 +248,19 @@ class UserRoleForm(ModelForm):
 
 
 class AgregarMiembroForm(forms.Form):
+    """
+    Muestra una lista de usuarios que no pertenecen al proyecto. Permite
+    seleccionar uno de ellos y agregarlo al equipo.
+
+    **Fecha:** 18/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    :param proyecto_id: El proyecto al que se le agrega un usuario.
+    :type proyecto_id: Proyecto
+
+    |
+    """
 
     def __init__(self, *args, proyecto_id, **kwargs):
         self.proyecto = proyecto_id
