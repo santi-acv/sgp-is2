@@ -31,7 +31,7 @@
             <td class="str">{{ form.apellido.value }}</td>
             <td class="str">{{ form.email.value }}</td>
             <td class="str">{{ form.rol }}</td>
-            <td class="hidden">{{ form.DELETE }}</td>
+            <td class="hidden">{{ form.borrar }}</td>
             {% if form.instance != usuario %}
                 <td class="chk"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
                                        type="button" value="Remover"></td>
@@ -48,7 +48,7 @@
         <td class="str">{{ formset.empty_form.apellido }}</td>
         <td class="str">{{ formset.empty_form.email }}</td>
         <td class="str">{{ formset.empty_form.rol }}</td>
-        <td class="hidden">{{ formset.empty_form.DELETE }}</td>
+        <td class="hidden">{{ formset.empty_form.borrar }}</td>
         <td class="chk"><input type="button" value="Remover" onclick="borrar(__prefix__, this)"></td>
     </tr>
 </table>
@@ -89,7 +89,7 @@
     }
 
     function borrar(form, self) {
-        const del = document.getElementById("id_form-"+(form)+"-DELETE");
+        const del = document.getElementById("id_form-"+(form)+"-borrar");
         const status = ! del.checked;
         del.checked = status;
         {% for field in formset.empty_form.visible_fields %}

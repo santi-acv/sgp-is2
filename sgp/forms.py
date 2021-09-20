@@ -203,6 +203,8 @@ class UserRoleForm(ModelForm):
     :type usuario_actual: User
     """
 
+    borrar = forms.BooleanField(required=False)
+
     def __init__(self, *args, usuario_actual, proyecto_actual, **kwargs):
         super(UserRoleForm, self).__init__(*args, **kwargs)
 
@@ -231,8 +233,7 @@ class UserRoleForm(ModelForm):
         |
         """
         cleaned_data = super(ModelForm, self).clean()
-        if cleaned_data.get('DELETE'):
-            cleaned_data['DELETE'] = False
+        if cleaned_data.get('borrar'):
             self.proyecto_actual.quitar_rol(self.instance)
             cleaned_data.pop('rol')
         return cleaned_data
@@ -244,13 +245,14 @@ class UserRoleForm(ModelForm):
 
     class Meta:
         model = User
-        fields = ['nombre', 'apellido', 'email']
+        fields = ['nombre', 'apellido', 'email', 'borrar']
 
 
 class AgregarMiembroForm(forms.Form):
     """
-    Muestra una lista de usuarios que no pertenecen al proyecto. Permite
-    seleccionar uno de ellos y agregarlo al equipo.
+    Permite seleccionar un usuario que no forma parte del equipo del proyecto y
+    un rol existente dentro del proyecto. Agrega al usuario al equipo con ese
+    rol.
 
     **Fecha:** 18/09/21
 

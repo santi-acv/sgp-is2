@@ -322,7 +322,15 @@ def administrar_equipo(request, proyecto_id):
                                   form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
         if formset.is_valid():
             formset.save()
-            return HttpResponseRedirect(reverse('sgp:administrar_equipo',
+
+            # Si se eliminó a un usuario del equipo, mostrar de nuevo la pagina
+            for form in formset:
+                if form.cleaned_data.get('borrar'):
+                    return HttpResponseRedirect(reverse('sgp:administrar_equipo',
+                                                kwargs={'proyecto_id': proyecto_id}))
+
+            # Si solo se cambiaron los roles, volver a la pagina de proyecto
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto',
                                                 kwargs={'proyecto_id': proyecto_id}))
     else:
         # Enviar una lista de miembros
