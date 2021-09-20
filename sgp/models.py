@@ -138,7 +138,7 @@ class Proyecto(models.Model):
         :type user: User
         :type role: string
         """
-        if user in self.equipo.all():
+        if self.equipo.filter(user_id=user.user_id).exists():
             self.quitar_rol(user)
         else:
             assign_perm('vista', user, self)
@@ -155,6 +155,7 @@ class Proyecto(models.Model):
         :param user: El usuario al que se le revocará el rol.
         :type user: User
         """
+        print("quitar rol")
         participa = user.participa_set.get(proyecto=self)
         for perm in participa.rol.permisos.all():
             remove_perm(perm.codename, user, self)
