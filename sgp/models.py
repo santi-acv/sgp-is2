@@ -155,7 +155,6 @@ class Proyecto(models.Model):
         :param user: El usuario al que se le revocará el rol.
         :type user: User
         """
-        print("quitar rol")
         participa = user.participa_set.get(proyecto=self)
         for perm in participa.rol.permisos.all():
             remove_perm(perm.codename, user, self)

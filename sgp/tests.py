@@ -8,11 +8,11 @@ realizar esta prueba, es necesario utilizar el siguiente comando.
 
 Las pruebas se encuentran agrupadas en clases según que componente evalúan.
 """
-
 from django.test import TestCase
 from django.urls import reverse
 from guardian.shortcuts import assign_perm
 
+from .forms import ProyectoForm
 from .models import Proyecto, User
 
 
@@ -20,9 +20,13 @@ class NavigationTest(TestCase):
 
     def test_inicio_respuesta_http(self):
         """
-        Verifica si la pagina de inicio envía una respuesta apropiada.\n
-        Fecha: 16/08/21\n
-        Artefacto: Página de inicio
+        Verifica si la pagina de inicio envía una respuesta apropiada.
+
+        **Fecha:** 16/08/21
+
+        **Artefacto:** Página de inicio
+
+        |
         """
         response = self.client.get(reverse('sgp:index'))
         self.assertEqual(response.status_code, 200,
@@ -30,9 +34,13 @@ class NavigationTest(TestCase):
 
     def test_administrar_respuesta_http(self):
         """
-        Verifica si la pagina de administración envía una respuesta apropiada.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de seguridad
+        Verifica si la pagina de administración envía una respuesta apropiada.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo de seguridad
+
+        |
         """
         response = self.client.get(reverse('sgp:administrar'))
         self.assertEqual(response.status_code, 200,
@@ -40,9 +48,13 @@ class NavigationTest(TestCase):
 
     def test_crear_proyecto_respuesta_http(self):
         """
-        Verifica si la pagina de creación de proyecto envía una respuesta apropiada.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de proyecto
+        Verifica si la pagina de creación de proyecto envía una respuesta apropiada.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
         """
         response = self.client.get(reverse('sgp:crear_proyecto'))
         self.assertEqual(response.status_code, 200,
@@ -50,51 +62,48 @@ class NavigationTest(TestCase):
 
     def test_mostrar_proyecto_respuesta_http(self):
         """
-        Verifica si la pagina de información de proyecto envía una respuesta apropiada.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de proyecto
+        Verifica si la pagina de información de proyecto envía una respuesta apropiada.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
         """
         Proyecto.objects.create(nombre='Proyecto de prueba')
         proj = Proyecto.objects.get(nombre='Proyecto de prueba')
         response = self.client.get(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proj.id}))
         self.assertEqual(response.status_code, 200,
                          "La página de información de proyecto retornó un error HTTP")
-        proj.delete()
 
     def test_editar_proyecto_respuesta_http(self):
         """
-        Verifica si la pagina de edición de proyecto envía una respuesta apropiada.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de proyecto
+        Verifica si la pagina de edición de proyecto envía una respuesta apropiada.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
         """
         Proyecto.objects.create(nombre='Proyecto de prueba')
         proj = Proyecto.objects.get(nombre='Proyecto de prueba')
         response = self.client.get(reverse('sgp:editar_proyecto', kwargs={'proyecto_id': proj.id}))
         self.assertEqual(response.status_code, 200,
                          "La página de edición de proyecto retornó un error HTTP")
-        proj.delete()
-
-    def test_administrar_roles_respuesta_http(self):
-        """
-        Verifica si la pagina de administración de roles envía una respuesta apropiada.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de proyecto
-        """
-        Proyecto.objects.create(nombre='Proyecto de prueba')
-        proj = Proyecto.objects.get(nombre='Proyecto de prueba')
-        response = self.client.get(reverse('sgp:administrar_roles', kwargs={'proyecto_id': proj.id}))
-        self.assertEqual(response.status_code, 200,
-                         "La página de administración de roles retornó un error HTTP")
-        proj.delete()
 
 
 class PermissionTest(TestCase):
 
     def test_otorgar_permisos(self):
         """
-        Verifica si se otorgan permisos por instancia de objeto adecuadamente.\n
-        Fecha:03/09/21\n
-        Artefacto: Módulo django-guardian
+        Verifica si se otorgan permisos por instancia de objeto adecuadamente.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo django-guardian
+
+        |
         """
         Proyecto.objects.create(nombre='Proyecto de prueba')
         proj = Proyecto.objects.get(nombre='Proyecto de prueba')
@@ -111,9 +120,13 @@ class PermissionTest(TestCase):
 
     def test_rol_predeterminado(self):
         """
-        Verifica el rol de scrum master otorga el permiso de gestión.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de proyecto
+        Verifica el rol de scrum master otorga el permiso de gestión.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
         """
         Proyecto.objects.create(nombre='Proyecto de prueba')
         proj = Proyecto.objects.get(nombre='Proyecto de prueba')
@@ -131,9 +144,13 @@ class PermissionTest(TestCase):
 
     def test_cambio_de_rol(self):
         """
-        Verifica que asignar un rol diferente elimine permisos antiguos.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de proyecto
+        Verifica que asignar un rol diferente elimine permisos antiguos.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
         """
         Proyecto.objects.create(nombre='Proyecto de prueba')
         proj = Proyecto.objects.get(nombre='Proyecto de prueba')
@@ -152,9 +169,13 @@ class PermissionTest(TestCase):
 
     def test_participa_set(self):
         """
-        Verifica que la asociación participa conecte el usuario con el proyecto.\n
-        Fecha: 03/09/21\n
-        Artefacto: Módulo de proyecto
+        Verifica que la asociación participa conecte al usuario con el proyecto.
+
+        **Fecha:** 03/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
         """
         Proyecto.objects.create(nombre='Proyecto de prueba')
         proj = Proyecto.objects.get(nombre='Proyecto de prueba')
@@ -169,3 +190,98 @@ class PermissionTest(TestCase):
                          "No se puede acceder al proyecto a través del usuario")
         user.delete()
         proj.delete()
+
+
+class CrearProyectoTest(TestCase):
+    def test_campo_requerido(self):
+        """
+        Verifica los campos nombre, duración de sprint, fecha de inicio, y
+        fecha de fin sean obligatorios.
+
+        **Fecha:** 20/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        form = ProyectoForm(data={})
+        for campo in form.fields:
+            if campo in ['nombre', 'duracion_sprint', 'fecha_inicio', 'fecha_fin']:
+                self.assertEqual(form.errors[campo], ['Este campo es obligatorio.'])
+
+    def test_fecha_formato_valido(self):
+        """
+        Verifica que el formulario acepte fechas si y solo si están en formato
+        dd/mm/aa.
+
+        **Fecha:** 20/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        for fecha in ['12/31/2021', '2021/12/31', '31-dec-2021']:
+            form = ProyectoForm(data={'fecha_inicio': fecha,
+                                      'fecha_fin': fecha})
+            self.assertEqual(form.errors['fecha_inicio'],
+                             ['La fecha debe estar en formato dd/mm/aaaa.'])
+            self.assertEqual(form.errors['fecha_fin'],
+                             ['La fecha debe estar en formato dd/mm/aaaa.'])
+
+        form = ProyectoForm(data={'nombre': 'Proyecto test',
+                                  'fecha_inicio': '30/12/2037',
+                                  'fecha_fin': '31/12/2037',
+                                  'duracion_sprint': 1})
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.errors.get('fecha_inicio'), None)
+        self.assertEqual(form.errors.get('fecha_inicio'), None)
+
+    def test_fechas_presente(self):
+        """
+        Verifica que las fechas de inicio y de fin no hayan ocurrido en el
+        pasado, y que la fecha de fin ocura después de la fecha de inicio.
+
+        **Fecha:** 20/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        form = ProyectoForm(data={'nombre': 'Proyecto test',
+                                  'fecha_inicio': '30/12/2020',
+                                  'fecha_fin': '31/12/2020',
+                                  'duracion_sprint': 1})
+        self.assertEqual(form.errors['fecha_inicio'],
+                         ['La fecha de inicio no puede ser en el pasado.'])
+        self.assertEqual(form.errors['fecha_fin'],
+                         ['La fecha de fin no puede ser en el pasado.'])
+
+        form = ProyectoForm(data={'nombre': 'Proyecto test',
+                                  'fecha_inicio': '31/12/2021',
+                                  'fecha_fin': '30/12/2021',
+                                  'duracion_sprint': 1})
+        self.assertEqual(form.errors['fecha_fin'],
+                         ['La fecha de fin debe ser después de la fecha de inicio.'])
+
+    def test_duracion_sprint(self):
+        """
+        Verifica que haya tiempo para por lo menos un sprint entre las fechas
+        de inicio y de fin.
+
+        **Fecha:** 20/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        form = ProyectoForm(data={'nombre': 'Proyecto test',
+                                  'fecha_inicio': '30/12/2021',
+                                  'fecha_fin': '31/12/2021',
+                                  'duracion_sprint': 2})
+        form.is_valid()
+        self.assertEqual(form.errors['duracion_sprint'],
+                             ['El proyecto debe tener tiempo para al menos un sprint.'])
