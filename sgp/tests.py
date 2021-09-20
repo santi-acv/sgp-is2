@@ -204,7 +204,6 @@ class CrearProyectoTest(TestCase):
 
         |
         """
-
         form = ProyectoForm(data={})
         for campo in form.fields:
             if campo in ['nombre', 'duracion_sprint', 'fecha_inicio', 'fecha_fin']:
@@ -221,7 +220,6 @@ class CrearProyectoTest(TestCase):
 
         |
         """
-
         for fecha in ['12/31/2021', '2021/12/31', '31-dec-2021']:
             form = ProyectoForm(data={'fecha_inicio': fecha,
                                       'fecha_fin': fecha})
@@ -249,7 +247,6 @@ class CrearProyectoTest(TestCase):
 
         |
         """
-
         form = ProyectoForm(data={'nombre': 'Proyecto test',
                                   'fecha_inicio': '30/12/2020',
                                   'fecha_fin': '31/12/2020',
@@ -277,7 +274,6 @@ class CrearProyectoTest(TestCase):
 
         |
         """
-
         form = ProyectoForm(data={'nombre': 'Proyecto test',
                                   'fecha_inicio': '30/12/2021',
                                   'fecha_fin': '31/12/2021',
@@ -285,3 +281,21 @@ class CrearProyectoTest(TestCase):
         form.is_valid()
         self.assertEqual(form.errors['duracion_sprint'],
                              ['El proyecto debe tener tiempo para al menos un sprint.'])
+
+    def test_creacion_exitosa(self):
+        """
+        Verifica que ProyectoForm sea capaz de crear un proyecto.
+
+        **Fecha:** 20/09/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+        form = ProyectoForm(data={'nombre': 'Proyecto test',
+                                  'fecha_inicio': '30/12/2021',
+                                  'fecha_fin': '31/12/2021',
+                                  'duracion_sprint': 1})
+        self.assertTrue(form.is_valid())
+        form.save()
+        self.assertTrue(Proyecto.objects.filter(nombre='Proyecto test').exists())
