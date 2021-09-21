@@ -3,9 +3,11 @@ Los modelos corresponden a tablas en la base de datos, y cada instancia
 representa una entrada. A continuación se documentan los campos principales y
 los métodos adicionales de los modelos en uso por la aplicación.
 """
+import datetime
 
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
+from django.utils import timezone
 from guardian.shortcuts import assign_perm, get_perms_for_model, remove_perm
 
 
@@ -182,19 +184,41 @@ class Proyecto(models.Model):
 
         |
         """
-        self.crear_rol('Scrum master', ['administrar_equipo', 'gestionar_proyecto', 'desarrollo'])
+        self.crear_rol('Scrum master', ['administrar_equipo', 'gestionar_proyecto'])
         self.crear_rol('Product owner', ['pila_producto'])
         self.crear_rol('Desarrollador', ['desarrollo'])
         self.crear_rol('Interesado', [])
 
+    def validar(self):
+        """
+        Valida el proyecto y retorna la lista de errores que este tenga. Si la
+        lista está vacía, el proyecto es válido.
+        """
+        errores = []
+
+        # verifica que haya tiempo para al menos un sprint
+        if self.fecha_fin < timezone.localdate():
+            errores.append("La fecha de fin se encuentra en el pasado.")
+        elif timezone.localdate()+datetime.timedelta(days=self.duracion_sprint) > self.fecha_fin:
+            errores.append("No hay suficiente tiempo para realizar al menos un sprint.")
+
+        # verifica que existe al menos un usuario con cada permiso
+        for perm, desc in Proyecto._meta.permissions:
+            for user in self.equipo.all():
+                if user.has_perm(perm, self):
+                    break
+            else:
+                errores.append("Falta al menos un usuario con el permiso de "+desc+".")
+        return errores
+
     class Meta:
         default_permissions = ()
         permissions = [
-            ('administrar_equipo', 'Permite asignar permisos a los usuarios'),
-            ('gestionar_proyecto', 'Permite auditar la información del sistema'),
-            ('pila_producto', 'Permite crear proyectos nuevos'),
-            ('desarrollo', 'Permite crear proyectos nuevos'),
-            ('vista', 'Permite ver información del proyecto'),
+            ('administrar_equipo', 'administración de equipo'),
+            ('gestionar_proyecto', 'gestión de proyecto'),
+            ('pila_producto', 'gestión de pila de producto'),
+            ('desarrollo', 'desarrollo'),
+            ('vista', 'acceso al proyecto'),
         ]
 
     def __str__(self):

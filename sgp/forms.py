@@ -98,15 +98,15 @@ class ProyectoForm(ModelForm):
         if fecha_inicio and fecha_inicio < timezone.localdate():
             self.add_error('fecha_inicio', 'La fecha de inicio no puede ser en el pasado.')
             fecha_inicio = None
-            if fecha_fin and fecha_fin < timezone.localdate():
-                self.add_error('fecha_fin', 'La fecha de fin no puede ser en el pasado.')
-        elif fecha_fin and fecha_inicio > fecha_fin:
-            self.add_error('fecha_fin', 'La fecha de fin debe ser después de la fecha de inicio.')
+        if fecha_fin and fecha_fin < timezone.localdate():
+            self.add_error('fecha_fin', 'La fecha de fin no puede ser en el pasado.')
             fecha_fin = None
-
-        if duracion_sprint and duracion_sprint < 0:
-            self.add_error('duracion_sprint', 'La duración de los sprints debe ser positiva.')
-        elif fecha_inicio and fecha_fin and fecha_inicio+datetime.timedelta(days=duracion_sprint) > fecha_fin:
+        if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+            self.add_error('fecha_fin', 'La fecha de fin debe ser después de la fecha de inicio.')
+            fecha_inicio = None
+            fecha_fin = None
+        if fecha_inicio and fecha_fin and duracion_sprint and \
+                fecha_inicio+datetime.timedelta(days=duracion_sprint) > fecha_fin:
             self.add_error('duracion_sprint', 'El proyecto debe tener tiempo para al menos un sprint.')
 
         return cleaned_data

@@ -8,7 +8,6 @@
     </style>
 </head>
 <body>
-{% csrf_token %}
 <h3>Información de {{ proyecto.nombre }}</h3>
 <table>
     <tr><th>Nombre:</th><td>{{ proyecto.nombre }}</td></tr>
@@ -24,7 +23,15 @@
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 {% if "gestionar_proyecto" in proyecto_perms %}
     {% if proyecto.estado == proyecto.Estado.PENDIENTE %}
-        <p><input type="button" value="Iniciar Proyecto" onclick="iniciar()"></p>
+        <ul>
+            {% for e in error %}
+                <li>{{ e }}</li>
+            {% endfor %}
+        </ul>
+        <form method=POST>
+            {% csrf_token %}
+            <p><input type="submit" value="Iniciar Proyecto"></p>
+        </form>
     {% endif %}
     <p>Si desea editar el proyecto, haga click
         <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">aquí</a>.</p>
@@ -47,16 +54,6 @@
        if (!confirm('Esto eliminará el proyecto de manera permanente. ¿Está seguro de que desea elimiarlo?')) {
            e.preventDefault();
        }
-    }
-
-    function iniciar() {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '{% url 'sgp:mostrar_proyecto' proyecto.id %}');
-        xhr.setRequestHeader('X-CSRFToken', csrftoken);
-        xhr.onload = function() {
-            window.location.href = '{% url 'sgp:mostrar_proyecto' proyecto.id %}';
-        };
-        xhr.send();
     }
 </script>
 </body>

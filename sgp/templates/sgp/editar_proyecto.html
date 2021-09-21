@@ -10,7 +10,7 @@
 <body>
 <h3>Editando {{ proyecto.nombre }}</h3>
 <p>En esta página puede modificar la información del proyecto.</p>
-    <form action="" method=POST>
+    <form method=POST>
         {% csrf_token %}
         <table>
             {{ form.as_table }}

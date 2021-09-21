@@ -148,12 +148,14 @@ def mostrar_proyecto(request, proyecto_id):
     |
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
+    error = None
     if request.method == 'POST':
-        proyecto.estado = proyecto.Estado.INICIADO
-        proyecto.fecha_inicio = now()
-        proyecto.save()
-        return HttpResponse("Proyecto iniciado")
-    context = {'proyecto': proyecto}
+        error = proyecto.validar()
+        if not error:
+            proyecto.estado = proyecto.Estado.INICIADO
+            proyecto.fecha_inicio = now()
+            proyecto.save()
+    context = {'proyecto': proyecto, 'error': error}
     return render(request, 'sgp/mostrar_proyecto.html', context)
 
 
@@ -171,10 +173,13 @@ def editar_proyecto(request, proyecto_id):
     |
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
-    form = ProyectoForm(request.POST or None, instance=proyecto)
-    if form.is_valid():
-        form.save()
-        return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+    if request.method == 'POST':
+        form = ProyectoForm(request.POST, instance=proyecto)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+    else:
+        form = ProyectoForm(instance=proyecto)
     context = {'proyecto': proyecto, 'form': form}
     return render(request, 'sgp/editar_proyecto.html', context)
 
