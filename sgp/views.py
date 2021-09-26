@@ -17,8 +17,9 @@ from django.urls import reverse
 from django.utils.timezone import now
 from guardian.shortcuts import get_objects_for_user
 
-from .models import User, Proyecto, Role
-from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm
+from .models import User, Proyecto, Role, Sprint
+from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
+    UserStoryForm
 
 
 def index(request):
@@ -132,7 +133,7 @@ def crear_proyecto(request):
             proyecto.asignar_rol(request.user, 'Scrum master')
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
     else:
-        form = ProyectoForm
+        form = ProyectoForm()
     return render(request, 'sgp/crear_proyecto.html', {'form': form})
 
 
@@ -329,18 +330,72 @@ def administrar_equipo(request, proyecto_id):
             formset.save()
 
             # Si se eliminó a un usuario del equipo, mostrar de nuevo la pagina
+            borrado = False
             for form in formset:
                 if form.cleaned_data.get('borrar'):
-                    return HttpResponseRedirect(reverse('sgp:administrar_equipo',
-                                                kwargs={'proyecto_id': proyecto_id}))
+                    borrado = True
+                    break
 
-            # Si solo se cambiaron los roles, volver a la pagina de proyecto
-            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto',
-                                                kwargs={'proyecto_id': proyecto_id}))
-    else:
-        # Enviar una lista de miembros
-        formset = UserRoleFormSet(queryset=User.objects.filter(participa__proyecto=proyecto_id),
-                                  form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
+            if not borrado:
+                # Si solo se cambiaron los roles, volver a la pagina de proyecto
+                return HttpResponseRedirect(reverse('sgp:mostrar_proyecto',
+                                                    kwargs={'proyecto_id': proyecto_id}))
+
+    # Enviar una lista de miembros
+    formset = UserRoleFormSet(queryset=User.objects.filter(participa__proyecto=proyecto_id),
+                              form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
 
     return render(request, 'sgp/administrar_equipo.html',
                   {'proyecto': proyecto, 'formset': formset, 'usuario': usuario, 'lista': lista})
+
+
+def product_backlog(request, proyecto_id):
+    """
+    **Fecha:** 26/09/21
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    backlog = proyecto.product_backlog.all()
+    context = {'proyecto': proyecto, 'backlog': backlog}
+    return render(request, 'sgp/product_backlog.html', context)
+
+
+def crear_user_story(request, proyecto_id):
+    """
+    **Fecha:** 26/09/21
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    if request.method == "POST":
+        form = UserStoryForm(request.POST)
+        if form.is_valid():
+            form.instance.proyecto = proyecto
+            form.save()
+            return HttpResponseRedirect(reverse('sgp:product_backlog', kwargs={'proyecto_id': proyecto_id}))
+    else:
+        form = UserStoryForm()
+    return render(request, 'sgp/crear_user_story.html', {'form': form, 'proyecto': proyecto})
+
+
+def crear_sprint(request, proyecto_id):
+    """
+    **Fecha:** 24/09/21
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    if request.method == "POST":
+        form = SprintForm(request.POST)
+        if form.is_valid():
+            form.instance.proyecto = proyecto
+            form.save()
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+    else:
+        form = SprintForm()
+    return render(request, 'sgp/crear_sprint.html', {'form': form, 'proyecto': proyecto})
+
+
+def mostrar_sprint(request, proyecto_id, sprint_id):
+    """
+    **Fecha:** 24/09/21
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    sprint = Sprint.objects.get(id=sprint_id)
+    context = {'proyecto': proyecto, 'sprint': sprint}
+    return render(request, 'sgp/mostrar_sprint.html', context)

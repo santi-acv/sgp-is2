@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear user story - SGP</title>
+    <style>
+        th { text-align: left; width: 8em }
+    </style>
+</head>
+<body>
+<h3>Crear user story para {{ proyecto.nombre }}</h3>
+<p>Por favor, ingrese la información del user story.</p>
+<form method=POST>
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <p><input type="submit" value="Crear user story"></p>
+</form>
+<p><a href="{% url 'sgp:product_backlog' proyecto.id %}">&#8592; Volver</a></p>
+</body>
+</html>

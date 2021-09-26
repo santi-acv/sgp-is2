@@ -18,7 +18,13 @@
     <tr><th>Fecha de fin:</th><td>{{ proyecto.fecha_fin }}</td></tr>
     <tr><th>Duración de los sprints:</th><td>{{ proyecto.duracion_sprint }} días</td></tr>
     <tr><th>Estado:</th><td>{{ proyecto.get_estado_display }}</td></tr>
+    <tr><th>Equipo:</th><td><ul>
+        {% for user in proyecto.equipo.all %}
+            <li>{{ user }}</li>
+        {% endfor %}
+    </ul></td></tr>
 </table>
+<p><a href="{% url 'sgp:product_backlog' proyecto_id=proyecto.id %}">Product backlog</a></p>
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 {% if "gestionar_proyecto" in proyecto_perms %}
@@ -46,14 +52,22 @@
     <p>Si desea eliminar el proyecto, haga click
         <a href="{% url 'sgp:eliminar_proyecto' proyecto.id %}" onclick="confirmar(event)">aquí</a>.</p>
 {% endif %}
+<p>El proyecto contiene los siguientes sprints:</p>
+<ul>
+    {% for sprint in proyecto.sprint_set.all %}
+        <li><a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=sprint.id %}">
+            {{ sprint.nombre }}</a></li>
+    {% endfor %}
+</ul>
+<p>Para crear un sprint nuevo, haga click <a href="{% url 'sgp:crear_sprint' proyecto.id %}">aquí</a>.</p>
 <p><a href="{% url 'sgp:index' %}">&#8592; Volver</a></p>
 <script type="text/javascript">
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     function confirmar(e) {
-       if (!confirm('Esto eliminará el proyecto de manera permanente. ¿Está seguro de que desea elimiarlo?')) {
-           e.preventDefault();
-       }
+        if (!confirm('Esto eliminará el proyecto de manera permanente. ¿Está seguro de que desea elimiarlo?')) {
+            e.preventDefault();
+        }
     }
 </script>
 </body>

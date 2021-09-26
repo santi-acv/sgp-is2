@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ sprint.nombre }} - SGP</title>
+    <style>
+        th { text-align: left; padding-right: 25px }
+    </style>
+</head>
+<body>
+<h3>Información de {{ sprint.nombre }}</h3>
+<table>
+    <tr><th>Nombre:</th><td>{{ sprint.nombre }}</td></tr>
+    <tr><th>Descripcion:</th><td>{{ sprint.descripcion }}</td></tr>
+    <tr><th>Fecha de inicio:</th><td>{{ sprint.fecha_inicio }}</td></tr>
+    <tr><th>Fecha de fin:</th><td>{{ sprint.fecha_fin }}</td></tr>
+    <tr><th>Estado:</th><td>{{ sprint.get_estado_display }}</td></tr>
+    <tr><th>Proyecto:</th><td>{{ sprint.proyecto }}</td></tr>
+    <tr><th>Equipo:</th><td><ul>
+        {% for user in proyecto.equipo.all %}
+            <li>{{ user }}</li>
+        {% endfor %}
+    </ul></td></tr>
+</table>
+<p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
+</body>
+</html>

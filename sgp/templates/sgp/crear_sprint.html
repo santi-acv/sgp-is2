@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear sprint - SGP</title>
+    <style>
+        th { text-align: left; width: 8em }
+    </style>
+</head>
+<body>
+<h3>Crear sprint</h3>
+<p>Por favor, ingrese la información del sprint.</p>
+<form method=POST>
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+    </table>
+    <p><input type="submit" value="Crear sprint"></p>
+</form>
+<p><a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">&#8592; Volver</a></p>
+</body>
+</html>

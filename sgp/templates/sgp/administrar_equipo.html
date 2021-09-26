@@ -27,9 +27,9 @@
             {% for field in form.hidden_fields %}
                 {{ field }}
             {% endfor %}
-            <td class="str">{{ form.nombre.value }}</td>
-            <td class="str">{{ form.apellido.value }}</td>
-            <td class="str">{{ form.email.value }}</td>
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-nombre">{{ form.nombre.value }}</td>
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-apellido">{{ form.apellido.value }}</td>
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-email">{{ form.email.value }}</td>
             <td class="str">{{ form.rol }}</td>
             <td class="hidden">{{ form.borrar }}</td>
             {% if form.instance != usuario %}
@@ -40,17 +40,6 @@
             {% endif %}
         </tr>
     {% endfor %}
-    <tr id="empty_form_row" class="hidden">
-        {% for field in formset.empty_form.hidden_fields %}
-            {{ field }}
-        {% endfor %}
-        <td class="str">{{ formset.empty_form.nombre }}</td>
-        <td class="str">{{ formset.empty_form.apellido }}</td>
-        <td class="str">{{ formset.empty_form.email }}</td>
-        <td class="str">{{ formset.empty_form.rol }}</td>
-        <td class="hidden">{{ formset.empty_form.borrar }}</td>
-        <td class="chk"><input type="button" value="Remover" onclick="borrar(__prefix__, this)"></td>
-    </tr>
 </table>
     <p><input type="submit" value="Guardar" name="asignar_roles"></p>
 </form>
@@ -92,14 +81,17 @@
         const del = document.getElementById("id_form-"+(form)+"-borrar");
         const status = ! del.checked;
         del.checked = status;
-        {% for field in formset.empty_form.visible_fields %}
-            document.getElementById("id_form-"+(form)+"-{{ field.name }}").disabled = status;
-        {% endfor %}
-        del.disabled = false;
+        document.getElementById("id_form-"+(form)+"-rol").disabled = status;
         if (status) {
             self.value = "Restaurar";
+            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-apellido").style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-email").style.setProperty('text-decoration', 'line-through');
         } else {
             self.value = "Remover";
+            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-apellido").style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-email").style.setProperty('text-decoration', '');
         }
     }
 </script>

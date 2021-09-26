@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        th { text-align: left; padding-right: 25px }
+    </style>
+</head>
+<body>
+<h3>Product backlog de {{ proyecto.nombre }}</h3>
+{% for user_story in backlog %}
+    <p><table>
+        <tr><th>Nombre:</th><td>{{ user_story.nombre }}</td></tr>
+        {% if user_story.descripcion %}
+            <tr><th>Descripcion:</th><td>{{ user_story.descripcion }}</td></tr>
+        {% endif %}
+        <tr><th>Estado:</th><td>{{ user_story.get_estado_display }}</td></tr>
+        <tr><th>Horas estimadas:</th><td>{{ user_story.horas_estimadas }}</td></tr>
+        {% if user_story.horas_trabajadas is not 0 %}
+            <tr><th>Horas trabajadas:</th><td>{{ user_story.horas_trabajadas }}</td></tr>
+        {% endif %}
+        <tr><th>Comentarios:</th><td>
+            {% for comentario in user_story.comentario_set.all %}
+                <li>{{ comentario.autor }} a las {{ comentario.fecha }}: {{ comentario.texto }}</li>
+            {% endfor %}
+            <a href="">+ agregar comentario</a>
+        </td></tr>
+        <tr><td><a href="">editar</a></td></tr>
+    </table>
+{% endfor %}
+<p><a href="{% url 'sgp:crear_user_story' proyecto_id=proyecto.id %}">+ Crear user story</a></p>
+<p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
+</body>
+</html>

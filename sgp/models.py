@@ -116,7 +116,7 @@ class Proyecto(models.Model):
     inició."""
 
     fecha_fin = models.DateField("Fecha de fin", auto_now_add=False, auto_now=False, null=True)
-    """Si el proyecto aún no ha iniciado, almacena una hora tentativa en la que
+    """Si el proyecto aún no ha terminado, almacena una hora tentativa en la que
     se planea terminarlo. Una vez que este acabe, almacena la hora en la que 
     acabó."""
 
@@ -281,3 +281,101 @@ class Participa(models.Model):
     """Rol al que pertenece el usuario.
     
     |"""
+
+
+class Sprint(models.Model):
+    """
+    Describe un sprint. Este debe ser creado por un usuario con el permiso
+    apropiado.
+
+    **Fecha:** 24/09/21
+
+    **Artefacto:** Módulo de proyecto
+    """
+
+    class Estado(models.TextChoices):
+        PENDIENTE = 'P', 'Pendiente'
+        INICIADO = 'I', 'Iniciado'
+        FINALIZADO = 'F', 'Finalizado'
+
+    nombre = models.CharField(max_length=200)
+    """Título del sprint."""
+
+    descripcion = models.TextField(blank=True, default='')
+    """Descripción del sprint."""
+
+    fecha_inicio = models.DateField("Fecha de inicio")
+    """Si el sprint aún no ha iniciado, almacena una hora tentativa en la que
+    se planea iniciarlo. Una vez que este inicia, almacena la hora en la que 
+    inició."""
+
+    fecha_fin = models.DateField("Fecha de fin")
+    """Si el sprint aún no ha terminado, almacena una hora tentativa en la que
+    se planea terminarlo. Una vez que este acabe, almacena la hora en la que 
+    acabó."""
+
+    estado = models.CharField(max_length=50, choices=Estado.choices, default=Estado.PENDIENTE)
+    """Indica en qué estado se encuentra el sprint. Cuando este se crea, el
+    estado predeterminado es pendiente."""
+
+    equipo = models.ManyToManyField(User)
+    """Indica qué usuarios participan de este sprint."""
+
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
+    """Indica a qué proyecto pertenece el sprint."""
+
+
+class UserStory(models.Model):
+    """
+    Describe un user story.
+
+    **Fecha:** 26/09/21
+
+    **Artefacto:** Módulo de proyecto
+    """
+
+    class Estado(models.TextChoices):
+        PENDIENTE = 'P', 'Pendiente'
+        INICIADO = 'I', 'Iniciado'
+        FINALIZADO = 'F', 'Finalizado'
+
+    nombre = models.CharField(max_length=200)
+    """Título del user story."""
+
+    descripcion = models.TextField(blank=True, default='')
+    """Descripción del user story."""
+
+    estado = models.CharField(max_length=50, choices=Estado.choices, default=Estado.PENDIENTE)
+    """Indica en qué estado se encuentra el user story. Cuando este se crea, el
+    estado predeterminado es pendiente."""
+
+    horas_estimadas = models.IntegerField()
+    """Número de horas estimadas que tomará completar el stream"""
+
+    horas_trabajadas = models.IntegerField(blank=True, default=0)
+    """Número de horas que se han trabajado en el user story"""
+
+    proyecto = models.ForeignKey(Proyecto, related_name='product_backlog', on_delete=models.CASCADE)
+    """Indica a qué proyecto pertenece el user story."""
+
+
+class Comentario(models.Model):
+    """
+    Describe un comentario en un user story.
+
+    **Fecha:** 26/09/21
+
+    **Artefacto:** Módulo de proyecto
+    """
+
+    texto = models.TextField()
+    """Contenido del comentario"""
+
+    fecha = models.DateTimeField(auto_now_add=True)
+    """Fecha en la que se realizó el comentario"""
+
+    autor = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    """Usuario que agregó el comentario"""
+
+    user_story = models.ForeignKey(UserStory, on_delete=models.CASCADE)
+    """User story al que pertenece el comentario"""

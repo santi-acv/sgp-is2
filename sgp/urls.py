@@ -15,4 +15,8 @@ urlpatterns = [
     path('proyecto-<int:proyecto_id>/roles/importar', views.importar_roles, name='importar_roles'),
     path('proyecto-<int:proyecto_id>/roles/exportar', views.exportar_roles, name='exportar_roles'),
     path('proyecto-<int:proyecto_id>/equipo', views.administrar_equipo, name='administrar_equipo'),
+    path('proyecto-<int:proyecto_id>/product-backlog', views.product_backlog, name='product_backlog'),
+    path('proyecto-<int:proyecto_id>/crear-user-story', views.crear_user_story, name='crear_user_story'),
+    path('proyecto-<int:proyecto_id>/crear-sprint', views.crear_sprint, name='crear_sprint'),
+    path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>', views.mostrar_sprint, name='mostrar_sprint'),
 ]

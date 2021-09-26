@@ -15,7 +15,7 @@ from django.forms import ModelForm
 from django.utils import timezone
 from guardian.shortcuts import assign_perm, remove_perm, get_perms_for_model
 
-from .models import User, Proyecto, Role
+from .models import User, Proyecto, Role, Sprint, UserStory
 
 
 class UserForm(ModelForm):
@@ -235,7 +235,6 @@ class UserRoleForm(ModelForm):
         cleaned_data = super(ModelForm, self).clean()
         if cleaned_data.get('borrar'):
             self.proyecto_actual.quitar_rol(self.instance)
-            cleaned_data.pop('rol')
         return cleaned_data
 
     def save(self, commit=True):
@@ -289,3 +288,51 @@ class UploadFileForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class UserStoryForm(ModelForm):
+    """
+    """
+    horas_estimadas = forms.IntegerField(label="Costo estimado del user story (en horas)", min_value=0)
+
+    def __init__(self, *args, **kwargs):
+        super(ModelForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = UserStory
+        fields = ('nombre', 'descripcion', 'horas_estimadas')
+
+
+class SprintForm(ModelForm):
+    """
+    """
+    fecha_inicio = forms.DateField(label="Fecha de inicio",
+                                   error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
+    fecha_fin = forms.DateField(label="Fecha de fin",
+                                error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
+
+    def __init__(self, *args, **kwargs):
+        super(ModelForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        """
+        """
+        cleaned_data = super(ModelForm, self).clean()
+
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_fin = cleaned_data.get('fecha_fin')
+
+        if fecha_inicio and fecha_inicio < timezone.localdate():
+            self.add_error('fecha_inicio', 'La fecha de inicio no puede ser en el pasado.')
+            fecha_inicio = None
+        if fecha_fin and fecha_fin < timezone.localdate():
+            self.add_error('fecha_fin', 'La fecha de fin no puede ser en el pasado.')
+            fecha_fin = None
+        if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+            self.add_error('fecha_fin', 'La fecha de fin debe ser después de la fecha de inicio.')
+
+        return cleaned_data
+
+    class Meta:
+        model = Sprint
+        fields = ('nombre', 'descripcion', 'fecha_inicio', 'fecha_fin')
