@@ -14,7 +14,9 @@
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 <table>
     <tr><th>Nombre:</th><td>{{ proyecto.nombre }}</td></tr>
-    <tr><th>Descripcion:</th><td>{{ proyecto.descripcion }}</td></tr>
+    {% if proyecto.descripcion %}
+        <tr><th>Descripcion:</th><td>{{ proyecto.descripcion }}</td></tr>
+    {% endif %}
     <tr><th>Creador:</th><td>{{ proyecto.creador }}</td></tr>
     <tr><th>Fecha de creación:</th><td>{{ proyecto.fecha_creacion }}</td></tr>
     <tr><th>Fecha de inicio:</th><td>{{ proyecto.fecha_inicio }}</td></tr>

@@ -179,7 +179,7 @@ def editar_proyecto(request, proyecto_id):
     if request.method == 'POST':
         if 'eliminar' in request.POST:
             proyecto.delete()
-            return HttpResponseRedirect(reverse('sgp:index', kwargs={'proyecto_id': proyecto_id}))
+            return HttpResponseRedirect(reverse('sgp:index'))
         else:
             form = ProyectoForm(request.POST, instance=proyecto)
             if form.is_valid():

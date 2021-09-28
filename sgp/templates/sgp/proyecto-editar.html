@@ -20,9 +20,6 @@
         <input type="submit" name="eliminar" value="Eliminar" onclick="confirmar(event)"></p>
 </form>
 
-<p>Si desea eliminar el proyecto, haga click
-    <a href="{% url 'sgp:eliminar_proyecto' proyecto.id %}" onclick="confirmar(event)">aquí</a>.</p>
-
 <script type="text/javascript">
     function confirmar(e) {
         if (!confirm('Esto eliminará el proyecto de manera permanente. ¿Está seguro de que desea eliminarlo?')) {
