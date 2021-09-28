@@ -157,7 +157,7 @@ def mostrar_proyecto(request, proyecto_id):
             proyecto.fecha_inicio = now()
             proyecto.save()
     context = {'proyecto': proyecto, 'error': error}
-    return render(request, 'sgp/mostrar_proyecto.html', context)
+    return render(request, 'sgp/proyecto.html', context)
 
 
 def editar_proyecto(request, proyecto_id):
@@ -182,7 +182,7 @@ def editar_proyecto(request, proyecto_id):
     else:
         form = ProyectoForm(instance=proyecto)
     context = {'proyecto': proyecto, 'form': form}
-    return render(request, 'sgp/editar_proyecto.html', context)
+    return render(request, 'sgp/proyecto-editar.html', context)
 
 
 def eliminar_proyecto(request, proyecto_id):
@@ -239,7 +239,7 @@ def administrar_roles(request, proyecto_id):
         formset = RoleFormSet(queryset=Role.objects.filter(proyecto=proyecto_id),
                               form_kwargs={'rol_actual': rol})
 
-    return render(request, 'sgp/administrar_roles.html',
+    return render(request, 'sgp/proyecto-roles.html',
                   {'proyecto': proyecto, 'formset': formset, 'rol': rol, 'file_form': UploadFileForm()})
 
 
@@ -345,7 +345,7 @@ def administrar_equipo(request, proyecto_id):
     formset = UserRoleFormSet(queryset=User.objects.filter(participa__proyecto=proyecto_id),
                               form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
 
-    return render(request, 'sgp/administrar_equipo.html',
+    return render(request, 'sgp/proyecto-equipo.html',
                   {'proyecto': proyecto, 'formset': formset, 'usuario': usuario, 'lista': lista})
 
 
@@ -356,7 +356,7 @@ def product_backlog(request, proyecto_id):
     proyecto = Proyecto.objects.get(id=proyecto_id)
     backlog = proyecto.product_backlog.all()
     context = {'proyecto': proyecto, 'backlog': backlog}
-    return render(request, 'sgp/product_backlog.html', context)
+    return render(request, 'sgp/proyecto-backlog.html', context)
 
 
 def crear_user_story(request, proyecto_id):
@@ -398,4 +398,4 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
     context = {'proyecto': proyecto, 'sprint': sprint}
-    return render(request, 'sgp/mostrar_sprint.html', context)
+    return render(request, 'sgp/sprint.html', context)

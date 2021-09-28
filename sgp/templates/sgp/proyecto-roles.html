@@ -11,7 +11,22 @@
     </style>
 </head>
 <body>
-<h3>Roles de {{ proyecto.nombre }}</h3>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+<p> <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Inicio</a>
+    {% if "gestionar_proyecto" in proyecto_perms %}
+        &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
+    {% endif %}
+    {% if "administrar_equipo" in proyecto_perms %}
+        &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
+        &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
+    {% endif %}
+    &#183; <a href="{% url 'sgp:product_backlog' proyecto.id %}">Product Backlog</a>
+    &#183; Planificación
+    &#183; Kanban
+    &#183; Burndown Chart
+</p>
 <p>En esta página puede ver y modificar los roles asociados al proyecto.</p>
 <form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto.id %}" method="post" name="form">
 {% csrf_token %}
@@ -71,8 +86,6 @@
         los roles guardados.</p>
     <p>{{ file_form.archivo }}</p>
 </form>
-
-<p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
 
 <script type="text/javascript">
     const form_idx = document.getElementById("id_form-TOTAL_FORMS")

@@ -8,7 +8,22 @@
     </style>
 </head>
 <body>
-<h3>Product backlog de {{ proyecto.nombre }}</h3>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+<p> <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Inicio</a>
+    {% if "gestionar_proyecto" in proyecto_perms %}
+        &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
+    {% endif %}
+    {% if "administrar_equipo" in proyecto_perms %}
+        &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
+        &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
+    {% endif %}
+    &#183; <a href="{% url 'sgp:product_backlog' proyecto.id %}">Product Backlog</a>
+    &#183; Planificación
+    &#183; Kanban
+    &#183; Burndown Chart
+</p>
 {% for user_story in backlog %}
     <p><table>
         <tr><th>Nombre:</th><td>{{ user_story.nombre }}</td></tr>
@@ -22,7 +37,7 @@
         {% endif %}
         <tr><th>Comentarios:</th><td>
             {% for comentario in user_story.comentario_set.all %}
-                <li>{{ comentario.autor }} a las {{ comentario.fecha }}: {{ comentario.texto }}</li>
+                <li>{{ comentario.autor.nombre_completo }} {{ comentario.fecha|date:"g:i a d-m-y" }}: {{ comentario.texto }}</li>
             {% endfor %}
             <a href="">+ agregar comentario</a>
         </td></tr>
@@ -30,6 +45,5 @@
     </table>
 {% endfor %}
 <p><a href="{% url 'sgp:crear_user_story' proyecto_id=proyecto.id %}">+ Crear user story</a></p>
-<p><a href="{% url 'sgp:mostrar_proyecto' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
 </body>
 </html>

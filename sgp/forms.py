@@ -77,6 +77,10 @@ class ProyectoForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ModelForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            if self.instance.estado == Proyecto.Estado.INICIADO:
+                self.fields['fecha_inicio'].initial = self.instance.fecha_inicio
+                self.fields['fecha_inicio'].disabled = True
 
     def clean(self):
         """

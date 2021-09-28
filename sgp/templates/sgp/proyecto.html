@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        th { text-align: left; padding-right: 25px }
+    </style>
+</head>
+<body>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+<p> <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Inicio</a>
+    {% if "gestionar_proyecto" in proyecto_perms %}
+        &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
+    {% endif %}
+    {% if "administrar_equipo" in proyecto_perms %}
+        &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
+        &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
+    {% endif %}
+    &#183; <a href="{% url 'sgp:product_backlog' proyecto.id %}">Product Backlog</a>
+    &#183; Planificación
+    &#183; Kanban
+    &#183; Burndown Chart
+</p>
+<table>
+    <tr><th>Nombre:</th><td>{{ proyecto.nombre }}</td></tr>
+    <tr><th>Descripcion:</th><td>{{ proyecto.descripcion }}</td></tr>
+    <tr><th>Creador:</th><td>{{ proyecto.creador }}</td></tr>
+    <tr><th>Fecha de creación:</th><td>{{ proyecto.fecha_creacion }}</td></tr>
+    <tr><th>Fecha de inicio:</th><td>{{ proyecto.fecha_inicio }}</td></tr>
+    <tr><th>Fecha de fin:</th><td>{{ proyecto.fecha_fin }}</td></tr>
+    <tr><th>Duración de los sprints:</th><td>{{ proyecto.duracion_sprint }} días</td></tr>
+    <tr><th>Estado:</th><td>{{ proyecto.get_estado_display }}</td></tr>
+    <tr><th>Sprints:</th><td><ul>
+        {% for sprint in proyecto.sprint_set.all %}
+            <li><a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=sprint.id %}">
+                {{ sprint }}</a></li>
+        {% endfor %}
+        {% if "gestionar_proyecto" in proyecto_perms %}
+            <p><a href="{% url 'sgp:crear_sprint' proyecto.id %}">Crear sprint</a></p>
+        {% endif %}
+    </ul></td></tr>
+</table>
+{% if "gestionar_proyecto" in proyecto_perms %}
+    {% if proyecto.estado == proyecto.Estado.PENDIENTE %}
+        <ul>
+            {% for e in error %}
+                <li>{{ e }}</li>
+            {% endfor %}
+        </ul>
+        <form method=POST>
+            {% csrf_token %}
+            <p><input type="submit" value="Iniciar Proyecto"></p>
+        </form>
+    {% endif %}
+{% endif %}
+<p><a href="{% url 'sgp:index' %}">&#8592; Volver a la página de inicio</a></p>
+</body>
+</html>

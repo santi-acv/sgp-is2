@@ -77,6 +77,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return str(self.nombre) + ' ' + str(self.apellido) + ' (' + str(self.email) + ')'
 
+    @property
+    def nombre_completo(self):
+        return self.nombre + ' ' + self.apellido
+
 
 class Proyecto(models.Model):
     """
@@ -260,7 +264,7 @@ class Role(models.Model):
             remove_perm(permiso, p.usuario, self.proyecto)
 
     def __str__(self):
-        return self.nombre + ' | ' + str(self.proyecto)
+        return self.nombre
 
 
 class Participa(models.Model):
@@ -324,6 +328,9 @@ class Sprint(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
     """Indica a qué proyecto pertenece el sprint."""
 
+    def __str__(self):
+        return self.nombre
+
 
 class UserStory(models.Model):
     """
@@ -357,6 +364,9 @@ class UserStory(models.Model):
 
     proyecto = models.ForeignKey(Proyecto, related_name='product_backlog', on_delete=models.CASCADE)
     """Indica a qué proyecto pertenece el user story."""
+
+    def __str__(self):
+        return self.nombre
 
 
 class Comentario(models.Model):
