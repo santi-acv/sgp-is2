@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ proyecto.nombre }} - SGP</title>
+    <title>Crear user story - SGP</title>
     <style>
         th { text-align: left; width: 8em }
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ user_story.nombre }} - Editar</h3>
 {% include 'sgp/proyecto-menu.html' %}
-<p>En esta página puede modificar la información del proyecto.</p>
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+<p>En esta página puede modificar la información del user story.</p>
 <form method=POST>
     {% csrf_token %}
     <table>
@@ -20,12 +22,9 @@
         <input type="submit" name="eliminar" value="Eliminar" onclick="confirmar(event)"></p>
 </form>
 
-<p>Si desea eliminar el proyecto, haga click
-    <a href="{% url 'sgp:eliminar_proyecto' proyecto.id %}" onclick="confirmar(event)">aquí</a>.</p>
-
 <script type="text/javascript">
     function confirmar(e) {
-        if (!confirm('Esto eliminará el proyecto de manera permanente. ¿Está seguro de que desea eliminarlo?')) {
+        if (!confirm('Esto quitará el user story del product backlog. ¿Está seguro de que desea eliminarlo?')) {
             e.preventDefault();
         }
     }

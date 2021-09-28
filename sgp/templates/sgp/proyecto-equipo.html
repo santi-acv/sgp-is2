@@ -11,21 +11,7 @@
 </head>
 <body>
 <h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
-{% load guardian_tags %}
-{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
-<p> <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Inicio</a>
-    {% if "gestionar_proyecto" in proyecto_perms %}
-        &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
-    {% endif %}
-    {% if "administrar_equipo" in proyecto_perms %}
-        &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
-        &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
-    {% endif %}
-    &#183; <a href="{% url 'sgp:product_backlog' proyecto.id %}">Product Backlog</a>
-    &#183; Planificación
-    &#183; Kanban
-    &#183; Burndown Chart
-</p>
+{% include 'sgp/proyecto-menu.html' %}
 <p>A continuación puede modificar los roles de los miembros del equipo del proyecto.</p>
 <form action="{% url 'sgp:administrar_equipo' proyecto_id=proyecto.id %}" method="post" name="form">
 {% csrf_token %}

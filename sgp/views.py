@@ -14,12 +14,13 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.timezone import now
 from guardian.shortcuts import get_objects_for_user
 
-from .models import User, Proyecto, Role, Sprint
+from .models import User, Proyecto, Role, Sprint, UserStory
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
-    UserStoryForm
+    UserStoryForm, ComentarioForm
 
 
 def index(request):
@@ -156,6 +157,7 @@ def mostrar_proyecto(request, proyecto_id):
             proyecto.estado = proyecto.Estado.INICIADO
             proyecto.fecha_inicio = now()
             proyecto.save()
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
     context = {'proyecto': proyecto, 'error': error}
     return render(request, 'sgp/proyecto.html', context)
 
@@ -175,29 +177,18 @@ def editar_proyecto(request, proyecto_id):
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     if request.method == 'POST':
-        form = ProyectoForm(request.POST, instance=proyecto)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
+        if 'eliminar' in request.POST:
+            proyecto.delete()
+            return HttpResponseRedirect(reverse('sgp:index', kwargs={'proyecto_id': proyecto_id}))
+        else:
+            form = ProyectoForm(request.POST, instance=proyecto)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
     else:
         form = ProyectoForm(instance=proyecto)
     context = {'proyecto': proyecto, 'form': form}
     return render(request, 'sgp/proyecto-editar.html', context)
-
-
-def eliminar_proyecto(request, proyecto_id):
-    """
-    Permite eliminar el proyecto.
-
-    **Fecha:** 02/09/21
-
-    **Artefacto:** módulo de proyecto
-
-    |
-    """
-    proyecto = Proyecto.objects.get(pk=proyecto_id)
-    proyecto.delete()
-    return HttpResponseRedirect(reverse('sgp:index'))
 
 
 def administrar_roles(request, proyecto_id):
@@ -330,16 +321,14 @@ def administrar_equipo(request, proyecto_id):
             formset.save()
 
             # Si se eliminó a un usuario del equipo, mostrar de nuevo la pagina
-            borrado = False
             for form in formset:
                 if form.cleaned_data.get('borrar'):
-                    borrado = True
-                    break
+                    return HttpResponseRedirect(reverse('sgp:administrar_equipo',
+                                                        kwargs={'proyecto_id': proyecto.id}))
 
-            if not borrado:
-                # Si solo se cambiaron los roles, volver a la pagina de proyecto
-                return HttpResponseRedirect(reverse('sgp:mostrar_proyecto',
-                                                    kwargs={'proyecto_id': proyecto_id}))
+            # Si solo se cambiaron los roles, volver a la pagina de proyecto
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto',
+                                                kwargs={'proyecto_id': proyecto_id}))
 
     # Enviar una lista de miembros
     formset = UserRoleFormSet(queryset=User.objects.filter(participa__proyecto=proyecto_id),
@@ -354,8 +343,13 @@ def product_backlog(request, proyecto_id):
     **Fecha:** 26/09/21
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
-    backlog = proyecto.product_backlog.all()
+    backlog = proyecto.product_backlog.exclude(estado=UserStory.Estado.CANCELADO).order_by('prioridad')
+
     context = {'proyecto': proyecto, 'backlog': backlog}
+
+    if request.user.has_perm('gestionar_proyecto', proyecto) or request.user.has_perm('pila_producto', proyecto):
+        context['backlog_cancelado'] = proyecto.product_backlog.filter(estado=UserStory.Estado.CANCELADO)
+
     return render(request, 'sgp/proyecto-backlog.html', context)
 
 
@@ -365,14 +359,69 @@ def crear_user_story(request, proyecto_id):
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     if request.method == "POST":
-        form = UserStoryForm(request.POST)
+        form = UserStoryForm(request.POST, usuario=request.user, proyecto=proyecto)
         if form.is_valid():
             form.instance.proyecto = proyecto
+            form.instance.numero = UserStory.objects.filter(proyecto=proyecto).count() + 1
             form.save()
             return HttpResponseRedirect(reverse('sgp:product_backlog', kwargs={'proyecto_id': proyecto_id}))
     else:
-        form = UserStoryForm()
+        form = UserStoryForm(usuario=request.user, proyecto=proyecto)
     return render(request, 'sgp/crear_user_story.html', {'form': form, 'proyecto': proyecto})
+
+
+def mostrar_user_story(request, proyecto_id, us_numero):
+    """
+    **Fecha:** 28/09/21
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    user_story = UserStory.objects.get(proyecto_id=proyecto_id, numero=us_numero)
+
+    if request.method == 'POST':
+        form = ComentarioForm(request.POST)
+        if form.is_valid():
+            form.instance.user_story = user_story
+            form.instance.autor = request.user
+            form.instance.fecha = timezone.localdate()
+            form.save()
+            return HttpResponseRedirect(reverse('sgp:mostrar_user_story',
+                                                kwargs={'proyecto_id': proyecto_id, 'us_numero': us_numero}))
+    else:
+        form = ComentarioForm()
+    context = {'proyecto': proyecto, 'user_story': user_story, 'form': form}
+    return render(request, 'sgp/user-story.html', context)
+
+
+def editar_user_story(request, proyecto_id, us_numero):
+    """
+    Permite modificar el user story.
+
+    **Fecha:** 28/09/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
+    """
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
+    user_story = UserStory.objects.get(proyecto_id=proyecto_id, numero=us_numero)
+    if request.method == 'POST':
+        if 'guardar' in request.POST:
+            form = UserStoryForm(request.POST, instance=user_story, usuario=request.user, proyecto=proyecto)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(reverse('sgp:mostrar_user_story',
+                                                    kwargs={'proyecto_id': proyecto_id, 'us_numero': us_numero}))
+        else:
+            if 'eliminar' in request.POST:
+                user_story.estado = UserStory.Estado.CANCELADO
+            elif 'restaurar' in request.POST:
+                user_story.estado = UserStory.Estado.PENDIENTE
+            user_story.save()
+            return HttpResponseRedirect(reverse('sgp:product_backlog', kwargs={'proyecto_id': proyecto_id}))
+    else:
+        form = UserStoryForm(instance=user_story, usuario=request.user, proyecto=proyecto)
+    context = {'proyecto': proyecto, 'form': form, 'user_story': user_story}
+    return render(request, 'sgp/user-story-editar.html', context)
 
 
 def crear_sprint(request, proyecto_id):

@@ -15,7 +15,7 @@ from django.forms import ModelForm
 from django.utils import timezone
 from guardian.shortcuts import assign_perm, remove_perm, get_perms_for_model
 
-from .models import User, Proyecto, Role, Sprint, UserStory
+from .models import User, Proyecto, Role, Sprint, UserStory, Comentario
 
 
 class UserForm(ModelForm):
@@ -297,14 +297,31 @@ class UploadFileForm(forms.Form):
 class UserStoryForm(ModelForm):
     """
     """
-    horas_estimadas = forms.IntegerField(label="Costo estimado del user story (en horas)", min_value=0)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, usuario=None, proyecto=None, **kwargs):
         super(ModelForm, self).__init__(*args, **kwargs)
+        if usuario:
+            if not usuario.has_perm('gestionar_proyecto', proyecto):
+                self.fields.pop('horas_estimadas')
+            else:
+                self.fields['horas_estimadas'] = forms.IntegerField(label="Costo estimado (en horas)",
+                                                                    min_value=0, required=False)
+            if not usuario.has_perm('pila_producto', proyecto):
+                self.fields.pop('nombre')
+                self.fields.pop('descripcion')
 
     class Meta:
         model = UserStory
-        fields = ('nombre', 'descripcion', 'horas_estimadas')
+        fields = ('nombre', 'descripcion', 'prioridad', 'horas_estimadas')
+
+
+class ComentarioForm(ModelForm):
+    """
+    **Fecha:** 28/09/21
+    """
+    class Meta:
+        model = Comentario
+        fields = ('texto',)
 
 
 class SprintForm(ModelForm):

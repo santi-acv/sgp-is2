@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ user_story.nombre }} - {{ proyecto.nombre }} - SGP</title>
+    <style>
+        th { text-align: left; padding-right: 25px }
+    </style>
+</head>
+<body>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ user_story.nombre }}</h3>
+{% include 'sgp/proyecto-menu.html' %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+<table>
+    <tr><th>&#8470;</th><td>US-{{ user_story.numero }}</td></tr>
+    <tr><th>Nombre:</th><td>{{ user_story.nombre }}</td></tr>
+    {% if user_story.descripcion %}
+        <tr><th>Descripcion:</th><td>{{ user_story.descripcion }}</td></tr>
+    {% endif %}
+    <tr><th>Estado:</th><td>{{ user_story.get_estado_display }}</td></tr>
+    <tr><th>Prioridad:</th><td>{{ user_story.get_prioridad_display }}</td></tr>
+    {% if user_story.horas_estimadas %}
+        <tr><th>Costo estimado:</th>
+            <td>{{ user_story.horas_estimadas }} hora{{ user_story.horas_estimadas|pluralize:"s" }}</td></tr>
+    {% endif %}
+    {% if user_story.horas_trabajadas %}
+        <tr><th>Tiempo invertido:</th>
+            <td>{{ user_story.horas_trabajadas }} hora{{ user_story.horas_trabajadas|pluralize:"s" }}</td></tr>
+    {% endif %}
+</table>
+
+{% if "gestionar_proyecto" in proyecto_perms or "pila_producto" in proyecto_perms %}
+    {% if user_story.estado == 'P' %}
+    <p>Si desea editar el user story, haga click
+        <a href="{% url 'sgp:editar_user_story' proyecto.id user_story.numero %}">aquí</a>.</p>
+    {% elif user_story.estado == 'C' %}
+        <form method=POST action="{% url 'sgp:editar_user_story' proyecto.id user_story.numero %}">
+            {% csrf_token %}
+            <p><input type="submit" name="restaurar" value="Restaurar User Story" onclick="confirmar(event)"></p>
+        </form>
+    {% endif %}
+{% endif %}
+
+{% if user_story.comentario_set.all %}
+    <h4>Comentarios:</h4>
+    {% for comentario in user_story.comentario_set.all %}
+        <p><table>
+            <tr><th>{{ comentario.autor.nombre_completo }}</th> <td rowspan="2">{{ comentario.texto }}</td></tr>
+            <tr><td>{{ comentario.fecha|date:"i:h a d/m/y" }}</td></tr>
+        </table>
+    {% endfor %}
+{% endif %}
+
+<h4>Agregar un comentario:</h4>
+<form method=POST>
+    {% csrf_token %}
+    {{ form.texto }}
+    <p><input type="submit" value="Comentar"></p>
+</form>
+
+<p><a href="{% url 'sgp:product_backlog' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
+
+<script type="text/javascript">
+    function confirmar(e) {
+        if (!confirm('Esto agregará el user story al product backlog. ¿Está seguro de que desea restaurarlo?')) {
+            e.preventDefault();
+        }
+    }
+</script>
+</body>
+</html>

@@ -345,6 +345,10 @@ class UserStory(models.Model):
         PENDIENTE = 'P', 'Pendiente'
         INICIADO = 'I', 'Iniciado'
         FINALIZADO = 'F', 'Finalizado'
+        CANCELADO = 'C', 'Cancelado'
+
+    numero = models.IntegerField()
+    """Número de user story dentro del proyecto."""
 
     nombre = models.CharField(max_length=200)
     """Título del user story."""
@@ -356,14 +360,27 @@ class UserStory(models.Model):
     """Indica en qué estado se encuentra el user story. Cuando este se crea, el
     estado predeterminado es pendiente."""
 
-    horas_estimadas = models.IntegerField()
+    prioridad = models.IntegerField(choices=[
+        (1, 'Muy Alta'),
+        (2, 'Alta'),
+        (3, 'Normal'),
+        (4, 'Baja'),
+        (5, 'Muy baja'),
+    ])
+    """Indica la prioridad del user story en una escala del 1 al 5, donde 5 
+    representa la prioridad máxima."""
+
+    horas_estimadas = models.IntegerField(null=True)
     """Número de horas estimadas que tomará completar el stream"""
 
-    horas_trabajadas = models.IntegerField(blank=True, default=0)
+    horas_trabajadas = models.IntegerField(default=0)
     """Número de horas que se han trabajado en el user story"""
 
     proyecto = models.ForeignKey(Proyecto, related_name='product_backlog', on_delete=models.CASCADE)
     """Indica a qué proyecto pertenece el user story."""
+
+    sprint = models.ForeignKey(Sprint, related_name='sprint_backlog', on_delete=models.CASCADE, null=True)
+    """Inddica a qué sprint pertenece el user story."""
 
     def __str__(self):
         return self.nombre
