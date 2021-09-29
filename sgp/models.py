@@ -97,6 +97,7 @@ class Proyecto(models.Model):
         INICIADO = 'I', 'Iniciado'
         FINALIZADO = 'F', 'Finalizado'
         CANCELADO = 'C', 'Cancelado'
+    """Contiene los estados posibles del proyecto."""
 
     nombre = models.CharField(max_length=200)
     """Título del proyecto."""
@@ -294,13 +295,14 @@ class Sprint(models.Model):
 
     **Fecha:** 24/09/21
 
-    **Artefacto:** Módulo de proyecto
+    **Artefacto:** Módulo de desarrollo
     """
 
     class Estado(models.TextChoices):
         PENDIENTE = 'P', 'Pendiente'
         INICIADO = 'I', 'Iniciado'
         FINALIZADO = 'F', 'Finalizado'
+    """Contiene los estados posibles del sprint."""
 
     nombre = models.CharField(max_length=200)
     """Título del sprint."""
@@ -326,7 +328,9 @@ class Sprint(models.Model):
     """Indica qué usuarios participan de este sprint."""
 
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
-    """Indica a qué proyecto pertenece el sprint."""
+    """Indica a qué proyecto pertenece el sprint.
+    
+    |"""
 
     def __str__(self):
         return self.nombre
@@ -334,11 +338,12 @@ class Sprint(models.Model):
 
 class UserStory(models.Model):
     """
-    Describe un user story.
+    Describe un user story. Este pertenece a un Proyecto y contiene un
+    conjunto de instancias de Comentario.
 
     **Fecha:** 26/09/21
 
-    **Artefacto:** Módulo de proyecto
+    **Artefacto:** Módulo de desarrollo
     """
 
     class Estado(models.TextChoices):
@@ -346,6 +351,7 @@ class UserStory(models.Model):
         INICIADO = 'I', 'Iniciado'
         FINALIZADO = 'F', 'Finalizado'
         CANCELADO = 'C', 'Cancelado'
+    """Contiene los estados posibles del user story."""
 
     numero = models.IntegerField()
     """Número de user story dentro del proyecto."""
@@ -367,7 +373,7 @@ class UserStory(models.Model):
         (4, 'Baja'),
         (5, 'Muy baja'),
     ])
-    """Indica la prioridad del user story en una escala del 1 al 5, donde 5 
+    """Indica la prioridad del user story en una escala del 1 al 5, donde 1
     representa la prioridad máxima."""
 
     horas_estimadas = models.IntegerField(null=True)
@@ -380,7 +386,9 @@ class UserStory(models.Model):
     """Indica a qué proyecto pertenece el user story."""
 
     sprint = models.ForeignKey(Sprint, related_name='sprint_backlog', on_delete=models.CASCADE, null=True)
-    """Inddica a qué sprint pertenece el user story."""
+    """Indica a qué sprint pertenece el user story.
+    
+    |"""
 
     def __str__(self):
         return self.nombre
@@ -392,7 +400,7 @@ class Comentario(models.Model):
 
     **Fecha:** 26/09/21
 
-    **Artefacto:** Módulo de proyecto
+    **Artefacto:** Módulo de desarrollo
     """
 
     texto = models.TextField()
@@ -405,4 +413,6 @@ class Comentario(models.Model):
     """Usuario que agregó el comentario"""
 
     user_story = models.ForeignKey(UserStory, on_delete=models.CASCADE)
-    """User story al que pertenece el comentario"""
+    """User story al que pertenece el comentario
+    
+    |"""

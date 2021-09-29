@@ -110,7 +110,7 @@ class ProyectoForm(ModelForm):
             fecha_inicio = None
             fecha_fin = None
         if fecha_inicio and fecha_fin and duracion_sprint and \
-                fecha_inicio+datetime.timedelta(days=duracion_sprint) > fecha_fin:
+                fecha_inicio + datetime.timedelta(days=duracion_sprint) > fecha_fin:
             self.add_error('duracion_sprint', 'El proyecto debe tener tiempo para al menos un sprint.')
 
         return cleaned_data
@@ -284,6 +284,8 @@ class UploadFileForm(forms.Form):
     """
     Permite enviar archivos al servidor.
 
+    Posee un solo campo, el cual recibe el archivo.
+
     **Fecha:** 07/09/21
 
     |
@@ -296,6 +298,25 @@ class UploadFileForm(forms.Form):
 
 class UserStoryForm(ModelForm):
     """
+    Corresponde al modelo UserStory. Este formulario se muestra en las páginas
+    de creación y de edición de user stories.
+
+    Posee campos correspondientes a los atributos de nombre, descripción,
+    prioridad, y horas estimadas. Los campos de nombre y descripción solo son
+    accesibles a usuarios con el permiso de pila de producto, mientras que el
+    campo de costo estimada solo es accesible a usuarios con el permiso de
+    gestión de proyecto. El campo de proridad es accesible para cualquiera.
+
+    **Fecha:** 26/09/21
+
+    **Artefacto:** Módulo de desarrollo
+
+    :param usuario: El usuario accediendo al formulario.
+    :param proyecto: El proyecto al que pertenece el user story.
+    :type usuario: Usuario
+    :type proyecto: Proyecto
+
+    |
     """
 
     def __init__(self, *args, usuario=None, proyecto=None, **kwargs):
@@ -317,7 +338,16 @@ class UserStoryForm(ModelForm):
 
 class ComentarioForm(ModelForm):
     """
+    Corresponde al modelo Comentario. Este formulario se muestra en la página
+    principal de cada user story, y permite agregarle comentarios.
+
+    Posee un solo campo, el cual lee el texto del comentario.
+
     **Fecha:** 28/09/21
+
+    **Artefacto:** Módulo de desarrollo
+
+    |
     """
     class Meta:
         model = Comentario
@@ -326,34 +356,54 @@ class ComentarioForm(ModelForm):
 
 class SprintForm(ModelForm):
     """
-    """
-    fecha_inicio = forms.DateField(label="Fecha de inicio",
-                                   error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
-    fecha_fin = forms.DateField(label="Fecha de fin",
-                                error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
+    Corresponde al modelo Sprint. Este formulario se muestra en las páginas de
+    creación y de edición de sprints.
 
-    def __init__(self, *args, **kwargs):
+    Posee campos correspondientes a los atributos de nombre, descripcion,
+    duracion, fecha de inicio, y fecha de fin. El campo de fecha de fin se
+    encuentra desactivado, por lo que esta fecha es calculada a partir de la
+    fecha de inicio y la duración.
+
+    **Fecha:** 24/09/21
+
+    **Artefacto:** Módulo de desarrollo
+
+    :param proyecto: El proyecto al que pertenece el sprint.
+    :type proyecto: Proyecto
+    """
+    duracion = forms.IntegerField(label="Duración (en días)", min_value=0,
+                                 widget=forms.NumberInput(attrs={'onchange': 'actualizar_fecha_fin()'}))
+    fecha_inicio = forms.DateField(label="Fecha de inicio",
+                                   widget=forms.TextInput(attrs={'onchange': 'actualizar_fecha_fin()'}),
+                                   error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
+    fecha_fin = forms.DateField(label="Fecha de fin", disabled=True, required=False)
+
+    def __init__(self, *args, proyecto=None, **kwargs):
         super(ModelForm, self).__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.fields['duracion'].initial = proyecto.duracion_sprint
 
     def clean(self):
         """
+        Verifica que el campo de fecha de inicio sea una fecha en el presente o
+        futuro, y calcula la fecha de inicio a partir de esta primera fecha y
+        la duración del sprint.
+
+        |
         """
         cleaned_data = super(ModelForm, self).clean()
 
         fecha_inicio = cleaned_data.get('fecha_inicio')
-        fecha_fin = cleaned_data.get('fecha_fin')
+        duracion = cleaned_data.get('duracion')
 
         if fecha_inicio and fecha_inicio < timezone.localdate():
             self.add_error('fecha_inicio', 'La fecha de inicio no puede ser en el pasado.')
             fecha_inicio = None
-        if fecha_fin and fecha_fin < timezone.localdate():
-            self.add_error('fecha_fin', 'La fecha de fin no puede ser en el pasado.')
-            fecha_fin = None
-        if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
-            self.add_error('fecha_fin', 'La fecha de fin debe ser después de la fecha de inicio.')
+        if fecha_inicio and duracion:
+            cleaned_data['fecha_fin'] = fecha_inicio + datetime.timedelta(days=duracion)
 
         return cleaned_data
 
     class Meta:
         model = Sprint
-        fields = ('nombre', 'descripcion', 'fecha_inicio', 'fecha_fin')
+        fields = ('nombre', 'descripcion', 'duracion', 'fecha_inicio', 'fecha_fin')

@@ -8,7 +8,8 @@
     </style>
 </head>
 <body>
-<h3>Información de {{ sprint.nombre }}</h3>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ sprint.nombre }}</h3>
+{% include 'sgp/proyecto-menu.html' %}
 <table>
     <tr><th>Nombre:</th><td>{{ sprint.nombre }}</td></tr>
     <tr><th>Descripcion:</th><td>{{ sprint.descripcion }}</td></tr>

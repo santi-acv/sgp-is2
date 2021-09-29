@@ -18,5 +18,29 @@
     </table>
     <p><input type="submit" value="Crear sprint"></p>
 </form>
+<script>
+    const duracion = document.getElementById('id_duracion');
+    const fecha_inicio = document.getElementById('id_fecha_inicio');
+    const fecha_fin = document.getElementById('id_fecha_fin');
+
+    function actualizar_fecha_fin() {
+        if (duracion.value && fecha_inicio.value) {
+            let date = new Date();
+            let fecha = fecha_inicio.value.match("^(0?[1-9]|[12][0-9]|3[01])/(0?[1-9]|1[012])/([0-9]+)$");
+            if (fecha !== null) {
+                date.setUTCFullYear(parseInt(fecha[3]), parseInt(fecha[2])-1, parseInt(fecha[1]));
+                if (date.getUTCMonth()+1 === parseInt(fecha[2])) {
+                    let offset = parseInt(duracion.value);
+                    date.setUTCDate(date.getUTCDate() + offset);
+                    fecha_fin.value = ('0' + date.getUTCDate()).slice(-2)
+                        + "/" + ('0' + (date.getUTCMonth()+1)).slice(-2)
+                        + "/" + date.getUTCFullYear();
+                    return;
+                }
+            }
+        }
+        fecha_fin.value = "";
+    }
+</script>
 </body>
 </html>

@@ -140,8 +140,11 @@ def crear_proyecto(request):
 
 def mostrar_proyecto(request, proyecto_id):
     """
-    Muestra una página con la información del proyecto, y además incluye
-    opciones para iniciar, modificar, o eliminar el proyecto.
+    Muestra la información principal del proyecto y permite cambiar su estado.
+
+    Incluye una lista de sprints y enlaces para acceder a cada uno de ellos. Si
+    el estado del proyecto es pendiente, presenta un botón para validar el
+    proyecto e iniciarlo.
 
     **Fecha:** 02/09/21
 
@@ -164,10 +167,10 @@ def mostrar_proyecto(request, proyecto_id):
 
 def editar_proyecto(request, proyecto_id):
     """
-    Permite modificar el proyecto.
+    Permite modificar los parámetros del proyecto o eliminarlo.
 
-    Muestra un formulario similar al de creación de proyectos. Si los datos
-    recibidos son válidos, actualiza la entrada en la base de datos.
+    Muestra una instancia de ProyectoForm. Si los datos recibidos a través del
+    formulario son válidos, actualiza la entrada en la base de datos.
 
     **Fecha:** 02/09/21
 
@@ -199,7 +202,10 @@ def administrar_roles(request, proyecto_id):
     respectivos nombres y permisos. El usuario puede modificar estos roles,
     crear roles nuevos, o eliminar roles existentes. También presenta opciones
     para exportar los roles actuales a un archivo JSON y para importar roles de
-    un archivo
+    un archivo.
+
+    Utiliza un formset con instancias de RoleForm para la lista de roles, y una
+    instancia de UploadFileForm para importar roles.
 
     **Fecha:** 02/09/21
 
@@ -293,6 +299,10 @@ def administrar_equipo(request, proyecto_id):
     respectivos roles. El usuario agregar miembros al equipo, removerlos, o
     asignarles roles diferentes.
 
+    Utiliza un formset con instancias de UserRoleForm para la lista de usuarios
+    que pertenecen al proyecto y una instancia de AgregarMiembroForm para los
+    usuarios que no pertenecen.
+
     **Fecha:** 18/09/21
 
     **Artefacto:** módulo de proyecto
@@ -340,7 +350,17 @@ def administrar_equipo(request, proyecto_id):
 
 def product_backlog(request, proyecto_id):
     """
+    Muestra el product backlog del proyecto.
+
+    Coloca los user stories cancelados en una sección aparte de la lista, la
+    cual solo es visible para usuarios con permisos de gestión de proyecto o de
+    pila de producto.
+
     **Fecha:** 26/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     backlog = proyecto.product_backlog.exclude(estado=UserStory.Estado.CANCELADO).order_by('prioridad')
@@ -355,7 +375,16 @@ def product_backlog(request, proyecto_id):
 
 def crear_user_story(request, proyecto_id):
     """
+    Permite crear un user story.
+
+    Muestra una instancia de UserStoryForm. Si los datos son válidos, agrega el
+    user story al proyecto y lo guarda en la base de datos.
+
     **Fecha:** 26/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     if request.method == "POST":
@@ -372,7 +401,16 @@ def crear_user_story(request, proyecto_id):
 
 def mostrar_user_story(request, proyecto_id, us_numero):
     """
+    Muestra los parámetros y comentarios del user story.
+
+    Si el usuario tiene permisos de gestión de proyecto o pila de producto,
+    muestra una opción para editar el user story.
+
     **Fecha:** 28/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     user_story = UserStory.objects.get(proyecto_id=proyecto_id, numero=us_numero)
@@ -394,11 +432,14 @@ def mostrar_user_story(request, proyecto_id, us_numero):
 
 def editar_user_story(request, proyecto_id, us_numero):
     """
-    Permite modificar el user story.
+    Permite modificar los parámetros del user story o eliminarlo.
+
+    Muestra una instancia de UserStoryForm. Si los datos recibidos a través del
+    formulario son válidos, actualiza la entrada en la base de datos.
 
     **Fecha:** 28/09/21
 
-    **Artefacto:** módulo de proyecto
+    **Artefacto:** módulo de desarrollo
 
     |
     """
@@ -426,23 +467,36 @@ def editar_user_story(request, proyecto_id, us_numero):
 
 def crear_sprint(request, proyecto_id):
     """
+    Permite crear un sprint.
+
+    Muestra una instancia de SprintForm. Si los datos son válidos, agrega el
+    sprint al proyecto y lo guarda en la base de datos.
+
     **Fecha:** 24/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     if request.method == "POST":
-        form = SprintForm(request.POST)
+        form = SprintForm(request.POST, proyecto=proyecto)
         if form.is_valid():
             form.instance.proyecto = proyecto
             form.save()
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
     else:
-        form = SprintForm()
+        form = SprintForm(proyecto=proyecto)
     return render(request, 'sgp/crear_sprint.html', {'form': form, 'proyecto': proyecto})
 
 
 def mostrar_sprint(request, proyecto_id, sprint_id):
     """
     **Fecha:** 24/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
