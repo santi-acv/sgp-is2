@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ sprint.nombre }} - SGP</title>
+    <style>
+        th { text-align: left; padding-right: 25px }
+    </style>
+</head>
+<body>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ sprint.nombre }} - Equipo</h3>
+{% include 'sgp/proyecto-menu.html' %}
+{% include 'sgp/sprint-menu.html' %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+
+{% if sprint.equipo.all %}
+    <table>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>E-Mail</th>
+            <th>Horas disponibles</th>
+        </tr>
+        {% for p in sprint.participasprint_set.all %}
+            <tr>
+                <td>{{ p.usuario.nombre }}</td>
+                <td>{{ p.usuario.apellido }}</td>
+                <td>{{ p.usuario.email }}</td>
+                <td>{{ p.horas_disponibles }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>El sprint aún no tiene ningún desarrollador.</p>
+{% endif %}
+
+{% if "gestionar_proyecto" in proyecto_perms %}
+    <h4>Agregar desarrollador:</h4>
+    <form method="post">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <th>Desarrollador</th>
+                <th>Horas disponibles</th>
+            </tr>
+            <tr>
+                <td class="str">{{ form.usuario }}</td>
+                <td class="str">{{ form.horas }}</td>
+            </tr>
+        </table>
+        <p><input type="submit" value="Agregar" name="agregar_usuario"></p>
+    </form>
+{% endif %}
+</body>
+</html>

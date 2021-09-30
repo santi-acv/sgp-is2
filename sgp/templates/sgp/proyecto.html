@@ -17,7 +17,7 @@
     {% if proyecto.descripcion %}
         <tr><th>Descripcion:</th><td>{{ proyecto.descripcion }}</td></tr>
     {% endif %}
-    <tr><th>Creador:</th><td>{{ proyecto.creador }}</td></tr>
+    <tr><th>Creador:</th><td>{{ proyecto.creador|default_if_none:"--" }}</td></tr>
     <tr><th>Fecha de creación:</th><td>{{ proyecto.fecha_creacion }}</td></tr>
     <tr><th>Fecha de inicio:</th><td>{{ proyecto.fecha_inicio }}</td></tr>
     <tr><th>Fecha de fin:</th><td>{{ proyecto.fecha_fin }}</td></tr>

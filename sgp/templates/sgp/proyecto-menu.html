@@ -1,6 +1,6 @@
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
-<p> <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Inicio</a>
+<p> <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Proyecto</a>
     {% if "gestionar_proyecto" in proyecto_perms %}
         &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
     {% endif %}

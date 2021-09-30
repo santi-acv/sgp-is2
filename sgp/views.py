@@ -20,7 +20,7 @@ from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role, Sprint, UserStory
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
-    UserStoryForm, ComentarioForm
+    UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm
 
 
 def index(request):
@@ -315,13 +315,13 @@ def administrar_equipo(request, proyecto_id):
 
     # Si se agregó un nuevo miembro al equipo, registrarlo
     if 'agregar_usuario' in request.POST:
-        lista = AgregarMiembroForm(request.POST, proyecto_id=proyecto)
+        lista = AgregarMiembroForm(request.POST, proyecto=proyecto)
         if lista.is_valid():
             lista.save()
             return HttpResponseRedirect(reverse('sgp:administrar_equipo',
                                                 kwargs={'proyecto_id': proyecto_id}))
     else:
-        lista = AgregarMiembroForm(proyecto_id=proyecto)
+        lista = AgregarMiembroForm(proyecto=proyecto)
 
     # Si se modificaron los roles de los miembros, procesar los cambios
     if 'asignar_roles' in request.POST:
@@ -500,5 +500,105 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
-    context = {'proyecto': proyecto, 'sprint': sprint}
+
+    if request.method == 'POST':
+        form = None
+        if 'agregar_user_story' in request.POST:
+            print("user story")
+            form = AgregarUserStoryForm(request.POST, proyecto=proyecto, sprint=sprint)
+        elif 'agregar_usuario' in request.POST:
+            print("usuario")
+            form = AgregarDesarrolladorForm(request.POST, proyecto=proyecto, sprint=sprint)
+        if form and form.is_valid():
+            form.save()
+            return HttpResponseRedirect(
+                reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+        else:
+            print(form.errors)
+            return HttpResponse(form)
+    else:
+        form_usuario = AgregarDesarrolladorForm(proyecto=proyecto, sprint=sprint)
+        form_user_story = AgregarUserStoryForm(proyecto=proyecto, sprint=sprint)
+
+    context = {'proyecto': proyecto, 'sprint': sprint,
+               'form_usuario': form_usuario, 'form_user_story': form_user_story}
     return render(request, 'sgp/sprint.html', context)
+
+
+def editar_sprint(request, proyecto_id, sprint_id):
+    """
+    Permite modificar los parámetros del sprint o eliminarlo.
+
+    Muestra una instancia de SprintForm. Si los datos recibidos a través del
+    formulario son válidos, actualiza la entrada en la base de datos.
+
+    **Fecha:** 30/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
+    sprint = Sprint.objects.get(pk=sprint_id)
+    if request.method == 'POST':
+        if 'eliminar' in request.POST:
+            sprint.delete()
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto'))
+        else:
+            form = SprintForm(request.POST, proyecto=proyecto, instance=sprint)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(
+                    reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+    else:
+        form = SprintForm(proyecto=proyecto, instance=sprint)
+    context = {'proyecto': proyecto, 'sprint': sprint, 'form': form}
+    return render(request, 'sgp/sprint-editar.html', context)
+
+
+def equipo_sprint(request, proyecto_id, sprint_id):
+    """
+    **Fecha:** 24/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    sprint = Sprint.objects.get(id=sprint_id)
+
+    if request.method == 'POST':
+        form = AgregarDesarrolladorForm(request.POST, proyecto=proyecto, sprint=sprint)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(
+                reverse('sgp:equipo_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+    else:
+        form = AgregarDesarrolladorForm(proyecto=proyecto, sprint=sprint)
+
+    context = {'proyecto': proyecto, 'sprint': sprint, 'form': form}
+    return render(request, 'sgp/sprint-equipo.html', context)
+
+
+def sprint_backlog(request, proyecto_id, sprint_id):
+    """
+    **Fecha:** 24/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    sprint = Sprint.objects.get(id=sprint_id)
+
+    if request.method == 'POST':
+        form = AgregarUserStoryForm(request.POST, proyecto=proyecto, sprint=sprint)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(
+                reverse('sgp:sprint_backlog', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+    else:
+        form = AgregarUserStoryForm(proyecto=proyecto, sprint=sprint)
+
+    context = {'proyecto': proyecto, 'sprint': sprint, 'form': form}
+    return render(request, 'sgp/sprint-backlog.html', context)

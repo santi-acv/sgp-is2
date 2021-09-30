@@ -237,7 +237,7 @@ class Role(models.Model):
 
     **Fecha:** 02/09/21
 
-    **Artefacto:** Roles de proyecto
+    **Artefacto:** Módulo de proyecto
     """
     nombre = models.CharField(max_length=100)
     """Nombre del rol."""
@@ -324,7 +324,7 @@ class Sprint(models.Model):
     """Indica en qué estado se encuentra el sprint. Cuando este se crea, el
     estado predeterminado es pendiente."""
 
-    equipo = models.ManyToManyField(User)
+    equipo = models.ManyToManyField(User, through='ParticipaSprint')
     """Indica qué usuarios participan de este sprint."""
 
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
@@ -385,7 +385,7 @@ class UserStory(models.Model):
     proyecto = models.ForeignKey(Proyecto, related_name='product_backlog', on_delete=models.CASCADE)
     """Indica a qué proyecto pertenece el user story."""
 
-    sprint = models.ForeignKey(Sprint, related_name='sprint_backlog', on_delete=models.CASCADE, null=True)
+    sprint = models.ForeignKey(Sprint, related_name='sprint_backlog', on_delete=models.SET_NULL, null=True)
     """Indica a qué sprint pertenece el user story.
     
     |"""
@@ -414,5 +414,28 @@ class Comentario(models.Model):
 
     user_story = models.ForeignKey(UserStory, on_delete=models.CASCADE)
     """User story al que pertenece el comentario
+    
+    |"""
+
+
+class ParticipaSprint(models.Model):
+    """
+    Describe la relación de pertenencia de un usuario dentro de un sprint.
+
+    **Fecha:** 30/09/21
+
+    **Artefacto:** Módulo de desarrollo
+    """
+    sprint = models.ForeignKey(Sprint, on_delete=models.CASCADE)
+    """Sprint en el que participa el usuario."""
+
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    """Usuario que participa en el sprint."""
+
+    horas_disponibles = models.IntegerField()
+    """Horas disponibles por el usuario para este sprint"""
+
+    user_stories = models.ManyToManyField(UserStory)
+    """Indica que user stories tiene asignado el usuario
     
     |"""

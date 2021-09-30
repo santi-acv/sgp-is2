@@ -46,7 +46,7 @@
 </form>
 
 <p>Para agregar un usuario al equipo, selecciónelo de la siguiente lista.</p>
-<form action="{% url 'sgp:administrar_equipo' proyecto_id=proyecto.id %}" method="post">
+<form method="post">
     {% csrf_token %}
     <table>
         <tr>
@@ -67,14 +67,6 @@
 
     const table = document.querySelector('table');
     const empty_row = document.getElementById("empty_form_row");
-
-    function agregar() {
-        const clone = empty_row.cloneNode(true);
-        clone.classList.remove("hidden");
-        clone.innerHTML = clone.innerHTML.replace(/__prefix__/g, total_forms++);
-        form_idx.value = total_forms.toString();
-        table.appendChild(clone);
-    }
 
     function borrar(form, self) {
         const del = document.getElementById("id_form-"+(form)+"-borrar");

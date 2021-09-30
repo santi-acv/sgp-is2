@@ -15,7 +15,7 @@ from django.forms import ModelForm
 from django.utils import timezone
 from guardian.shortcuts import assign_perm, remove_perm, get_perms_for_model
 
-from .models import User, Proyecto, Role, Sprint, UserStory, Comentario
+from .models import User, Proyecto, Role, Sprint, UserStory, Comentario, ParticipaSprint
 
 
 class UserForm(ModelForm):
@@ -261,20 +261,19 @@ class AgregarMiembroForm(forms.Form):
 
     **Artefacto:** módulo de proyecto
 
-    :param proyecto_id: El proyecto al que se le agrega un usuario.
-    :type proyecto_id: Proyecto
+    :param proyecto: El proyecto al que se le agrega un usuario.
+    :type proyecto: Proyecto
 
     |
     """
 
-    def __init__(self, *args, proyecto_id, **kwargs):
-        self.proyecto = proyecto_id
+    def __init__(self, *args, proyecto, **kwargs):
+        self.proyecto = proyecto
         super().__init__(*args, **kwargs)
-        self.fields['usuarios'] = \
-            forms.ModelChoiceField(queryset=User.objects.exclude(participa__proyecto=proyecto_id)
-                                   .exclude(pk='AnonymousUser'))
-        self.fields['roles'] = \
-            forms.ModelChoiceField(queryset=Role.objects.filter(proyecto=proyecto_id))
+        self.fields['usuarios'] = forms.ModelChoiceField(
+            queryset=User.objects.exclude(participa__proyecto=proyecto).exclude(pk='AnonymousUser'))
+        self.fields['roles'] = forms.ModelChoiceField(
+            queryset=Role.objects.filter(proyecto=proyecto))
 
     def save(self):
         self.proyecto.asignar_rol(self.cleaned_data['usuarios'], self.cleaned_data['roles'].nombre)
@@ -374,7 +373,7 @@ class SprintForm(ModelForm):
     duracion = forms.IntegerField(label="Duración (en días)", min_value=0,
                                  widget=forms.NumberInput(attrs={'onchange': 'actualizar_fecha_fin()'}))
     fecha_inicio = forms.DateField(label="Fecha de inicio",
-                                   widget=forms.TextInput(attrs={'onchange': 'actualizar_fecha_fin()'}),
+                                   widget=forms.DateInput(attrs={'onchange': 'actualizar_fecha_fin()'}),
                                    error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
     fecha_fin = forms.DateField(label="Fecha de fin", disabled=True, required=False)
 
@@ -382,6 +381,9 @@ class SprintForm(ModelForm):
         super(ModelForm, self).__init__(*args, **kwargs)
         if not self.instance.pk:
             self.fields['duracion'].initial = proyecto.duracion_sprint
+        else:
+            self.fields['duracion'].initial = (self.instance.fecha_fin - self.instance.fecha_inicio).days
+
 
     def clean(self):
         """
@@ -407,3 +409,66 @@ class SprintForm(ModelForm):
     class Meta:
         model = Sprint
         fields = ('nombre', 'descripcion', 'duracion', 'fecha_inicio', 'fecha_fin')
+
+
+class AgregarUserStoryForm(forms.Form):
+    """
+    Permite seleccionar un user story que no forma parte de ningún sprint.
+    Agrega el user story al sprint con esa estimación.
+
+    **Fecha:** 30/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    :param proyecto: El proyecto del cual se obtienen los user stories.
+    :param sprint: El sprint al que se le agrega un user story.
+    :type proyecto: Proyecto
+    :type sprint: Sprint
+
+    |
+    """
+
+    def __init__(self, *args, proyecto, sprint, **kwargs):
+        self.sprint = sprint
+        self.proyecto = proyecto
+        super().__init__(*args, **kwargs)
+        self.fields['user_story'] = forms.ModelChoiceField(
+            queryset=proyecto.product_backlog.exclude(sprint__isnull=False), required=True)
+        self.fields['usuario'] = forms.ModelChoiceField(queryset=sprint.equipo.all(), required=True)
+
+    def save(self):
+        user_story = self.cleaned_data['user_story']
+        user_story.sprint = self.sprint
+        self.sprint.sprint_backlog.add(user_story)
+
+
+class AgregarDesarrolladorForm(forms.Form):
+    """
+    Permite seleccionar un desarrollador que no forma parte del equipo del
+    sprint y una disponibilidad de horas. Agrega al usuario al equipo con ese
+    número de horas disponibles.
+
+    **Fecha:** 30/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    :param proyecto: El proyecto del cual se obtienen los usuarios.
+    :param sprint: El sprint al que se le agrega un usuario.
+    :type proyecto: Proyecto
+    :type sprint: Sprint
+
+    |
+    """
+
+    def __init__(self, *args, proyecto, sprint, **kwargs):
+        self.sprint = sprint
+        super().__init__(*args, **kwargs)
+        queryset = proyecto.equipo \
+            .filter(participa__rol__permisos__codename__in=['desarrollo']) \
+            .exclude(user_id__in=sprint.equipo.all())
+        self.fields['usuario'] = forms.ModelChoiceField(queryset=queryset, required=True)
+        self.fields['horas'] = forms.IntegerField(min_value=0, required=True)
+
+    def save(self):
+        ParticipaSprint.objects.create(sprint=self.sprint, usuario=self.cleaned_data['usuario'],
+                                       horas_disponibles=self.cleaned_data['horas'])

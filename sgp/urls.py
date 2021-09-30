@@ -20,4 +20,7 @@ urlpatterns = [
     path('proyecto-<int:proyecto_id>/us-<int:us_numero>/editar', views.editar_user_story, name='editar_user_story'),
     path('proyecto-<int:proyecto_id>/crear-sprint', views.crear_sprint, name='crear_sprint'),
     path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>', views.mostrar_sprint, name='mostrar_sprint'),
+    path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>/editar', views.editar_sprint, name='editar_sprint'),
+    path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>/equipo', views.equipo_sprint, name='equipo_sprint'),
+    path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>/backlog', views.sprint_backlog, name='sprint_backlog'),
 ]
