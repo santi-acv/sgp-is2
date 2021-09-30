@@ -20,7 +20,7 @@ from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role, Sprint, UserStory
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
-    UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm
+    UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm, UserSprintForm, BacklogForm
 
 
 def index(request):
@@ -558,7 +558,7 @@ def editar_sprint(request, proyecto_id, sprint_id):
 
 def equipo_sprint(request, proyecto_id, sprint_id):
     """
-    **Fecha:** 24/09/21
+    **Fecha:** 30/09/21
 
     **Artefacto:** módulo de desarrollo
 
@@ -566,8 +566,9 @@ def equipo_sprint(request, proyecto_id, sprint_id):
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
+    UserSprintFormSet = modelformset_factory(User, form=UserSprintForm, extra=0, can_delete=True)
 
-    if request.method == 'POST':
+    if 'agregar_usuario' in request.POST:
         form = AgregarDesarrolladorForm(request.POST, proyecto=proyecto, sprint=sprint)
         if form.is_valid():
             form.save()
@@ -576,13 +577,29 @@ def equipo_sprint(request, proyecto_id, sprint_id):
     else:
         form = AgregarDesarrolladorForm(proyecto=proyecto, sprint=sprint)
 
-    context = {'proyecto': proyecto, 'sprint': sprint, 'form': form}
-    return render(request, 'sgp/sprint-equipo.html', context)
+    if 'editar_usuarios' in request.POST:
+        formset = UserSprintFormSet(request.POST, form_kwargs={'sprint': sprint})
+        if formset.is_valid():
+            formset.save()
+
+            for form in formset:
+                if form.cleaned_data.get('borrar'):
+                    return HttpResponseRedirect(
+                        reverse('sgp:equipo_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+
+            return HttpResponseRedirect(
+                reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+
+    else:
+        formset = UserSprintFormSet(queryset=sprint.equipo.all(), form_kwargs={'sprint': sprint})
+
+    return render(request, 'sgp/sprint-equipo.html',
+                  {'proyecto': proyecto, 'sprint': sprint, 'formset': formset, 'form': form})
 
 
 def sprint_backlog(request, proyecto_id, sprint_id):
     """
-    **Fecha:** 24/09/21
+    **Fecha:** 30/09/21
 
     **Artefacto:** módulo de desarrollo
 
@@ -590,8 +607,9 @@ def sprint_backlog(request, proyecto_id, sprint_id):
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
+    BacklogFormSet = modelformset_factory(UserStory, form=BacklogForm, extra=0, can_delete=True)
 
-    if request.method == 'POST':
+    if 'agregar_user_story' in request.POST:
         form = AgregarUserStoryForm(request.POST, proyecto=proyecto, sprint=sprint)
         if form.is_valid():
             form.save()
@@ -600,5 +618,19 @@ def sprint_backlog(request, proyecto_id, sprint_id):
     else:
         form = AgregarUserStoryForm(proyecto=proyecto, sprint=sprint)
 
-    context = {'proyecto': proyecto, 'sprint': sprint, 'form': form}
+    if 'editar_user_stories' in request.POST:
+        formset = BacklogFormSet(request.POST, form_kwargs={'sprint': sprint})
+        if formset.is_valid():
+            formset.save()
+            for form in formset:
+                if form.cleaned_data.get('borrar'):
+                    return HttpResponseRedirect(
+                        reverse('sgp:sprint_backlog', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+
+            return HttpResponseRedirect(
+                reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
+    else:
+        formset = BacklogFormSet(queryset=sprint.sprint_backlog.all(), form_kwargs={'sprint': sprint})
+
+    context = {'proyecto': proyecto, 'sprint': sprint, 'form': form, 'formset': formset}
     return render(request, 'sgp/sprint-backlog.html', context)

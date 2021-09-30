@@ -4,17 +4,21 @@
     <meta charset="UTF-8">
     <title>{{ sprint.nombre }} - SGP</title>
     <style>
-        th { text-align: left; padding-right: 25px }
+        .str { padding: 0 5px }
+        .chk { text-align: center }
+        .hidden { display: none }
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ sprint.nombre }}</h3>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ sprint.nombre }} - Sprint backlog</h3>
 {% include 'sgp/proyecto-menu.html' %}
 {% include 'sgp/sprint-menu.html' %}
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 
 {% if sprint.sprint_backlog.all %}
+    <form method=POST>
+    {% csrf_token %}
     <table>
         <tr>
             <th>&#8470;</th>
@@ -22,24 +26,27 @@
             <th>Prioridad</th>
             <th>Horas estimadas</th>
             <th>Comentarios</th>
-            <th>Desarrollador</th>
         </tr>
-        {% for us in sprint.sprint_backlog.all %}
-        <tr>
-            <td>US-{{ us.numero }}</td>
-            <td><a href="{% url 'sgp:mostrar_user_story' proyecto.id us.numero %}">
-                {{ us.nombre }}</a></td>
-            <td>{{ us.get_prioridad_display }}</td>
-            <td>{{ us.horas_estimadas|default_if_none:"--" }}</td>
-            <td>{{ us.comentario_set.count }}</td>
-            <td>{% for p in us.participasprint_set.all %}
-                {% if p.sprint == sprint %}
-                    {{ p.usuario }}
-                {% endif %}
-            {% endfor %}</td>
-        </tr>
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <tr>
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-n">{{ form.n.value }}</td>
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-nombre"><a href="{% url 'sgp:mostrar_user_story' proyecto.id form.instance.numero %}">{{ form.nombre.value }}</a></td>
+            <td class="str">{{ form.prioridad }}</td>
+            <td class="str">{{ form.horas_estimadas }}</td>
+            <td class="chk" id="id_form-{{ forloop.counter|add:"-1" }}-comentarios">{{ form.instance.comentario_set.count }}</td>
+            <td class="hidden">{{ form.borrar }}</td>
+            <td class="chk"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
+                                   type="button" value="Remover"></td>
+            <td>{{ form.errors }}</td>
+            </tr>
         {% endfor %}
     </table>
+    <p><input type="submit" value="Guardar" name="editar_user_stories"></p>
+    </form>
 {% endif %}
 
 {% if "gestionar_proyecto" in proyecto_perms %}
@@ -59,5 +66,32 @@
         <p><input type="submit" value="Agregar" name="agregar_user_story"></p>
     </form>
 {% endif %}
+
+<script type="text/javascript">
+    const form_idx = document.getElementById("id_form-TOTAL_FORMS")
+    let total_forms = parseInt(form_idx.value);
+
+    const table = document.querySelector('table');
+    const empty_row = document.getElementById("empty_form_row");
+
+    function borrar(form, self) {
+        const del = document.getElementById("id_form-"+(form)+"-borrar");
+        const status = ! del.checked;
+        del.checked = status;
+        document.getElementById("id_form-"+(form)+"-prioridad").disabled = status;
+        document.getElementById("id_form-"+(form)+"-horas_estimadas").disabled = status;
+        if (status) {
+            self.value = "Restaurar";
+            document.getElementById("id_form-"+(form)+"-n").style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-comentarios").style.setProperty('text-decoration', 'line-through');
+        } else {
+            self.value = "Remover";
+            document.getElementById("id_form-"+(form)+"-n").style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-comentarios").style.setProperty('text-decoration', '');
+        }
+    }
+</script>
 </body>
 </html>

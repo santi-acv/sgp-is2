@@ -411,6 +411,61 @@ class SprintForm(ModelForm):
         fields = ('nombre', 'descripcion', 'duracion', 'fecha_inicio', 'fecha_fin')
 
 
+class BacklogForm(ModelForm):
+    """
+    Corresponde al modelo UserStory. Se muestra un formulario por cada user
+    story dentro de la página de sprint backlog, donde muestra la información
+    principal y se pueden modificar parámetros de los user stories.
+
+    **Fecha:** 30/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    :param sprint: El sprint cuyos user stories se muestran.
+    :type sprint: Sprint
+    """
+
+    borrar = forms.BooleanField(required=False)
+
+    def __init__(self, *args, sprint, **kwargs):
+        super(BacklogForm, self).__init__(*args, **kwargs)
+
+        self.sprint = sprint
+
+        self.fields['n'] = forms.CharField(initial='US-'+str(self.instance.numero), disabled=True)
+        self.fields['nombre'].disabled = True
+        self.fields['prioridad'].required = False
+        self.fields['horas_estimadas'].required = False
+
+    def clean(self):
+        """
+        Se asegura de que al marcar un formulario para borrarlo, esto quite al
+        usuario del equipo en vez de eliminarlo.
+
+        |
+        """
+        cleaned_data = super(ModelForm, self).clean()
+        if not cleaned_data.get('prioridad'):
+            cleaned_data['prioridad'] = self.instance.prioridad
+        if not cleaned_data.get('horas_estimadas'):
+            cleaned_data['horas_estimadas'] = self.instance.horas_estimadas
+        if cleaned_data.get('borrar'):
+            print("*****")
+            self.instance.sprint = None
+            self.instance.save()
+        return cleaned_data
+
+    def save(self, commit=True):
+        if self.cleaned_data.get('horas'):
+            self.participa.horas_disponibles = self.cleaned_data['horas']
+            self.participa.save()
+        super(BacklogForm, self).save(commit)
+
+    class Meta:
+        model = UserStory
+        fields = ['nombre', 'prioridad', 'horas_estimadas']
+
+
 class AgregarUserStoryForm(forms.Form):
     """
     Permite seleccionar un user story que no forma parte de ningún sprint.
@@ -434,12 +489,69 @@ class AgregarUserStoryForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.fields['user_story'] = forms.ModelChoiceField(
             queryset=proyecto.product_backlog.exclude(sprint__isnull=False), required=True)
-        self.fields['usuario'] = forms.ModelChoiceField(queryset=sprint.equipo.all(), required=True)
+        self.fields['usuario'] = forms.ModelChoiceField(queryset=sprint.equipo.all(), required=False)
 
     def save(self):
         user_story = self.cleaned_data['user_story']
         user_story.sprint = self.sprint
         self.sprint.sprint_backlog.add(user_story)
+
+
+class UserSprintForm(ModelForm):
+    """
+    Corresponde al modelo User. Se muestra un formulario por cada usuario
+    dentro de la página de equipo de sprint, donde muestra la información
+    principal y se pueden cargar las horas disponibles de cada usuario.
+
+    Posee campos desactivados correspondientes a los atributos de nombre,
+    apellido, y correo electrónico. Además, posee un campo activado para
+    las horas disponibles.
+
+    **Fecha:** 30/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    :param sprint: El sprint cuyos roles se muestran.
+    :type sprint: Sprint
+    """
+
+    borrar = forms.BooleanField(required=False)
+
+    def __init__(self, *args, sprint, **kwargs):
+        super(UserSprintForm, self).__init__(*args, **kwargs)
+
+        self.sprint = sprint
+        self.participa = ParticipaSprint.objects.get(sprint=sprint, usuario=self.instance)
+
+        self.fields['nombre'].disabled = True
+        self.fields['apellido'].disabled = True
+        self.fields['email'].disabled = True
+        self.fields['horas'] = forms.IntegerField(min_value=0, required=False,
+                                                  initial=self.participa.horas_disponibles)
+
+    def clean(self):
+        """
+        Se asegura de que al marcar un formulario para borrarlo, esto quite al
+        usuario del equipo en vez de eliminarlo.
+
+        |
+        """
+        cleaned_data = super(ModelForm, self).clean()
+        if cleaned_data.get('borrar'):
+            self.participa.delete()
+            if cleaned_data.get('horas'):
+                cleaned_data.pop('horas')
+        return cleaned_data
+
+    def save(self, commit=True):
+        if self.cleaned_data.get('horas'):
+            self.participa.horas_disponibles = self.cleaned_data['horas']
+            self.participa.save()
+        super(UserSprintForm, self).save(commit)
+
+    class Meta:
+        model = User
+        fields = ['nombre', 'apellido', 'email', 'borrar']
 
 
 class AgregarDesarrolladorForm(forms.Form):

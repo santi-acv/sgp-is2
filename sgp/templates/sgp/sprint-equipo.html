@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>{{ sprint.nombre }} - SGP</title>
     <style>
-        th { text-align: left; padding-right: 25px }
+        .str { padding: 0 5px }
+        .chk { text-align: center }
+        .hidden { display: none }
     </style>
 </head>
 <body>
@@ -15,22 +17,34 @@
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 
 {% if sprint.equipo.all %}
+    <form method=POST>
+    {% csrf_token %}
     <table>
         <tr>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>E-Mail</th>
-            <th>Horas disponibles</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>E-Mail</th>
+        <th>Horas disponibles</th>
         </tr>
-        {% for p in sprint.participasprint_set.all %}
+        {{ formset.management_form }}
+        {% for form in formset %}
             <tr>
-                <td>{{ p.usuario.nombre }}</td>
-                <td>{{ p.usuario.apellido }}</td>
-                <td>{{ p.usuario.email }}</td>
-                <td>{{ p.horas_disponibles }}</td>
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-nombre">{{ form.nombre.value }}</td>
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-apellido">{{ form.apellido.value }}</td>
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-email">{{ form.email.value }}</td>
+            <td class="str">{{ form.horas }}</td>
+            <td class="hidden">{{ form.borrar }}</td>
+            <td class="chk"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
+                                   type="button" value="Remover"></td>
+            <td>{{ form.errors }}</td>
             </tr>
         {% endfor %}
     </table>
+    <p><input type="submit" value="Guardar" name="editar_usuarios"></p>
+    </form>
 {% else %}
     <p>El sprint aún no tiene ningún desarrollador.</p>
 {% endif %}
@@ -52,5 +66,31 @@
         <p><input type="submit" value="Agregar" name="agregar_usuario"></p>
     </form>
 {% endif %}
+
+<script type="text/javascript">
+    const form_idx = document.getElementById("id_form-TOTAL_FORMS")
+    let total_forms = parseInt(form_idx.value);
+
+    const table = document.querySelector('table');
+    const empty_row = document.getElementById("empty_form_row");
+
+    function borrar(form, self) {
+        const del = document.getElementById("id_form-"+(form)+"-borrar");
+        const status = ! del.checked;
+        del.checked = status;
+        document.getElementById("id_form-"+(form)+"-horas").disabled = status;
+        if (status) {
+            self.value = "Restaurar";
+            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-apellido").style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-email").style.setProperty('text-decoration', 'line-through');
+        } else {
+            self.value = "Remover";
+            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-apellido").style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-email").style.setProperty('text-decoration', '');
+        }
+    }
+</script>
 </body>
 </html>
