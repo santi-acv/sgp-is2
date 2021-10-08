@@ -11,8 +11,7 @@
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
-{% include 'sgp/proyecto-menu.html' %}
+{% include 'sgp/proyecto-menu.html' with pos="Roles" %}
 <p>En esta página puede ver y modificar los roles asociados al proyecto.</p>
 <form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto.id %}" method="post" name="form">
 {% csrf_token %}

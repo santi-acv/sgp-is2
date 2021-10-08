@@ -10,8 +10,7 @@
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
-{% include 'sgp/proyecto-menu.html' %}
+{% include 'sgp/proyecto-menu.html' with pos="Product Backlog" %}
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 <table>

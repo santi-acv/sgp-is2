@@ -1,9 +1,28 @@
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
-<p> <a href="{% url 'sgp:mostrar_sprint' proyecto.id sprint.id %}">Sprint</a>
-    {% if "gestionar_proyecto" in proyecto_perms %}
-        &#183; <a href="{% url 'sgp:editar_sprint' proyecto.id sprint.id %}">Editar</a>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> -
+    <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">{{ proyecto.nombre }}</a>
+    - {{ sprint.nombre }}</h3>
+<p> {% if not pos %}
+        <strong>Sprint</strong>
+    {% else %}
+        <a href="{% url 'sgp:mostrar_sprint' proyecto.id sprint.id %}">Sprint</a>
     {% endif %}
-    &#183; <a href="{% url 'sgp:equipo_sprint' proyecto.id sprint.id %}">Equipo</a>
-    &#183; <a href="{% url 'sgp:sprint_backlog' proyecto.id sprint.id %}">Sprint Backlog</a>
+    {% if "gestionar_proyecto" in proyecto_perms %}
+        {% if pos == "Editar" %}
+            &#183; <strong>Editar</strong>
+        {% else %}
+            &#183; <a href="{% url 'sgp:editar_sprint' proyecto.id sprint.id %}">Editar</a>
+        {% endif %}
+    {% endif %}
+    {% if pos == "Equipo" %}
+        &#183; <strong>Equipo</strong>
+    {% else %}
+        &#183; <a href="{% url 'sgp:equipo_sprint' proyecto.id sprint.id %}">Equipo</a>
+    {% endif %}
+    {% if pos == "Sprint Backlog" %}
+        &#183; <strong>Sprint Backlog</strong>
+    {% else %}
+        &#183; <a href="{% url 'sgp:sprint_backlog' proyecto.id sprint.id %}">Sprint Backlog</a>
+    {% endif %}
 </p>

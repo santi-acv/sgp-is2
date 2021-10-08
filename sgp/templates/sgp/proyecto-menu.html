@@ -1,14 +1,36 @@
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
-<p> <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Proyecto</a>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
+<p>
+    {% if not pos %}
+        <strong>Proyecto</strong>
+    {% else %}
+        <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Proyecto</a>
+    {% endif %}
     {% if "gestionar_proyecto" in proyecto_perms %}
-        &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
+        {% if pos == "Editar" %}
+            &#183; <strong>Editar</strong>
+        {% else %}
+            &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
+        {% endif %}
     {% endif %}
     {% if "administrar_equipo" in proyecto_perms %}
-        &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
-        &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
+        {% if pos == "Equipo" %}
+            &#183; <strong>Equipo</strong>
+        {% else %}
+            &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
+        {% endif %}
+        {% if pos == "Roles" %}
+            &#183; <strong>Roles</strong>
+        {% else %}
+            &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
+        {% endif %}
     {% endif %}
-    &#183; <a href="{% url 'sgp:product_backlog' proyecto.id %}">Product Backlog</a>
+    {% if pos == "Product Backlog" %}
+        &#183; <strong>Product Backlog</strong>
+    {% else %}
+        &#183; <a href="{% url 'sgp:product_backlog' proyecto.id %}">Product Backlog</a>
+    {% endif %}
     &#183; Planificación
     &#183; Kanban
     &#183; Burndown Chart

@@ -8,8 +8,6 @@
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ sprint.nombre }}</h3>
-{% include 'sgp/proyecto-menu.html' %}
 {% include 'sgp/sprint-menu.html' %}
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
@@ -21,6 +19,20 @@
     <tr><th>Fecha de inicio:</th><td>{{ sprint.fecha_inicio }}</td></tr>
     <tr><th>Fecha de fin:</th><td>{{ sprint.fecha_fin }}</td></tr>
     <tr><th>Estado:</th><td>{{ sprint.get_estado_display }}</td></tr>
+    <tr><th>Capacidad del equipo:</th><td>{{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }}</td></tr>
 </table>
+{% if "gestionar_proyecto" in proyecto_perms %}
+    {% if sprint.estado == sprint.Estado.PENDIENTE %}
+        <ul>
+            {% for e in error %}
+                <li>{{ e }}</li>
+            {% endfor %}
+        </ul>
+        <form method=POST>
+            {% csrf_token %}
+            <p><input type="submit" value="Iniciar Sprint"></p>
+        </form>
+    {% endif %}
+{% endif %}
 </body>
 </html>

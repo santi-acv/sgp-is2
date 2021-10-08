@@ -10,13 +10,14 @@
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ sprint.nombre }} - Equipo</h3>
-{% include 'sgp/proyecto-menu.html' %}
-{% include 'sgp/sprint-menu.html' %}
+{% include 'sgp/sprint-menu.html' with pos="Equipo" %}
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 
 {% if sprint.equipo.all %}
+
+    <p><strong>Capacidad del equipo:</strong> {{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }}</p>
+
     <form method=POST>
     {% csrf_token %}
     <table>
