@@ -328,9 +328,34 @@ class Sprint(models.Model):
     """Indica qué usuarios participan de este sprint."""
 
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
-    """Indica a qué proyecto pertenece el sprint.
-    
-    |"""
+    """Indica a qué proyecto pertenece el sprint."""
+
+    def validar(self):
+        """
+        Valida el spreint y retorna la lista de errores que este tenga. Si la
+        lista está vacía, el sprint es válido.
+        """
+        errores = []
+
+        # verifica que haya al menos un desarrollador
+        if not self.equipo.first():
+            errores.append("El sprint necesita al menos un desarrollador.")
+
+        # verifica que exista al menos un user story
+        if not self.sprint_backlog.first():
+            errores.append("El sprint necesta al menos un user story.")
+        return errores
+
+    @property
+    def capacidad_equipo(self):
+        """Calcula el número de horas disponibles de los miembros del sprint.
+
+        |"""
+
+        capacidad = 0
+        for miembro in self.participasprint_set.all():
+            capacidad = capacidad + miembro.horas_disponibles
+        return capacidad
 
     def __str__(self):
         return self.nombre

@@ -492,36 +492,26 @@ def crear_sprint(request, proyecto_id):
 
 def mostrar_sprint(request, proyecto_id, sprint_id):
     """
+    Muestra la información principal del sprint y permite cambiar su estado.
+
     **Fecha:** 24/09/21
 
     **Artefacto:** módulo de desarrollo
 
     |
     """
-    proyecto = Proyecto.objects.get(id=proyecto_id)
+    proyecto = Proyecto.objects.get(pk=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
-
+    error = None
     if request.method == 'POST':
-        form = None
-        if 'agregar_user_story' in request.POST:
-            print("user story")
-            form = AgregarUserStoryForm(request.POST, proyecto=proyecto, sprint=sprint)
-        elif 'agregar_usuario' in request.POST:
-            print("usuario")
-            form = AgregarDesarrolladorForm(request.POST, proyecto=proyecto, sprint=sprint)
-        if form and form.is_valid():
-            form.save()
+        error = sprint.validar()
+        if not error:
+            sprint.estado = proyecto.Estado.INICIADO
+            sprint.fecha_inicio = now()
+            sprint.save()
             return HttpResponseRedirect(
-                reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
-        else:
-            print(form.errors)
-            return HttpResponse(form)
-    else:
-        form_usuario = AgregarDesarrolladorForm(proyecto=proyecto, sprint=sprint)
-        form_user_story = AgregarUserStoryForm(proyecto=proyecto, sprint=sprint)
-
-    context = {'proyecto': proyecto, 'sprint': sprint,
-               'form_usuario': form_usuario, 'form_user_story': form_user_story}
+                reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto.id, 'sprint_id': sprint.id}))
+    context = {'proyecto': proyecto, 'sprint': sprint, 'error': error}
     return render(request, 'sgp/sprint.html', context)
 
 
@@ -619,7 +609,7 @@ def sprint_backlog(request, proyecto_id, sprint_id):
         form = AgregarUserStoryForm(proyecto=proyecto, sprint=sprint)
 
     if 'editar_user_stories' in request.POST:
-        formset = BacklogFormSet(request.POST, form_kwargs={'sprint': sprint})
+        formset = BacklogFormSet(request.POST, form_kwargs={'proyecto': proyecto, 'sprint': sprint})
         if formset.is_valid():
             formset.save()
             for form in formset:
@@ -630,7 +620,8 @@ def sprint_backlog(request, proyecto_id, sprint_id):
             return HttpResponseRedirect(
                 reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
     else:
-        formset = BacklogFormSet(queryset=sprint.sprint_backlog.all(), form_kwargs={'sprint': sprint})
+        formset = BacklogFormSet(queryset=sprint.sprint_backlog.all(),
+                                 form_kwargs={'proyecto': proyecto, 'sprint': sprint})
 
     context = {'proyecto': proyecto, 'sprint': sprint, 'form': form, 'formset': formset}
     return render(request, 'sgp/sprint-backlog.html', context)

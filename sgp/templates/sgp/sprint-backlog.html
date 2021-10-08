@@ -26,6 +26,7 @@
             <th>Prioridad</th>
             <th>Horas estimadas</th>
             <th>Comentarios</th>
+            <th>Desarrolador</th>
         </tr>
         {{ formset.management_form }}
         {% for form in formset %}
@@ -34,10 +35,14 @@
                 {{ field }}
             {% endfor %}
             <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-n">{{ form.n.value }}</td>
-            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-nombre"><a href="{% url 'sgp:mostrar_user_story' proyecto.id form.instance.numero %}">{{ form.nombre.value }}</a></td>
+            <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-nombre">
+                <a href="{% url 'sgp:mostrar_user_story' proyecto.id form.instance.numero %}">
+                    {{ form.nombre.value }}</a></td>
             <td class="str">{{ form.prioridad }}</td>
             <td class="str">{{ form.horas_estimadas }}</td>
-            <td class="chk" id="id_form-{{ forloop.counter|add:"-1" }}-comentarios">{{ form.instance.comentario_set.count }}</td>
+            <td class="chk" id="id_form-{{ forloop.counter|add:"-1" }}-comentarios">
+                {{ form.instance.comentario_set.count }}</td>
+            <td class="str">{{ form.desarrollador }}</td>
             <td class="hidden">{{ form.borrar }}</td>
             <td class="chk"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
                                    type="button" value="Remover"></td>
@@ -80,16 +85,23 @@
         del.checked = status;
         document.getElementById("id_form-"+(form)+"-prioridad").disabled = status;
         document.getElementById("id_form-"+(form)+"-horas_estimadas").disabled = status;
+        document.getElementById("id_form-"+(form)+"-desarrollador").disabled = status;
         if (status) {
             self.value = "Restaurar";
-            document.getElementById("id_form-"+(form)+"-n").style.setProperty('text-decoration', 'line-through');
-            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', 'line-through');
-            document.getElementById("id_form-"+(form)+"-comentarios").style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-n")
+                .style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-nombre")
+                .style.setProperty('text-decoration', 'line-through');
+            document.getElementById("id_form-"+(form)+"-comentarios")
+                .style.setProperty('text-decoration', 'line-through');
         } else {
             self.value = "Remover";
-            document.getElementById("id_form-"+(form)+"-n").style.setProperty('text-decoration', '');
-            document.getElementById("id_form-"+(form)+"-nombre").style.setProperty('text-decoration', '');
-            document.getElementById("id_form-"+(form)+"-comentarios").style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-n")
+                .style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-nombre")
+                .style.setProperty('text-decoration', '');
+            document.getElementById("id_form-"+(form)+"-comentarios")
+                .style.setProperty('text-decoration', '');
         }
     }
 </script>

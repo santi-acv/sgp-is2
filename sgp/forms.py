@@ -371,7 +371,7 @@ class SprintForm(ModelForm):
     :type proyecto: Proyecto
     """
     duracion = forms.IntegerField(label="Duración (en días)", min_value=0,
-                                 widget=forms.NumberInput(attrs={'onchange': 'actualizar_fecha_fin()'}))
+                                  widget=forms.NumberInput(attrs={'onchange': 'actualizar_fecha_fin()'}))
     fecha_inicio = forms.DateField(label="Fecha de inicio",
                                    widget=forms.DateInput(attrs={'onchange': 'actualizar_fecha_fin()'}),
                                    error_messages={'invalid': 'La fecha debe estar en formato dd/mm/aaaa.'})
@@ -383,7 +383,6 @@ class SprintForm(ModelForm):
             self.fields['duracion'].initial = proyecto.duracion_sprint
         else:
             self.fields['duracion'].initial = (self.instance.fecha_fin - self.instance.fecha_inicio).days
-
 
     def clean(self):
         """
@@ -427,7 +426,7 @@ class BacklogForm(ModelForm):
 
     borrar = forms.BooleanField(required=False)
 
-    def __init__(self, *args, sprint, **kwargs):
+    def __init__(self, *args, proyecto, sprint, **kwargs):
         super(BacklogForm, self).__init__(*args, **kwargs)
 
         self.sprint = sprint
@@ -436,6 +435,9 @@ class BacklogForm(ModelForm):
         self.fields['nombre'].disabled = True
         self.fields['prioridad'].required = False
         self.fields['horas_estimadas'].required = False
+        queryset = sprint.equipo.filter(participa__rol__permisos__codename__in=['desarrollo'])
+        initial = sprint.equipo.filter(participasprint__user_stories__in=[self.instance]).first()
+        self.fields['desarrollador'] = forms.ModelChoiceField(queryset=queryset, initial=initial, required=False)
 
     def clean(self):
         """
@@ -450,7 +452,12 @@ class BacklogForm(ModelForm):
         if not cleaned_data.get('horas_estimadas'):
             cleaned_data['horas_estimadas'] = self.instance.horas_estimadas
         if cleaned_data.get('borrar'):
-            print("*****")
+            p = ParticipaSprint.objects.filter(sprint=self.sprint, user_stories__in=[self.instance]).first()
+            if p:
+                p.user_stories.remove(self.instance)
+                p.save()
+            if self.cleaned_data.get('desarrollador'):
+                cleaned_data.pop('desarrollador')
             self.instance.sprint = None
             self.instance.save()
         return cleaned_data
@@ -459,6 +466,16 @@ class BacklogForm(ModelForm):
         if self.cleaned_data.get('horas'):
             self.participa.horas_disponibles = self.cleaned_data['horas']
             self.participa.save()
+
+        # actualiza el desarrollador del user story
+        p = ParticipaSprint.objects.filter(sprint=self.sprint, user_stories__in=[self.instance]).first()
+        if p:
+            p.user_stories.remove(self.instance)
+            p.save()
+        if self.cleaned_data.get('desarrollador'):
+            p = self.sprint.participasprint_set.get(usuario=self.cleaned_data['desarrollador'])
+            p.user_stories.add(self.instance)
+            p.save()
         super(BacklogForm, self).save(commit)
 
     class Meta:
@@ -492,9 +509,16 @@ class AgregarUserStoryForm(forms.Form):
         self.fields['usuario'] = forms.ModelChoiceField(queryset=sprint.equipo.all(), required=False)
 
     def save(self):
+        # agrega el user story al sprint backlog
         user_story = self.cleaned_data['user_story']
         user_story.sprint = self.sprint
         self.sprint.sprint_backlog.add(user_story)
+
+        # asigna el user story al desarrollador
+        if self.cleaned_data.get('usuario'):
+            p = self.sprint.participasprint_set.get(usuario=self.cleaned_data['usuario'])
+            p.user_stories.add(user_story)
+            p.save()
 
 
 class UserSprintForm(ModelForm):
