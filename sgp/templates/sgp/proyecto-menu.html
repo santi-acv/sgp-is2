@@ -1,6 +1,6 @@
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }}</h3>
+<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} {% if pos %} - {{ pos }}{% endif %}</h3>
 <p>
     {% if not pos %}
         <strong>Proyecto</strong>

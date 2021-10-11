@@ -8,10 +8,12 @@
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - {{ user_story.nombre }} - Editar</h3>
-{% include 'sgp/proyecto-menu.html' %}
+{% include 'sgp/proyecto-menu.html' with pos="Product Backlog" %}
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+
+<p><a href="{% url 'sgp:mostrar_user_story' proyecto_id=proyecto.id us_numero=user_story.numero %}">&#8592; Volver</a></p>
+
 <p>En esta página puede modificar la información del user story.</p>
 <form method=POST>
     {% csrf_token %}
