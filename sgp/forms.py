@@ -332,7 +332,8 @@ class UserStoryForm(ModelForm):
 
     def save(self, commit=True):
         self.instance.proyecto = self.proyecto
-        self.instance.numero = UserStory.objects.filter(proyecto=self.proyecto).count() + 1
+        if not self.instance.pk:
+            self.instance.numero = UserStory.objects.filter(proyecto=self.proyecto).count() + 1
         super(ModelForm, self).save(commit)
 
     class Meta:
