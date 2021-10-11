@@ -2,7 +2,7 @@
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 <h3><a href="{% url 'sgp:index' %}">SGP</a> -
     <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">{{ proyecto.nombre }}</a>
-    - {{ sprint.nombre }}</h3>
+    - {{ sprint.nombre }} {% if pos %} - {{ pos }}{% endif %}</h3>
 <p> {% if not pos %}
         <strong>Sprint</strong>
     {% else %}

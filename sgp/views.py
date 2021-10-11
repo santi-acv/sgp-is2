@@ -106,7 +106,7 @@ def administrar(request):
                     return HttpResponseRedirect(reverse('sgp:administrar'))
             return HttpResponseRedirect(reverse('sgp:index'))
     else:
-        formset = UserFormSet(queryset=User.objects.exclude(user_id='AnonymousUser'))
+        formset = UserFormSet(queryset=User.objects.exclude(user_id='AnonymousUser').order_by('fecha_registro'))
     return render(request, 'sgp/administrar.html', {'formset': formset})
 
 
@@ -341,8 +341,9 @@ def administrar_equipo(request, proyecto_id):
                                                 kwargs={'proyecto_id': proyecto_id}))
 
     # Enviar una lista de miembros
-    formset = UserRoleFormSet(queryset=User.objects.filter(participa__proyecto=proyecto_id),
-                              form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
+    formset = UserRoleFormSet(
+        queryset=User.objects.filter(participa__proyecto=proyecto_id).order_by('fecha_registro'),
+        form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
 
     return render(request, 'sgp/proyecto-equipo.html',
                   {'proyecto': proyecto, 'formset': formset, 'usuario': usuario, 'lista': lista})
@@ -363,13 +364,17 @@ def product_backlog(request, proyecto_id):
     |
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
-    backlog = proyecto.product_backlog.exclude(estado=UserStory.Estado.CANCELADO).order_by('prioridad')
+
+    backlog = dict()
+
+    backlog['activo'] = list(proyecto.product_backlog.exclude(
+        estado__in=[UserStory.Estado.PENDIENTE, UserStory.Estado.CANCELADO]).order_by('prioridad'))
+    backlog['activo'] = backlog.get('activo') + list(proyecto.product_backlog.filter(
+        estado=UserStory.Estado.PENDIENTE).order_by('prioridad'))
+    if request.user.has_perm('gestionar_proyecto', proyecto) or request.user.has_perm('pila_producto', proyecto):
+        backlog['cancelado'] = proyecto.product_backlog.filter(estado=UserStory.Estado.CANCELADO)
 
     context = {'proyecto': proyecto, 'backlog': backlog}
-
-    if request.user.has_perm('gestionar_proyecto', proyecto) or request.user.has_perm('pila_producto', proyecto):
-        context['backlog_cancelado'] = proyecto.product_backlog.filter(estado=UserStory.Estado.CANCELADO)
-
     return render(request, 'sgp/proyecto-backlog.html', context)
 
 
@@ -455,6 +460,7 @@ def editar_user_story(request, proyecto_id, us_numero):
         else:
             if 'eliminar' in request.POST:
                 user_story.estado = UserStory.Estado.CANCELADO
+                user_story.sprint = None
             elif 'restaurar' in request.POST:
                 user_story.estado = UserStory.Estado.PENDIENTE
             user_story.save()
@@ -507,6 +513,9 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
         error = sprint.validar()
         if not error:
             sprint.estado = proyecto.Estado.INICIADO
+            for us in sprint.sprint_backlog.all():
+                us.estado = UserStory.Estado.INICIADO
+                us.save()
             sprint.fecha_inicio = now()
             sprint.save()
             return HttpResponseRedirect(
@@ -581,7 +590,8 @@ def equipo_sprint(request, proyecto_id, sprint_id):
                 reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
 
     else:
-        formset = UserSprintFormSet(queryset=sprint.equipo.all(), form_kwargs={'sprint': sprint})
+        formset = UserSprintFormSet(queryset=sprint.equipo.all().order_by('fecha_registro'),
+                                    form_kwargs={'sprint': sprint})
 
     return render(request, 'sgp/sprint-equipo.html',
                   {'proyecto': proyecto, 'sprint': sprint, 'formset': formset, 'form': form})

@@ -54,7 +54,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     """Almacena el nombre del usuario, obtenido a partir de su cuenta de Google."""
 
     apellido = models.CharField(max_length=60)
-    """Almacena los apellidos del usuario, obtenidos a partir de su cuenta de Google.
+    """Almacena los apellidos del usuario, obtenidos a partir de su cuenta de Google."""
+
+    fecha_registro = models.DateTimeField("Fecha de registro", auto_now_add=True)
+    """Almacena la fecha en la que el usuario fue registrado.
     
     |"""
 
@@ -337,6 +340,11 @@ class Sprint(models.Model):
         """
         errores = []
 
+        # verifica que no haya otro sprint en curso
+        for sprint in self.proyecto.sprint_set.all():
+            if sprint.estado == Sprint.Estado.INICIADO:
+                errores.append("Ya existe un sprint en curso.")
+
         # verifica que haya al menos un desarrollador
         if not self.equipo.first():
             errores.append("El sprint necesita al menos un desarrollador.")
@@ -344,18 +352,43 @@ class Sprint(models.Model):
         # verifica que exista al menos un user story
         if not self.sprint_backlog.first():
             errores.append("El sprint necesta al menos un user story.")
+
+        # verifica que cada user story tenga un desarrollador asociado
+        for us in self.sprint_backlog.all():
+            if not ParticipaSprint.objects.filter(sprint=self, user_stories__in=[us]).exists():
+                errores.append("US-"+str(us.numero)+" no tiene un desarrollador asociado.")
+
+        # verifica que cada user story tenga un costo estimado
+        for us in self.sprint_backlog.all():
+            if not us.horas_estimadas:
+                errores.append("US-" + str(us.numero) + " aún no tiene un costo estimado en horas.")
+
+        # verifica que haya suficiente tiempo para completar los user stories
+        if self.equipo.first() and self.sprint_backlog.first() and self.costo_backlog > self.capacidad_equipo:
+            errores.append("La capacidad del equipo es menore que el costo estimado del backlog.")
+
         return errores
 
     @property
     def capacidad_equipo(self):
-        """Calcula el número de horas disponibles de los miembros del sprint.
-
-        |"""
+        """Calcula el número de horas disponibles de los miembros del sprint."""
 
         capacidad = 0
         for miembro in self.participasprint_set.all():
             capacidad = capacidad + miembro.horas_disponibles
         return capacidad
+
+    @property
+    def costo_backlog(self):
+        """Calcula el costo total en horas del sprint backlog.
+
+        |"""
+
+        costo = 0
+        for us in self.sprint_backlog.all():
+            if us.horas_estimadas:
+                costo = costo + us.horas_estimadas
+        return costo
 
     def __str__(self):
         return self.nombre

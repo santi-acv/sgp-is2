@@ -19,34 +19,44 @@
         <th>User Story</th>
         <th>Prioridad</th>
         <th>Horas estimadas</th>
+        <th>Estado</th>
         <th>Comentarios</th>
+        <th>Sprint</th>
     </tr>
-    {% for us in backlog %}
+    {% for us in backlog.activo %}
     <tr>
         <td>US-{{ us.numero }}</td>
         <td class="str"><a href="{% url 'sgp:mostrar_user_story' proyecto.id us.numero %}">{{ us.nombre }}</a></td>
         <td>{{ us.get_prioridad_display }}</td>
         <td>{{ us.horas_estimadas|default_if_none:"--" }}</td>
+        <td>{{ us.get_estado_display }}</td>
         <td>{{ us.comentario_set.count }}</td>
+        {% if us.sprint %}
+            <td><a href="{% url 'sgp:mostrar_sprint' proyecto.id us.sprint.id %}">{{ us.sprint }}</a></td>
+        {% else %}
+            <td>--</td>
+        {% endif %}
     </tr>
     {% endfor %}
 </table>
-{% if backlog_cancelado %}
+{% if backlog.cancelado %}
 <table>
     <tr>
         <th>&#8470;</th>
         <th>User Story</th>
         <th>Prioridad</th>
         <th>Horas estimadas</th>
+        <th>Estado</th>
         <th>Comentarios</th>
     </tr>
     <p>Los siguientes user stories fueron cancelados:</p>
-    {% for us in backlog_cancelado %}
+    {% for us in backlog.cancelado %}
     <tr>
         <td>US-{{ us.numero }}</td>
         <td class="str"><a href="{% url 'sgp:mostrar_user_story' proyecto.id us.numero %}">{{ us.nombre }}</a></td>
         <td>{{ us.get_prioridad_display }}</td>
         <td>{{ us.horas_estimadas|default_if_none:"--" }}</td>
+        <td>{{ us.get_estado_display }}</td>
         <td>{{ us.comentario_set.count }}</td>
     </tr>
     {% endfor %}

@@ -14,7 +14,12 @@
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 
-{% if "gestionar_proyecto" in proyecto_perms %}
+{% if sprint.sprint_backlog.all %}
+    <p><strong>Costo total del backlog:</strong>
+                {{ sprint.costo_backlog }} hora{{ sprint.costo_backlog|pluralize:",s" }}</p>
+{% endif %}
+
+{% if "gestionar_proyecto" in proyecto_perms and sprint.estado == sprint.Estado.PENDIENTE %}
     {% if sprint.sprint_backlog.all %}
         <form method=POST>
         {% csrf_token %}
@@ -25,7 +30,7 @@
                 <th>Prioridad</th>
                 <th>Horas estimadas</th>
                 <th>Comentarios</th>
-                <th>Desarrolador</th>
+                <th>Desarrollador</th>
             </tr>
             {{ formset.management_form }}
             {% for form in formset %}
@@ -114,8 +119,9 @@
                 <th class="str">User Story</th>
                 <th class="str">Prioridad</th>
                 <th class="str">Horas estimadas</th>
+                <th class="str">Estado</th>
                 <th class="str">Comentarios</th>
-                <th class="str">Desarrolador</th>
+                <th class="str">Desarrollador</th>
             </tr>
             {% for form in formset %}
                 <tr>
@@ -125,8 +131,9 @@
                             {{ form.nombre.value }}</a></td>
                     <td class="chk">{{ form.instance.get_prioridad_display }}</td>
                     <td class="chk">{{ form.horas_estimadas.value }}</td>
-                    <td class="chk"> {{ form.instance.comentario_set.count }}</td>
-                    <td class="chk">{{ form.desarrollador.value|default_if_none:"--" }}</td>
+                    <td class="chk">{{ form.instance.get_estado_display }}</td>
+                    <td class="chk">{{ form.instance.comentario_set.count }}</td>
+                    <td class="chk">{{ form.nombre_desarrollador|default_if_none:"--" }}</td>
                     <td>{{ form.errors }}</td>
                 </tr>
             {% endfor %}

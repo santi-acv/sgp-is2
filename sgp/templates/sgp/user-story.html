@@ -12,8 +12,6 @@
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 
-<p><a href="{% url 'sgp:product_backlog' proyecto_id=proyecto.id %}">&#8592; Volver</a></p>
-
 <table>
     <tr><th>&#8470;</th><td>US-{{ user_story.numero }}</td></tr>
     <tr><th>Nombre:</th><td>{{ user_story.nombre }}</td></tr>
@@ -29,6 +27,10 @@
     {% if user_story.horas_trabajadas %}
         <tr><th>Tiempo invertido:</th>
             <td>{{ user_story.horas_trabajadas }} hora{{ user_story.horas_trabajadas|pluralize:"s" }}</td></tr>
+    {% endif %}
+    {% if user_story.sprint %}
+        <tr><th>Sprint:</th>
+            <td><a href="{% url "sgp:mostrar_sprint" proyecto.id user_story.sprint.id %}">{{ user_story.sprint }}</a></td></tr>
     {% endif %}
 </table>
 

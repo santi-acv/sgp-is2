@@ -163,7 +163,6 @@ class RoleForm(ModelForm):
     def save(self, commit=True):
         permisos = get_perms_for_model(Proyecto).exclude(codename='vista')
         if self.instance.pk:
-            print(self.instance, '==', self.rol_actual)
             if self.instance == self.rol_actual:
                 self.cleaned_data['administrar_equipo'] = True
             for perm in permisos:
@@ -437,6 +436,7 @@ class BacklogForm(ModelForm):
         self.fields['horas_estimadas'].required = False
         queryset = sprint.equipo.filter(participa__rol__permisos__codename__in=['desarrollo'])
         initial = sprint.equipo.filter(participasprint__user_stories__in=[self.instance]).first()
+        self.nombre_desarrollador = str(initial)
         self.fields['desarrollador'] = forms.ModelChoiceField(queryset=queryset, initial=initial, required=False)
 
     def clean(self):
@@ -505,7 +505,8 @@ class AgregarUserStoryForm(forms.Form):
         self.proyecto = proyecto
         super().__init__(*args, **kwargs)
         self.fields['user_story'] = forms.ModelChoiceField(
-            queryset=proyecto.product_backlog.exclude(sprint__isnull=False), required=True)
+            queryset=proyecto.product_backlog.filter(sprint__isnull=True, estado=UserStory.Estado.PENDIENTE),
+            required=True)
         self.fields['usuario'] = forms.ModelChoiceField(queryset=sprint.equipo.all(), required=False)
 
     def save(self):
@@ -550,7 +551,7 @@ class UserSprintForm(ModelForm):
         self.fields['nombre'].disabled = True
         self.fields['apellido'].disabled = True
         self.fields['email'].disabled = True
-        self.fields['horas'] = forms.IntegerField(min_value=0, required=False,
+        self.fields['horas'] = forms.IntegerField(min_value=1, required=False,
                                                   initial=self.participa.horas_disponibles)
 
     def clean(self):
@@ -603,8 +604,10 @@ class AgregarDesarrolladorForm(forms.Form):
             .filter(participa__rol__permisos__codename__in=['desarrollo']) \
             .exclude(user_id__in=sprint.equipo.all())
         self.fields['usuario'] = forms.ModelChoiceField(queryset=queryset, required=True)
-        self.fields['horas'] = forms.IntegerField(min_value=0, required=True)
+        self.fields['horas'] = forms.IntegerField(min_value=1, required=True)
 
     def save(self):
+        if not self.cleaned_data.get('horas'):
+            self.cleaned_data['horas'] = 0
         ParticipaSprint.objects.create(sprint=self.sprint, usuario=self.cleaned_data['usuario'],
                                        horas_disponibles=self.cleaned_data['horas'])
