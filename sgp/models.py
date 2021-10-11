@@ -363,10 +363,6 @@ class Sprint(models.Model):
             if not us.horas_estimadas:
                 errores.append("US-" + str(us.numero) + " aún no tiene un costo estimado en horas.")
 
-        # verifica que haya suficiente tiempo para completar los user stories
-        if self.equipo.first() and self.sprint_backlog.first() and self.costo_backlog > self.capacidad_equipo:
-            errores.append("La capacidad del equipo es menore que el costo estimado del backlog.")
-
         return errores
 
     @property

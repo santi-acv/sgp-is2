@@ -19,7 +19,7 @@
             {{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }}</p>
 {% endif %}
 
-{% if "gestionar_proyecto" in proyecto_perms %}
+{% if "gestionar_proyecto" in proyecto_perms and sprint.estado == sprint.Estado.PENDIENTE %}
     {% if sprint.equipo.all %}
         <form method=POST>
         {% csrf_token %}
@@ -107,8 +107,6 @@
     </script>
 {% else %}
     {% if sprint.equipo.all %}
-    <p><strong>Capacidad del equipo:</strong>
-        {{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }}</p>
     <table>
             <tr>
                 <th>Nombre</th>

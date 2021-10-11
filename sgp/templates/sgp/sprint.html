@@ -32,6 +32,10 @@
             {% csrf_token %}
             <p><input type="submit" value="Iniciar Sprint"></p>
         </form>
+
+        {% if sprint.costo_backlog > sprint.capacidad_equipo %}
+            <p><strong>Advertencia:</strong> El costo total del backlog es mayor que la capacidad del equipo.</p>
+        {% endif %}
     {% endif %}
 {% endif %}
 </body>
