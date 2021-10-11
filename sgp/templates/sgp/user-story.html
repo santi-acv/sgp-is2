@@ -30,7 +30,7 @@
     {% endif %}
     {% if user_story.sprint %}
         <tr><th>Sprint:</th>
-            <td><a href="{% url "sgp:mostrar_sprint" proyecto.id user_story.sprint.id %}">{{ user_story.sprint }}</a></td></tr>
+            <td><a href="{% url "sgp:sprint_backlog" proyecto.id user_story.sprint.id %}">{{ user_story.sprint }}</a></td></tr>
     {% endif %}
 </table>
 

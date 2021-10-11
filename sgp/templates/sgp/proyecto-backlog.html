@@ -32,7 +32,7 @@
         <td>{{ us.get_estado_display }}</td>
         <td>{{ us.comentario_set.count }}</td>
         {% if us.sprint %}
-            <td><a href="{% url 'sgp:mostrar_sprint' proyecto.id us.sprint.id %}">{{ us.sprint }}</a></td>
+            <td><a href="{% url 'sgp:sprint_backlog' proyecto.id us.sprint.id %}">{{ us.sprint }}</a></td>
         {% else %}
             <td>--</td>
         {% endif %}
