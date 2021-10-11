@@ -319,6 +319,7 @@ class UserStoryForm(ModelForm):
 
     def __init__(self, *args, usuario=None, proyecto=None, **kwargs):
         super(ModelForm, self).__init__(*args, **kwargs)
+        self.proyecto = proyecto
         if usuario:
             if not usuario.has_perm('gestionar_proyecto', proyecto):
                 self.fields.pop('horas_estimadas')
@@ -328,6 +329,11 @@ class UserStoryForm(ModelForm):
             if not usuario.has_perm('pila_producto', proyecto):
                 self.fields.pop('nombre')
                 self.fields.pop('descripcion')
+
+    def save(self, commit=True):
+        self.instance.proyecto = self.proyecto
+        self.instance.numero = UserStory.objects.filter(proyecto=self.proyecto).count() + 1
+        super(ModelForm, self).save(commit)
 
     class Meta:
         model = UserStory
@@ -347,6 +353,17 @@ class ComentarioForm(ModelForm):
 
     |
     """
+    def __init__(self, *args, usuario=None, user_story=None, **kwargs):
+        super(ModelForm, self).__init__(*args, **kwargs)
+        self.usuario = usuario
+        self.user_story = user_story
+
+    def save(self, commit=True):
+        self.instance.user_story = self.user_story
+        self.instance.autor = self.usuario
+        self.instance.fecha = timezone.localdate()
+        super(ModelForm, self).save(commit)
+
     class Meta:
         model = Comentario
         fields = ('texto',)
@@ -378,6 +395,7 @@ class SprintForm(ModelForm):
 
     def __init__(self, *args, proyecto=None, **kwargs):
         super(ModelForm, self).__init__(*args, **kwargs)
+        self.proyecto = proyecto
         if not self.instance.pk:
             self.fields['duracion'].initial = proyecto.duracion_sprint
         else:
@@ -403,6 +421,10 @@ class SprintForm(ModelForm):
             cleaned_data['fecha_fin'] = fecha_inicio + datetime.timedelta(days=duracion)
 
         return cleaned_data
+
+    def save(self, commit=True):
+        self.instance.proyecto = self.proyecto
+        super(ModelForm, self).save(commit)
 
     class Meta:
         model = Sprint

@@ -8,8 +8,7 @@
     </style>
 </head>
 <body>
-<h3><a href="{% url 'sgp:index' %}">SGP</a> - {{ proyecto.nombre }} - Crear user story</h3>
-{% include 'sgp/proyecto-menu.html' %}
+{% include 'sgp/proyecto-menu.html' with pos='Crear user story' %}
 <p>Por favor, ingrese la información del user story.</p>
 <form method=POST>
     {% csrf_token %}

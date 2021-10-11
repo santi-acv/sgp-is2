@@ -14,7 +14,6 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.timezone import now
 from guardian.shortcuts import get_objects_for_user
 
@@ -395,8 +394,6 @@ def crear_user_story(request, proyecto_id):
     if request.method == "POST":
         form = UserStoryForm(request.POST, usuario=request.user, proyecto=proyecto)
         if form.is_valid():
-            form.instance.proyecto = proyecto
-            form.instance.numero = UserStory.objects.filter(proyecto=proyecto).count() + 1
             form.save()
             return HttpResponseRedirect(reverse('sgp:product_backlog', kwargs={'proyecto_id': proyecto_id}))
     else:
@@ -421,11 +418,8 @@ def mostrar_user_story(request, proyecto_id, us_numero):
     user_story = UserStory.objects.get(proyecto_id=proyecto_id, numero=us_numero)
 
     if request.method == 'POST':
-        form = ComentarioForm(request.POST)
+        form = ComentarioForm(request.POST, usuario=request.user, user_story=user_story)
         if form.is_valid():
-            form.instance.user_story = user_story
-            form.instance.autor = request.user
-            form.instance.fecha = timezone.localdate()
             form.save()
             return HttpResponseRedirect(reverse('sgp:mostrar_user_story',
                                                 kwargs={'proyecto_id': proyecto_id, 'us_numero': us_numero}))
@@ -488,7 +482,6 @@ def crear_sprint(request, proyecto_id):
     if request.method == "POST":
         form = SprintForm(request.POST, proyecto=proyecto)
         if form.is_valid():
-            form.instance.proyecto = proyecto
             form.save()
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
     else:

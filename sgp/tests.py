@@ -8,12 +8,15 @@ realizar esta prueba, es necesario utilizar el siguiente comando.
 
 Las pruebas se encuentran agrupadas en clases según que componente evalúan.
 """
+import datetime
+
 from django.test import TestCase
 from django.urls import reverse
 from guardian.shortcuts import assign_perm
 
-from .forms import ProyectoForm
-from .models import Proyecto, User
+from .forms import ProyectoForm, UserStoryForm, ComentarioForm, SprintForm, \
+    AgregarDesarrolladorForm, AgregarUserStoryForm
+from .models import Proyecto, User, UserStory, Comentario, Sprint, ParticipaSprint, Role
 
 
 class NavigationTest(TestCase):
@@ -279,8 +282,7 @@ class CrearProyectoTest(TestCase):
                                   'fecha_fin': '31/12/2021',
                                   'duracion_sprint': 2})
         form.is_valid()
-        self.assertEqual(form.errors['duracion_sprint'],
-                             ['El proyecto debe tener tiempo para al menos un sprint.'])
+        self.assertEqual(form.errors['duracion_sprint'], ['El proyecto debe tener tiempo para al menos un sprint.'])
 
     def test_creacion_exitosa(self):
         """
@@ -299,3 +301,151 @@ class CrearProyectoTest(TestCase):
         self.assertTrue(form.is_valid())
         form.save()
         self.assertTrue(Proyecto.objects.filter(nombre='Proyecto test').exists())
+
+
+class FormulariosDesarrolloTest(TestCase):
+    def setUp(self):
+        self.proj = Proyecto.objects.create(nombre='Proyecto de prueba')
+        self.proj.crear_roles_predeterminados()
+        self.user = User.objects.create(
+            nombre='Nombre', apellido='Apellido', email='test@test.com', is_superuser=True)
+
+    def test_crear_user_story(self):
+        """
+        Verifica que UserStoryForm sea capaz de crear un user story.
+
+        **Fecha:** 10/10/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        form = UserStoryForm(usuario=self.user, proyecto=self.proj,
+                             data={'nombre': 'US de prueba', 'horas_estimadas': 10, 'prioridad': 3})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertTrue(UserStory.objects.filter(nombre='US de prueba', proyecto=self.proj).exists(),
+                        "El user story no fue creado correctamente")
+
+    def test_editar_user_story(self):
+        """
+        Verifica que UserStoryForm sea capaz de editar un user story.
+
+        **Fecha:** 10/10/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        us = UserStory.objects.create(numero=1, nombre='US de prueba', proyecto=self.proj)
+        form = UserStoryForm(usuario=self.user, proyecto=self.proj, instance=us,
+                             data={'nombre': 'US modificado', 'horas_estimadas': 10, 'prioridad': 3})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertTrue(UserStory.objects.filter(nombre='US modificado', proyecto=self.proj,
+                                                 horas_estimadas=10, prioridad=3).exists(),
+                        "El user story no fue modificado correctamente")
+
+    def test_agregar_comentario(self):
+        """
+        Verifica que ComentarioForm sea capaz de agregar un comentario a un proyecto.
+
+        **Fecha:** 10/10/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        us = UserStory.objects.create(numero=1, nombre='US de prueba', proyecto=self.proj)
+        form = ComentarioForm(usuario=self.user, user_story=us, data={'texto': 'Texto de comentario.'})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertEquals(Comentario.objects.get(user_story=us).texto, 'Texto de comentario.',
+                          "El comentario no fue creado correctamente")
+
+    def test_crear_sprint(self):
+        """
+        Verifica que SprintForm sea capaz de crear un sprint.
+
+        **Fecha:** 10/10/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        form = SprintForm(proyecto=self.proj,
+                          data={'nombre': 'Sprint de prueba', 'fecha_inicio': '12/12/2021', 'duracion': 10})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertTrue(Sprint.objects.filter(nombre='Sprint de prueba', proyecto=self.proj).exists(),
+                        "El sprint no fue creado correctamente")
+
+    def test_editar_sprint(self):
+        """
+        Verifica que SprintForm sea capaz de editar un sprint.
+
+        **Fecha:** 10/10/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+        sprint = Sprint.objects.create(nombre='Sprint de prueba', fecha_inicio=datetime.date(2021, 12, 20),
+                                       fecha_fin=datetime.date(2021, 12, 10), proyecto=self.proj)
+        form = SprintForm(proyecto=self.proj, instance=sprint,
+                          data={'nombre': 'Sprint modificado', 'fecha_inicio': '2021-12-25', 'duracion': 7})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertEquals(Sprint.objects.get(nombre='Sprint modificado', proyecto=self.proj).fecha_fin,
+                          datetime.date(2022, 1, 1), "El sprint no fue modificado correctamente")
+
+    def test_agregar_user_story(self):
+        """
+        Verifica que AgregarUserStoryForm sea capaz de agregar un user story a un sprint.
+
+        **Fecha:** 10/10/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        sprint = Sprint.objects.create(nombre='Sprint de prueba', fecha_inicio='2021-12-20',
+                                       fecha_fin='2021-12-30', proyecto=self.proj)
+        self.proj.asignar_rol(self.user, Role.objects.get(nombre='Desarrollador'))
+
+        ParticipaSprint.objects.create(sprint=sprint, usuario=self.user, horas_disponibles=0)
+
+        us = UserStory.objects.create(numero=1, nombre='US de prueba', proyecto=self.proj)
+        form = AgregarUserStoryForm(proyecto=self.proj, sprint=sprint,
+                                    data={'user_story': us, 'usuario': self.user})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertTrue(us in sprint.sprint_backlog.all(), "El user story no aparece en el sprint backlog")
+        self.assertTrue(us in ParticipaSprint.objects.get(usuario=self.user, sprint=sprint).user_stories.all(),
+                        "El user story no aparece asignado al desarrollador")
+
+    def test_agregar_desarrollador(self):
+        """
+        Verifica que AgregarDesarrolladorForm sea capaz de agregar un desarrollador a un sprint.
+
+        **Fecha:** 10/10/21
+
+        **Artefacto:** Módulo de proyecto
+
+        |
+        """
+
+        sprint = Sprint.objects.create(nombre='Sprint de prueba', fecha_inicio='2021-12-20',
+                                       fecha_fin='2021-12-30', proyecto=self.proj)
+        self.proj.asignar_rol(self.user, Role.objects.get(nombre='Desarrollador'))
+        form = AgregarDesarrolladorForm(proyecto=self.proj, sprint=sprint, data={'usuario': self.user, 'horas': 10})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertEquals(ParticipaSprint.objects.get(usuario=self.user, sprint=sprint).horas_disponibles, 10,
+                          "El desarrollador no fue agregado al equipo con las horas disponibles indicadas")
+        self.assertEquals(sprint.capacidad_equipo, 10, "La capacidad del equipo difiere de la del desarrollador")

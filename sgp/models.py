@@ -426,7 +426,7 @@ class UserStory(models.Model):
         (3, 'Normal'),
         (4, 'Baja'),
         (5, 'Muy baja'),
-    ])
+    ], default=3)
     """Indica la prioridad del user story en una escala del 1 al 5, donde 1
     representa la prioridad máxima."""
 
