@@ -623,7 +623,7 @@ def sprint_backlog(request, proyecto_id, sprint_id):
             return HttpResponseRedirect(
                 reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
     else:
-        formset = BacklogFormSet(queryset=sprint.sprint_backlog.all(),
+        formset = BacklogFormSet(queryset=sprint.sprint_backlog.all().order_by('prioridad'),
                                  form_kwargs={'proyecto': proyecto, 'sprint': sprint})
 
     context = {'proyecto': proyecto, 'sprint': sprint, 'form': form, 'formset': formset}
