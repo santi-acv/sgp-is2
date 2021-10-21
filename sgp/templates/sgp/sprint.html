@@ -26,24 +26,45 @@
         <td>{{ sprint.costo_backlog }} hora{{ sprint.costo_backlog|pluralize:",s" }}</td></tr>
 </table>
 {% if "gestionar_proyecto" in proyecto_perms %}
-    {% if sprint.estado == sprint.Estado.PENDIENTE and proyecto.estado == proyecto.Estado.INICIADO %}
+    {% if mensajes.errores %}
+        {% if sprint.estado == sprint.Estado.PENDIENTE %}
+            <p>El sprint no puede iniciar por las siguientes razones:</p>
+        {% elif sprint.estado == sprint.Estado.INICIADO %}
+            <p>El sprint no puede finalizar por las siguientes razones:</p>
+        {% endif %}
         <ul>
-            {% for e in error %}
-                <li>{{ e }}</li>
+            {% for error in mensajes.errores %}
+                <li>{{ error }}</li>
             {% endfor %}
         </ul>
+    {% else %}
         <form method=POST>
             {% csrf_token %}
-            <p><input type="submit" value="Iniciar Sprint" onclick="confirmar(event)"></p>
+            {% if sprint.estado == sprint.Estado.PENDIENTE %}
+                <p><input type="submit" value="Iniciar Sprint" onclick="confirmar(event)"></p>
+            {% elif sprint.estado == sprint.Estado.INICIADO %}
+                <p><input type="submit" value="Finalizar Sprint" onclick="confirmar(event)"></p>
+            {% endif %}
         </form>
     {% endif %}
-    {% if sprint.costo_backlog > sprint.capacidad_equipo %}
-        <p><strong>Advertencia:</strong> El costo total del backlog es mayor que la capacidad del equipo.</p>
+
+    {% if mensajes.advertencias %}
+        <p>El sprint presenta las siguientes advertencias:</p>
+        <ul>
+            {% for advertencia in mensajes.advertencias %}
+                <li>{{ advertencia }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
 {% endif %}
 <script type="text/javascript">
     function confirmar(e) {
-        if (!confirm('¿Está seguro de que desea iniciar el sprint? Una vez hecho esto, no podrá modificarlo.')) {
+        {% if sprint.estado == proyecto.Estado.PENDIENTE %}
+            mensaje = '¿Está seguro de que desea iniciar el sprint?'
+        {% elif sprint.estado == proyecto.Estado.INICIADO %}
+            mensaje = '¿Está seguro de que desea finalizar el sprint?'
+        {% endif %}
+        if (!confirm(mensaje)) {
             e.preventDefault();
         }
     }

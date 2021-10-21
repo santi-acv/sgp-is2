@@ -8,6 +8,7 @@ import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from django.utils import timezone
+from django.utils.timezone import now
 from guardian.shortcuts import assign_perm, get_perms_for_model, remove_perm
 
 
@@ -197,18 +198,26 @@ class Proyecto(models.Model):
         self.crear_rol('Desarrollador', ['desarrollo'])
         self.crear_rol('Interesado', [])
 
-    def validar(self):
+    def validar_inicio(self):
         """
-        Valida el proyecto y retorna la lista de errores que este tenga. Si la
-        lista está vacía, el proyecto es válido.
+        Verifica si el proyecto puede iniciar y retorna un diccionario con
+        dos listas: errores y advertencias. Los mensajes en la lista errores
+        son lo suficientemente graves para que el proyecto no pueda iniciar,
+        mientras que aquellos en la lista advertencias pueden ser ignorados.
         """
-        errores = []
+        msg = {'errores': [], 'advertencias': []}
+
+        # verifica que ya sea la fecha de inicio
+        if now().date() < self.fecha_inicio:
+            msg['advertencias'].append('Todavía no ha llegado la fecha de inicio.')
+        elif self.fecha_inicio < now().date():
+            msg['advertencias'].append('Ya ha pasado la fecha de inicio.')
 
         # verifica que haya tiempo para al menos un sprint
         if self.fecha_fin < timezone.localdate():
-            errores.append("La fecha de fin se encuentra en el pasado.")
+            msg['errores'].append('La fecha de fin se encuentra en el pasado.')
         elif timezone.localdate()+datetime.timedelta(days=self.duracion_sprint) > self.fecha_fin:
-            errores.append("No hay suficiente tiempo para realizar al menos un sprint.")
+            msg['errores'].append('No hay suficiente tiempo para realizar al menos un sprint.')
 
         # verifica que existe al menos un usuario con cada permiso
         for perm, desc in Proyecto._meta.permissions:
@@ -216,19 +225,50 @@ class Proyecto(models.Model):
                 if user.has_perm(perm, self):
                     break
             else:
-                errores.append("Falta al menos un usuario con el permiso de "+desc+".")
-        return errores
+                msg['errores'].append('Falta al menos un usuario con el permiso de '+desc+'.')
+
+        return msg
+
+    def validar_fin(self):
+        """
+        Verifica si el proyecto puede finalizar y retorna un diccionario con
+        dos listas: errores y advertencias. Los mensajes en la lista errores
+        son lo suficientemente graves para que el proyecto no pueda iniciar,
+        mientras que aquellos en la lista advertencias pueden ser ignorados.
+        """
+        msg = {'errores': [], 'advertencias': []}
+
+        # verifica que ya sea la fecha de fin
+        if now().date() < self.fecha_fin:
+            msg['advertencias'].append('Todavía no ha llegado la fecha de fin.')
+        elif self.fecha_fin < now().date():
+            msg['advertencias'].append('Ya ha pasado la fecha de fin.')
+
+        # verifica que todos los sprints hayan terminado
+        if self.sprint_activo:
+            msg['errores'].append('Existe un sprint activo.')
+        if self.sprint_pendiente:
+            msg['errores'].append('Existe un sprint pendiente.')
+
+        # verifica que todos los user stories se encuentren completos o cancelados
+            if self.product_backlog.filter(estado=UserStory.Estado.PENDIENTE).first():
+                msg['errores'].append('Existen user stories pendientes.')
+
+        return msg
 
     @property
     def sprint_activo(self):
+        """Retorna el sprint activo del proyecto, si este existe."""
         return self.sprint_set.filter(estado=Sprint.Estado.INICIADO).first()
 
     @property
     def sprint_pendiente(self):
+        """Retorna el sprint pendiente del proyecto, si este existe."""
         return self.sprint_set.filter(estado=Sprint.Estado.PENDIENTE).first()
 
     @property
     def sprints_finalizados(self):
+        """Retorna el conjunto de sprints pendientes del proyecto."""
         return self.sprint_set.filter(estado=Sprint.Estado.FINALIZADO)
 
     class Meta:
@@ -345,37 +385,67 @@ class Sprint(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
     """Indica a qué proyecto pertenece el sprint."""
 
-    def validar(self):
+    def validar_inicio(self):
         """
-        Valida el spreint y retorna la lista de errores que este tenga. Si la
-        lista está vacía, el sprint es válido.
+        Verifica si el sprint puede iniciar y retorna un diccionario con
+        dos listas: errores y advertencias. Los mensajes en la lista errores
+        son lo suficientemente graves para que el sprint no pueda iniciar,
+        mientras que aquellos en la lista advertencias pueden ser ignorados.
         """
-        errores = []
+        msg = {'errores': [], 'advertencias': []}
+
+        # verifica que ya sea la fecha de inicio
+        if now().date() < self.fecha_inicio:
+            msg['advertencias'].append('Todavía no ha llegado la fecha de inicio.')
+        elif self.fecha_inicio < now().date():
+            msg['advertencias'].append('Ya ha pasado la fecha de inicio.')
 
         # verifica que no haya otro sprint en curso
-        for sprint in self.proyecto.sprint_set.all():
-            if sprint.estado == Sprint.Estado.INICIADO:
-                errores.append("Ya existe un sprint en curso.")
+        if self.proyecto.sprint_activo:
+            msg['errores'].append('Ya existe un sprint en curso.')
+            if self.fecha_inicio < self.proyecto.sprint_activo.fecha_fin:
+                msg['advertencias'].append('El inicio de este sprint se solapa con el fin del sprint activo.')
 
         # verifica que haya al menos un desarrollador
         if not self.equipo.first():
-            errores.append("El sprint necesita al menos un desarrollador.")
+            msg['errores'].append('El sprint necesita al menos un desarrollador.')
 
         # verifica que exista al menos un user story
         if not self.sprint_backlog.first():
-            errores.append("El sprint necesta al menos un user story.")
+            msg['errores'].append('El sprint necesta al menos un user story.')
 
         # verifica que cada user story tenga un desarrollador asociado
         for us in self.sprint_backlog.all():
             if not ParticipaSprint.objects.filter(sprint=self, user_stories__in=[us]).exists():
-                errores.append("US-"+str(us.numero)+" no tiene un desarrollador asociado.")
+                msg['errores'].append('US-'+str(us.numero)+' no tiene un desarrollador asociado.')
 
         # verifica que cada user story tenga un costo estimado
         for us in self.sprint_backlog.all():
             if not us.horas_estimadas:
-                errores.append("US-" + str(us.numero) + " aún no tiene un costo estimado en horas.")
+                msg['errores'].append('US-'+str(us.numero)+' aún no tiene un costo estimado en horas.')
 
-        return errores
+        # verifica que la capacidad del equipo sea suficiente para el costo del backlog
+        if self.capacidad_equipo < self.costo_backlog:
+            msg['advertencias'].append('El costo total del backlog es mayor que la capacidad del equipo.')
+
+        return msg
+
+    def validar_fin(self):
+        """
+        Verifica si el sprint puede finalizar y retorna un diccionario con
+        dos listas: errores y advertencias. Los mensajes en la lista errores
+        son lo suficientemente graves para que el sprint no pueda iniciar,
+        mientras que aquellos en la lista advertencias pueden ser ignorados.
+        """
+        msg = {'errores': [], 'advertencias': []}
+
+        # verifica que ya sea la fecha de fin
+        if now().date() < self.fecha_fin:
+            msg['advertencias'].append('Todavía no ha llegado la fecha de fin.')
+        elif self.fecha_fin < now().date():
+            msg['advertencias'].append('Ya ha pasado la fecha de fin.')
+
+        return msg
 
     @property
     def capacidad_diaria(self):

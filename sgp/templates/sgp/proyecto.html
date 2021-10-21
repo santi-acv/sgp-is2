@@ -53,21 +53,45 @@
     {% endif %}
 </table>
 {% if "gestionar_proyecto" in proyecto_perms %}
-    {% if proyecto.estado == proyecto.Estado.PENDIENTE %}
+    {% if mensajes.errores %}
+        {% if proyecto.estado == proyecto.Estado.PENDIENTE %}
+            <p>El proyecto no puede iniciar por las siguientes razones:</p>
+        {% elif proyecto.estado == proyecto.Estado.INICIADO %}
+            <p>El proyecto no puede finalizar por las siguientes razones:</p>
+        {% endif %}
         <ul>
-            {% for e in error %}
-                <li>{{ e }}</li>
+            {% for error in mensajes.errores %}
+                <li>{{ error }}</li>
             {% endfor %}
         </ul>
+    {% else %}
         <form method=POST>
             {% csrf_token %}
-            <p><input type="submit" value="Iniciar Proyecto" onclick="confirmar(event)"></p>
+            {% if proyecto.estado == proyecto.Estado.PENDIENTE %}
+                <p><input type="submit" value="Iniciar Proyecto" onclick="confirmar(event)"></p>
+            {% elif proyecto.estado == proyecto.Estado.INICIADO %}
+                <p><input type="submit" value="Finalizar Proyecto" onclick="confirmar(event)"></p>
+            {% endif %}
         </form>
+    {% endif %}
+
+    {% if mensajes.advertencias %}
+        <p>El proyecto presenta las siguientes advertencias:</p>
+        <ul>
+            {% for advertencia in mensajes.advertencias %}
+                <li>{{ advertencia }}</li>
+            {% endfor %}
+        </ul>
     {% endif %}
 {% endif %}
 <script type="text/javascript">
     function confirmar(e) {
-        if (!confirm('¿Está seguro de que desea iniciar el proyecto?')) {
+        {% if proyecto.estado == proyecto.Estado.PENDIENTE %}
+            mensaje = '¿Está seguro de que desea iniciar el proyecto?'
+        {% elif proyecto.estado == proyecto.Estado.INICIADO %}
+            mensaje = '¿Está seguro de que desea finalizar el proyecto?'
+        {% endif %}
+        if (!confirm(mensaje)) {
             e.preventDefault();
         }
     }

@@ -21,12 +21,12 @@
         {{ form.as_table }}
     </table>
     <p> <input type="submit" name="guardar" value="Guardar cambios">
-        <input type="submit" name="eliminar" value="Eliminar" onclick="confirmar(event)"></p>
+        <input type="submit" name="eliminar" value="Abortar User Story" onclick="confirmar(event)"></p>
 </form>
 
 <script type="text/javascript">
     function confirmar(e) {
-        if (!confirm('Esto quitará el user story del product backlog. ¿Está seguro de que desea eliminarlo?')) {
+        if (!confirm('Esto quitará el user story del product backlog. ¿Está seguro de que desea abortarlo?')) {
             e.preventDefault();
         }
     }

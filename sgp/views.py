@@ -140,27 +140,41 @@ def crear_proyecto(request):
 def mostrar_proyecto(request, proyecto_id):
     """
     Muestra la información principal del proyecto y permite cambiar su estado.
+    Incluye una lista de sprints y enlaces para acceder a cada uno de ellos.
 
-    Incluye una lista de sprints y enlaces para acceder a cada uno de ellos. Si
-    el estado del proyecto es pendiente, presenta un botón para validar el
-    proyecto e iniciarlo.
+    Si el estado del proyecto es pendiente, verifica si es posible iniciarlo y
+    muestra una lista de errores y advertencias. Si la lista de errores está
+    vacía, permite iniciar el proyecto. Si el estado es iniciado, realiza el
+    mismo procedimiento pero para finalizarlo en vez de iniciarlo.
 
-    **Fecha:** 02/09/21
+    **Fecha:** 21/10/21
 
     **Artefacto:** módulo de proyecto
 
     |
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
-    error = None
-    if request.method == 'POST':
-        error = proyecto.validar()
-        if not error:
-            proyecto.estado = proyecto.Estado.INICIADO
+    mensajes = None
+
+    pendiente = Proyecto.Estado.PENDIENTE
+    iniciado = Proyecto.Estado.INICIADO
+    finalizado = Proyecto.Estado.FINALIZADO
+
+    if proyecto.estado == pendiente:
+        mensajes = proyecto.validar_inicio()
+    elif proyecto.estado == iniciado:
+        mensajes = proyecto.validar_fin()
+
+    if request.method == 'POST' and not mensajes['errores']:
+        if proyecto.estado == pendiente:
+            proyecto.estado = iniciado
             proyecto.fecha_inicio = now()
-            proyecto.save()
-            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
-    context = {'proyecto': proyecto, 'error': error}
+        elif proyecto.estado == iniciado:
+            proyecto.estado = finalizado
+            proyecto.fecha_fin = now()
+        proyecto.save()
+        return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
+    context = {'proyecto': proyecto, 'mensajes': mensajes}
     return render(request, 'sgp/proyecto.html', context)
 
 
@@ -493,7 +507,12 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
     """
     Muestra la información principal del sprint y permite cambiar su estado.
 
-    **Fecha:** 24/09/21
+    Si el estado del sprint es pendiente, verifica si es posible iniciarlo y
+    muestra una lista de errores y advertencias. Si la lista de errores está
+    vacía, permite iniciar el sprint. Si el estado es iniciado, realiza el
+    mismo procedimiento pero para finalizarlo en vez de iniciarlo.
+
+    **Fecha:** 21/10/21
 
     **Artefacto:** módulo de desarrollo
 
@@ -501,19 +520,32 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
     """
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
-    error = None
-    if request.method == 'POST':
-        error = sprint.validar()
-        if not error:
-            sprint.estado = proyecto.Estado.INICIADO
+    mensajes = None
+
+    pendiente = Sprint.Estado.PENDIENTE
+    iniciado = Sprint.Estado.INICIADO
+    finalizado = Sprint.Estado.FINALIZADO
+
+    if sprint.estado == pendiente:
+        mensajes = sprint.validar_inicio()
+    elif sprint.estado == iniciado:
+        mensajes = sprint.validar_fin()
+
+    if request.method == 'POST' and not mensajes['errores']:
+        if sprint.estado == pendiente:
+            sprint.estado = iniciado
             for us in sprint.sprint_backlog.all():
                 us.estado = UserStory.Estado.INICIADO
                 us.save()
             sprint.fecha_inicio = now()
-            sprint.save()
-            return HttpResponseRedirect(
-                reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto.id, 'sprint_id': sprint.id}))
-    context = {'proyecto': proyecto, 'sprint': sprint, 'error': error}
+        elif sprint.estado == iniciado:
+            sprint.estado = finalizado
+            sprint.fecha_fin = now()
+        sprint.save()
+        return HttpResponseRedirect(
+            reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto.id, 'sprint_id': sprint.id}))
+
+    context = {'proyecto': proyecto, 'sprint': sprint, 'mensajes': mensajes}
     return render(request, 'sgp/sprint.html', context)
 
 
@@ -535,7 +567,7 @@ def editar_sprint(request, proyecto_id, sprint_id):
     if request.method == 'POST':
         if 'eliminar' in request.POST:
             sprint.delete()
-            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto'))
+            return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
         else:
             form = SprintForm(request.POST, proyecto=proyecto, instance=sprint)
             if form.is_valid():
