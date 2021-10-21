@@ -487,7 +487,7 @@ class BacklogForm(ModelForm):
 
     def save(self, commit=True):
         if self.cleaned_data.get('horas'):
-            self.participa.horas_disponibles = self.cleaned_data['horas']
+            self.participa.horas_diarias = self.cleaned_data['horas']
             self.participa.save()
 
         # actualiza el desarrollador del user story
@@ -575,7 +575,7 @@ class UserSprintForm(ModelForm):
         self.fields['apellido'].disabled = True
         self.fields['email'].disabled = True
         self.fields['horas'] = forms.IntegerField(min_value=1, required=False,
-                                                  initial=self.participa.horas_disponibles)
+                                                  initial=self.participa.horas_diarias)
 
     def clean(self):
         """
@@ -593,7 +593,7 @@ class UserSprintForm(ModelForm):
 
     def save(self, commit=True):
         if self.cleaned_data.get('horas'):
-            self.participa.horas_disponibles = self.cleaned_data['horas']
+            self.participa.horas_diarias = self.cleaned_data['horas']
             self.participa.save()
         super(UserSprintForm, self).save(commit)
 
@@ -633,4 +633,4 @@ class AgregarDesarrolladorForm(forms.Form):
         if not self.cleaned_data.get('horas'):
             self.cleaned_data['horas'] = 0
         ParticipaSprint.objects.create(sprint=self.sprint, usuario=self.cleaned_data['usuario'],
-                                       horas_disponibles=self.cleaned_data['horas'])
+                                       horas_diarias=self.cleaned_data['horas'])

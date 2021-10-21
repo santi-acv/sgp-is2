@@ -23,15 +23,32 @@
     <tr><th>Duración de los sprints:</th>
         <td>{{ proyecto.duracion_sprint }} día{{ proyecto.duracion_sprint|pluralize:"s" }}</td></tr>
     <tr><th>Estado:</th><td>{{ proyecto.get_estado_display }}</td></tr>
-    {% if proyecto.sprint_set.all or "gestionar_proyecto" in proyecto_perms %}
-        <tr><th>Sprints:</th><td><ul>
-            {% for sprint in proyecto.sprint_set.all %}
+    <tr><th>Sprint activo:</th><td>
+        {% if proyecto.sprint_activo %}
+            <a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=proyecto.sprint_activo.id %}">
+                {{ proyecto.sprint_activo }}</a>
+        {% else %}
+            --
+        {% endif %}
+    </td></tr>
+    <tr><th>Sprint pendiente:</th><td>
+        {% if proyecto.sprint_pendiente %}
+            <a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=proyecto.sprint_pendiente.id %}">
+                {{ proyecto.sprint_pendiente }}</a>
+        {% else %}
+            {% if "gestionar_proyecto" in proyecto_perms %}
+                <a href="{% url 'sgp:crear_sprint' proyecto.id %}">+ Crear sprint</a>
+            {% else %}
+                --
+            {% endif %}
+        {% endif %}
+    </td></tr>
+    {% if proyecto.sprints_finalizados.first %}
+        <tr><th>Sprints finalizados:</th><td><ul>
+            {% for sprint in proyecto.sprints_finalizados.all %}
                 <li><a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=sprint.id %}">
                     {{ sprint }}</a></li>
             {% endfor %}
-            {% if "gestionar_proyecto" in proyecto_perms %}
-                <p><a href="{% url 'sgp:crear_sprint' proyecto.id %}">Crear sprint</a></p>
-            {% endif %}
         </ul></td></tr>
     {% endif %}
 </table>
@@ -44,9 +61,16 @@
         </ul>
         <form method=POST>
             {% csrf_token %}
-            <p><input type="submit" value="Iniciar Proyecto"></p>
+            <p><input type="submit" value="Iniciar Proyecto" onclick="confirmar(event)"></p>
         </form>
     {% endif %}
 {% endif %}
+<script type="text/javascript">
+    function confirmar(e) {
+        if (!confirm('¿Está seguro de que desea iniciar el proyecto?')) {
+            e.preventDefault();
+        }
+    }
+</script>
 </body>
 </html>

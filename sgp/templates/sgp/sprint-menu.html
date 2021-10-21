@@ -8,7 +8,7 @@
     {% else %}
         <a href="{% url 'sgp:mostrar_sprint' proyecto.id sprint.id %}">Sprint</a>
     {% endif %}
-    {% if "gestionar_proyecto" in proyecto_perms %}
+    {% if "gestionar_proyecto" in proyecto_perms and sprint.estado == sprint.Estado.PENDIENTE %}
         {% if pos == "Editar" %}
             &#183; <strong>Editar</strong>
         {% else %}

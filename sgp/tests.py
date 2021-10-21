@@ -418,7 +418,7 @@ class FormulariosDesarrolloTest(TestCase):
                                        fecha_fin='2021-12-30', proyecto=self.proj)
         self.proj.asignar_rol(self.user, Role.objects.get(nombre='Desarrollador'))
 
-        ParticipaSprint.objects.create(sprint=sprint, usuario=self.user, horas_disponibles=0)
+        ParticipaSprint.objects.create(sprint=sprint, usuario=self.user, horas_diarias=0)
 
         us = UserStory.objects.create(numero=1, nombre='US de prueba', proyecto=self.proj)
         form = AgregarUserStoryForm(proyecto=self.proj, sprint=sprint,
@@ -440,12 +440,12 @@ class FormulariosDesarrolloTest(TestCase):
         |
         """
 
-        sprint = Sprint.objects.create(nombre='Sprint de prueba', fecha_inicio='2021-12-20',
-                                       fecha_fin='2021-12-30', proyecto=self.proj)
+        sprint = Sprint.objects.create(nombre='Sprint de prueba', fecha_inicio=datetime.date(2021, 12, 20),
+                                       fecha_fin=datetime.date(2021, 12, 30), proyecto=self.proj)
         self.proj.asignar_rol(self.user, Role.objects.get(nombre='Desarrollador'))
         form = AgregarDesarrolladorForm(proyecto=self.proj, sprint=sprint, data={'usuario': self.user, 'horas': 10})
         self.assertTrue(form.is_valid(), "El formulario no es válido")
         form.save()
-        self.assertEquals(ParticipaSprint.objects.get(usuario=self.user, sprint=sprint).horas_disponibles, 10,
+        self.assertEquals(ParticipaSprint.objects.get(usuario=self.user, sprint=sprint).horas_diarias, 10,
                           "El desarrollador no fue agregado al equipo con las horas disponibles indicadas")
-        self.assertEquals(sprint.capacidad_equipo, 10, "La capacidad del equipo difiere de la del desarrollador")
+        self.assertEquals(sprint.capacidad_diaria, 10, "La capacidad del equipo difiere de la del desarrollador")

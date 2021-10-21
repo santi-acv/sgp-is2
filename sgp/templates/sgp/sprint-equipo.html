@@ -16,7 +16,8 @@
 
 {% if sprint.equipo.all %}
     <p><strong>Capacidad del equipo:</strong>
-            {{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }}</p>
+            {{ sprint.capacidad_diaria }} hora{{ sprint.capacidad_diaria|pluralize:",s" }} por día,
+            {{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }} en total</p>
 {% endif %}
 
 {% if "gestionar_proyecto" in proyecto_perms and sprint.estado == sprint.Estado.PENDIENTE %}
@@ -28,7 +29,7 @@
                 <th>Nombre</th>
                 <th>Apellido</th>
                 <th>E-Mail</th>
-                <th>Horas disponibles</th>
+                <th>Horas diarias disponibles</th>
             </tr>
             {{ formset.management_form }}
             {% for form in formset %}
@@ -42,7 +43,7 @@
                         {{ form.apellido.value }}</td>
                     <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-email">
                         {{ form.email.value }}</td>
-                    <td class="str">{{ form.horas }}</td>
+                    <td class="chk">{{ form.horas }}</td>
                     <td class="hidden">{{ form.borrar }}</td>
                     <td class="chk"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
                                            type="button" value="Remover"></td>
@@ -63,7 +64,7 @@
             <table>
                 <tr>
                     <th>Desarrollador</th>
-                    <th>Horas disponibles</th>
+                    <th>Horas diarias disponibles</th>
                 </tr>
                 <tr>
                     <td class="str">{{ form.usuario }}</td>

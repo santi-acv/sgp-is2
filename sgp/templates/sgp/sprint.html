@@ -12,20 +12,21 @@
 {% load guardian_tags %}
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 <table>
-    <tr>
-        <th>Nombre:</th><td>{{ sprint.nombre }}</td></tr>
-        {% if sprint.descripcion %}
-            <tr><th>Descripcion:</th><td>{{ sprint.descripcion }}</td></tr>
-        {% endif %}
-        <tr><th>Fecha de inicio:</th><td>{{ sprint.fecha_inicio }}</td></tr>
-        <tr><th>Fecha de fin:</th><td>{{ sprint.fecha_fin }}</td></tr>
-        <tr><th>Estado:</th><td>{{ sprint.get_estado_display }}</td></tr>
-        <tr><th>Capacidad del equipo:</th><td>{{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }}</td>
-        <tr><th>Costo total del backlog:</th><td>{{ sprint.costo_backlog }} hora{{ sprint.costo_backlog|pluralize:",s" }}</td>
-    </tr>
+    <tr><th>Nombre:</th><td>{{ sprint.nombre }}</td></tr>
+    {% if sprint.descripcion %}
+        <tr><th>Descripcion:</th><td>{{ sprint.descripcion }}</td></tr>
+    {% endif %}
+    <tr><th>Fecha de inicio:</th><td>{{ sprint.fecha_inicio }}</td></tr>
+    <tr><th>Fecha de fin:</th><td>{{ sprint.fecha_fin }}</td></tr>
+    <tr><th>Estado:</th><td>{{ sprint.get_estado_display }}</td></tr>
+    <tr><th>Capacidad del equipo:</th>
+        <td>{{ sprint.capacidad_diaria }} hora{{ sprint.capacidad_diaria|pluralize:",s" }} por día,
+            {{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }} en total</td></tr>
+    <tr><th>Costo total del backlog:</th>
+        <td>{{ sprint.costo_backlog }} hora{{ sprint.costo_backlog|pluralize:",s" }}</td></tr>
 </table>
 {% if "gestionar_proyecto" in proyecto_perms %}
-    {% if sprint.estado == sprint.Estado.PENDIENTE %}
+    {% if sprint.estado == sprint.Estado.PENDIENTE and proyecto.estado == proyecto.Estado.INICIADO %}
         <ul>
             {% for e in error %}
                 <li>{{ e }}</li>
@@ -33,13 +34,19 @@
         </ul>
         <form method=POST>
             {% csrf_token %}
-            <p><input type="submit" value="Iniciar Sprint"></p>
+            <p><input type="submit" value="Iniciar Sprint" onclick="confirmar(event)"></p>
         </form>
-
-        {% if sprint.costo_backlog > sprint.capacidad_equipo %}
-            <p><strong>Advertencia:</strong> El costo total del backlog es mayor que la capacidad del equipo.</p>
-        {% endif %}
+    {% endif %}
+    {% if sprint.costo_backlog > sprint.capacidad_equipo %}
+        <p><strong>Advertencia:</strong> El costo total del backlog es mayor que la capacidad del equipo.</p>
     {% endif %}
 {% endif %}
+<script type="text/javascript">
+    function confirmar(e) {
+        if (!confirm('¿Está seguro de que desea iniciar el sprint? Una vez hecho esto, no podrá modificarlo.')) {
+            e.preventDefault();
+        }
+    }
+</script>
 </body>
 </html>

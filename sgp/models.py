@@ -219,6 +219,18 @@ class Proyecto(models.Model):
                 errores.append("Falta al menos un usuario con el permiso de "+desc+".")
         return errores
 
+    @property
+    def sprint_activo(self):
+        return self.sprint_set.filter(estado=Sprint.Estado.INICIADO).first()
+
+    @property
+    def sprint_pendiente(self):
+        return self.sprint_set.filter(estado=Sprint.Estado.PENDIENTE).first()
+
+    @property
+    def sprints_finalizados(self):
+        return self.sprint_set.filter(estado=Sprint.Estado.FINALIZADO)
+
     class Meta:
         default_permissions = ()
         permissions = [
@@ -366,13 +378,19 @@ class Sprint(models.Model):
         return errores
 
     @property
-    def capacidad_equipo(self):
-        """Calcula el número de horas disponibles de los miembros del sprint."""
+    def capacidad_diaria(self):
+        """Calcula el número de horas disponibles de los miembros del sprint en un día."""
 
         capacidad = 0
         for miembro in self.participasprint_set.all():
-            capacidad = capacidad + miembro.horas_disponibles
+            capacidad = capacidad + miembro.horas_diarias
         return capacidad
+
+    @property
+    def capacidad_equipo(self):
+        """Calcula el número de horas disponibles de los miembros del sprint en total."""
+
+        return self.capacidad_diaria * (self.fecha_fin - self.fecha_inicio).days
 
     @property
     def costo_backlog(self):
@@ -486,8 +504,8 @@ class ParticipaSprint(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     """Usuario que participa en el sprint."""
 
-    horas_disponibles = models.IntegerField()
-    """Horas disponibles por el usuario para este sprint"""
+    horas_diarias = models.IntegerField()
+    """Horas disponibles cada día por el usuario para este sprint"""
 
     user_stories = models.ManyToManyField(UserStory)
     """Indica que user stories tiene asignado el usuario
