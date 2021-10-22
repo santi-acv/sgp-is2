@@ -676,11 +676,6 @@ def planificacion(request, proyecto_id):
         'fecha': proyecto.fecha_inicio,
         'evento': 'Inicio',
         'done': proyecto.estado != Proyecto.Estado.PENDIENTE,
-    }, {
-        'tipo': 'proyecto',
-        'fecha': proyecto.fecha_fin,
-        'evento': 'Fin',
-        'done': proyecto.estado == Proyecto.Estado.FINALIZADO,
     }]
 
     for sprint in proyecto.sprint_set.all():
@@ -696,6 +691,13 @@ def planificacion(request, proyecto_id):
             'sprint': sprint,
             'done': sprint.estado == Sprint.Estado.FINALIZADO,
         })
+
+    eventos.append({
+        'tipo': 'proyecto',
+        'fecha': proyecto.fecha_fin,
+        'evento': 'Fin',
+        'done': proyecto.estado == Proyecto.Estado.FINALIZADO,
+    })
 
     context = {'proyecto': proyecto, 'eventos': eventos}
     return render(request, 'sgp/proyecto-planificacion.html', context)

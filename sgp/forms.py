@@ -217,9 +217,11 @@ class UserRoleForm(ModelForm):
         else:
             queryset = Role.objects.filter(proyecto=proyecto_actual)
 
+        initial = self.instance.participa_set.get(proyecto=proyecto_actual).rol
+        self.nombre_rol = str(initial)
         self.fields['rol'] = forms.ModelChoiceField(
             queryset=queryset,
-            initial=self.instance.participa_set.get(proyecto=proyecto_actual).rol
+            initial=initial,
         )
         self.fields['nombre'].disabled = True
         self.fields['apellido'].disabled = True

@@ -7,24 +7,22 @@
     {% else %}
         <a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">Proyecto</a>
     {% endif %}
-    {% if "gestionar_proyecto" in proyecto_perms %}
+    {% if "gestionar_proyecto" in proyecto_perms and proyecto.estado != proyecto.Estado.FINALIZADO %}
         {% if pos == "Editar" %}
             &#183; <strong>Editar</strong>
         {% else %}
             &#183; <a href="{% url 'sgp:editar_proyecto' proyecto.id %}">Editar</a>
         {% endif %}
     {% endif %}
-    {% if "administrar_equipo" in proyecto_perms %}
-        {% if pos == "Equipo" %}
-            &#183; <strong>Equipo</strong>
-        {% else %}
-            &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
-        {% endif %}
-        {% if pos == "Roles" %}
-            &#183; <strong>Roles</strong>
-        {% else %}
-            &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
-        {% endif %}
+    {% if pos == "Equipo" %}
+        &#183; <strong>Equipo</strong>
+    {% else %}
+        &#183; <a href="{% url 'sgp:administrar_equipo' proyecto.id %}">Equipo</a>
+    {% endif %}
+    {% if pos == "Roles" %}
+        &#183; <strong>Roles</strong>
+    {% else %}
+        &#183; <a href="{% url 'sgp:administrar_roles' proyecto.id %}">Roles</a>
     {% endif %}
     {% if pos == "Product Backlog" %}
         &#183; <strong>Product Backlog</strong>

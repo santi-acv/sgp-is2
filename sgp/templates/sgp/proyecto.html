@@ -23,26 +23,30 @@
     <tr><th>Duración de los sprints:</th>
         <td>{{ proyecto.duracion_sprint }} día{{ proyecto.duracion_sprint|pluralize:"s" }}</td></tr>
     <tr><th>Estado:</th><td>{{ proyecto.get_estado_display }}</td></tr>
-    <tr><th>Sprint activo:</th><td>
-        {% if proyecto.sprint_activo %}
-            <a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=proyecto.sprint_activo.id %}">
-                {{ proyecto.sprint_activo }}</a>
-        {% else %}
-            --
-        {% endif %}
-    </td></tr>
-    <tr><th>Sprint pendiente:</th><td>
-        {% if proyecto.sprint_pendiente %}
-            <a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=proyecto.sprint_pendiente.id %}">
-                {{ proyecto.sprint_pendiente }}</a>
-        {% else %}
-            {% if "gestionar_proyecto" in proyecto_perms %}
-                <a href="{% url 'sgp:crear_sprint' proyecto.id %}">+ Crear sprint</a>
+    {% if proyecto.estado != proyecto.Estado.FINALIZADO %}
+        <tr><th>Sprint activo:</th><td>
+            {% if proyecto.sprint_activo %}
+                <a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=proyecto.sprint_activo.id %}">
+                    {{ proyecto.sprint_activo }}</a>
             {% else %}
                 --
             {% endif %}
-        {% endif %}
-    </td></tr>
+        </td></tr>
+        <tr><th>Sprint pendiente:</th><td>
+            {% with proyecto.sprint_pendiente as pendiente %}
+                {% if pendiente %}
+                    <a href="{% url 'sgp:mostrar_sprint' proyecto_id=proyecto.pk sprint_id=pendiente.id %}">
+                        {{ pendiente}}</a>
+                {% else %}
+                    {% if "gestionar_proyecto" in proyecto_perms and proyecto.estado != proyecto.Estado.FINALIZADO %}
+                        <a href="{% url 'sgp:crear_sprint' proyecto.id %}">+ Crear sprint</a>
+                    {% else %}
+                        --
+                    {% endif %}
+                {% endif %}
+            {% endwith %}
+        </td></tr>
+    {% endif %}
     {% if proyecto.sprints_finalizados.first %}
         <tr><th>Sprints finalizados:</th><td><ul>
             {% for sprint in proyecto.sprints_finalizados.all %}

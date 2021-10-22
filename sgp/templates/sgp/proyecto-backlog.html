@@ -62,7 +62,7 @@
     {% endfor %}
 </table>
 {% endif %}
-{% if "pila_producto" in proyecto_perms %}
+{% if "pila_producto" in proyecto_perms and proyecto.estado != proyecto.Estado.FINALIZADO %}
     <p><a href="{% url 'sgp:crear_user_story' proyecto.id %}">+ Crear user story</a></p>
 {% endif %}
 </body>

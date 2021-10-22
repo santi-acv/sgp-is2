@@ -4,103 +4,129 @@
     <meta charset="UTF-8">
     <title>{{ proyecto.nombre }} - SGP</title>
     <style>
-        .prm { padding: 0 5px }
+        .str { padding: 0 5px }
         .chk { text-align: center }
-        .str { text-align: center }
         .hidden { display: none }
     </style>
 </head>
 <body>
 {% include 'sgp/proyecto-menu.html' with pos="Roles" %}
-<p>En esta página puede ver y modificar los roles asociados al proyecto.</p>
-<form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto.id %}" method="post" name="form">
-{% csrf_token %}
-<table>
-    <tr>
-        <th rowspan="2">Nombre</th>
-        <th colspan="4">Permisos</th>
-    </tr>
-    <tr>
-        <th class="prm">Administrar Equipo</th>
-        <th class="prm">Gestionar Proyecto</th>
-        <th class="prm">Modificar Pila de Producto</th>
-        <th class="prm">Participar en el Desarrollo</th>
-    </tr>
-    {{ formset.management_form }}
-    {% for form in formset %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+{% if "administrar_equipo" in proyecto_perms and proyecto.estado != proyecto.Estado.FINALIZADO %}
+    <form action="{% url 'sgp:administrar_roles' proyecto_id=proyecto.id %}" method="post" name="form">
+    {% csrf_token %}
+    <table>
         <tr>
-            {% for field in form.hidden_fields %}
+            <th rowspan="2">Nombre</th>
+            <th colspan="4">Permisos</th>
+        </tr>
+        <tr>
+            <th class="str">Administrar Equipo</th>
+            <th class="str">Gestionar Proyecto</th>
+            <th class="str">Modificar Pila de Producto</th>
+            <th class="str">Participar en el Desarrollo</th>
+        </tr>
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <tr>
+                {% for field in form.hidden_fields %}
+                    {{ field }}
+                {% endfor %}
+                <td class="chk">{{ form.nombre }}</td>
+                <td class="chk">{{ form.administrar_equipo }}</td>
+                <td class="chk">{{ form.gestionar_proyecto }}</td>
+                <td class="chk">{{ form.pila_producto }}</td>
+                <td class="chk">{{ form.desarrollo }}</td>
+                <td class="hidden">{{ form.DELETE }}</td>
+                {% if form.instance != rol %}
+                    <td class="chk"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
+                                           type="button" value="Borrar"></td>
+                {% else %}
+                    <td class="chk">Rol actual</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        <tr id="empty_form_row" class="hidden">
+            {% for field in formset.empty_form.hidden_fields %}
                 {{ field }}
             {% endfor %}
-            <td class="str">{{ form.nombre }}</td>
-            <td class="chk">{{ form.administrar_equipo }}</td>
-            <td class="chk">{{ form.gestionar_proyecto }}</td>
-            <td class="chk">{{ form.pila_producto }}</td>
-            <td class="chk">{{ form.desarrollo }}</td>
-            <td class="hidden">{{ form.DELETE }}</td>
-            {% if form.instance != rol %}
-                <td class="str"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
-                                       type="button" value="Borrar"></td>
-            {% else %}
-                <td class="str">Rol actual</td>
-            {% endif %}
+            <td class="chk">{{ formset.empty_form.nombre }}</td>
+            <td class="chk">{{ formset.empty_form.administrar_equipo }}</td>
+            <td class="chk">{{ formset.empty_form.gestionar_proyecto }}</td>
+            <td class="chk">{{ formset.empty_form.pila_producto }}</td>
+            <td class="chk">{{ formset.empty_form.desarrollo }}</td>
+            <td class="hidden">{{ formset.empty_form.DELETE }}</td>
+            <td class="chk"><input type="button" value="Borrar" onclick="borrar(__prefix__, this)"></td>
         </tr>
-    {% endfor %}
-    <tr id="empty_form_row" class="hidden">
-        {% for field in formset.empty_form.hidden_fields %}
-            {{ field }}
-        {% endfor %}
-        <td class="str">{{ formset.empty_form.nombre }}</td>
-        <td class="chk">{{ formset.empty_form.administrar_equipo }}</td>
-        <td class="chk">{{ formset.empty_form.gestionar_proyecto }}</td>
-        <td class="chk">{{ formset.empty_form.pila_producto }}</td>
-        <td class="chk">{{ formset.empty_form.desarrollo }}</td>
-        <td class="hidden">{{ formset.empty_form.DELETE }}</td>
-        <td class="str"><input type="button" value="Borrar" onclick="borrar(__prefix__, this)"></td>
-    </tr>
-</table>
-    <a href="javascript:" onclick="agregar()">+ Agregar rol</a>
-    <p><input type="submit" value="Guardar"></p>
-</form>
+    </table>
+        <a href="javascript:" onclick="agregar()">+ Agregar rol</a>
+        <p><input type="submit" value="Guardar"></p>
+    </form>
 
-<form action="{% url 'sgp:importar_roles' proyecto_id=proyecto.id %}" method="post"
-      enctype="multipart/form-data" >
-    {% csrf_token %}
-    <p>También puede <a href="javascript:" onclick="parentNode.parentNode.submit()">importar</a> roles desde
-        un archivo externo o <a href="{% url 'sgp:exportar_roles' proyecto_id=proyecto.id %}">exportar</a>
-        los roles guardados.</p>
-    <p>{{ file_form.archivo }}</p>
-</form>
+    <form action="{% url 'sgp:importar_roles' proyecto_id=proyecto.id %}" method="post"
+          enctype="multipart/form-data" >
+        {% csrf_token %}
+        <p>También puede <a href="javascript:" onclick="parentNode.parentNode.submit()">importar</a> roles desde
+            un archivo externo o <a href="{% url 'sgp:exportar_roles' proyecto_id=proyecto.id %}">exportar</a>
+            los roles guardados.</p>
+        <p>{{ file_form.archivo }}</p>
+    </form>
 
-<script type="text/javascript">
-    const form_idx = document.getElementById("id_form-TOTAL_FORMS")
-    let total_forms = parseInt(form_idx.value);
+    <script type="text/javascript">
+        const form_idx = document.getElementById("id_form-TOTAL_FORMS")
+        let total_forms = parseInt(form_idx.value);
 
-    const table = document.querySelector('table');
-    const empty_row = document.getElementById("empty_form_row");
+        const table = document.querySelector('table');
+        const empty_row = document.getElementById("empty_form_row");
 
-    function agregar() {
-        const clone = empty_row.cloneNode(true);
-        clone.classList.remove("hidden");
-        clone.innerHTML = clone.innerHTML.replace(/__prefix__/g, total_forms++);
-        form_idx.value = total_forms.toString();
-        table.appendChild(clone);
-    }
-
-    function borrar(form, self) {
-        const del = document.getElementById("id_form-"+(form)+"-DELETE");
-        const status = ! del.checked;
-        del.checked = status;
-        {% for field in formset.empty_form.visible_fields %}
-            document.getElementById("id_form-"+(form)+"-{{ field.name }}").disabled = status;
-        {% endfor %}
-        del.disabled = false;
-        if (status) {
-            self.value = "Restaurar";
-        } else {
-            self.value = "Borrar";
+        function agregar() {
+            const clone = empty_row.cloneNode(true);
+            clone.classList.remove("hidden");
+            clone.innerHTML = clone.innerHTML.replace(/__prefix__/g, total_forms++);
+            form_idx.value = total_forms.toString();
+            table.appendChild(clone);
         }
-    }
-</script>
+
+        function borrar(form, self) {
+            const del = document.getElementById("id_form-"+(form)+"-DELETE");
+            const status = ! del.checked;
+            del.checked = status;
+            {% for field in formset.empty_form.visible_fields %}
+                document.getElementById("id_form-"+(form)+"-{{ field.name }}").disabled = status;
+            {% endfor %}
+            del.disabled = false;
+            if (status) {
+                self.value = "Restaurar";
+            } else {
+                self.value = "Borrar";
+            }
+        }
+    </script>
+{% else %}
+    <table>
+        <tr>
+            <th rowspan="2">Nombre</th>
+            <th colspan="4">Permisos</th>
+        </tr>
+        <tr>
+            <th class="str">Administrar Equipo</th>
+            <th class="str">Gestionar Proyecto</th>
+            <th class="str">Modificar Pila de Producto</th>
+            <th class="str">Participar en el Desarrollo</th>
+        </tr>
+        {% for form in formset %}
+            <tr>
+                <td class="str">{{ form.nombre.value }}</td>
+                <td class="chk">{% if form.administrar_equipo.value %} &#9632; {% else %} &#9633; {% endif %}</td>
+                <td class="chk">{% if form.gestionar_proyecto.value %} &#9632; {% else %} &#9633; {% endif %}</td>
+                <td class="chk">{% if form.pila_producto.value %} &#9632; {% else %} &#9633; {% endif %}</td>
+                <td class="chk">{% if form.desarrollo.value %} &#9632; {% else %} &#9633; {% endif %}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <p>Para exportar los roles del proyecto, haga click
+        <a href="{% url 'sgp:exportar_roles' proyecto_id=proyecto.id %}">aquí</a>.</p>
+{% endif %}
 </body>
 </html>
