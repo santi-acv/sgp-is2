@@ -31,7 +31,10 @@
     {% else %}
         &#183; <a href="{% url 'sgp:product_backlog' proyecto.id %}">Product Backlog</a>
     {% endif %}
-    &#183; Planificación
+    {% if pos == "Planificación" %}
+        &#183; <strong>Planificación</strong>
+    {% else %}
+        &#183; <a href="{% url 'sgp:planificacion' proyecto.id %}">Planificación</a>
+    {% endif %}
     &#183; Kanban
-    &#183; Burndown Chart
 </p>

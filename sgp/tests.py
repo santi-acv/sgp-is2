@@ -73,7 +73,8 @@ class NavigationTest(TestCase):
 
         |
         """
-        Proyecto.objects.create(nombre='Proyecto de prueba')
+        Proyecto.objects.create(nombre='Proyecto de prueba', fecha_inicio=datetime.date(2021, 12, 30),
+                                fecha_fin=datetime.date(2021, 12, 31), duracion_sprint=1)
         proj = Proyecto.objects.get(nombre='Proyecto de prueba')
         response = self.client.get(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proj.id}))
         self.assertEqual(response.status_code, 200,

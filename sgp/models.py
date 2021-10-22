@@ -8,7 +8,6 @@ import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
 from django.utils import timezone
-from django.utils.timezone import now
 from guardian.shortcuts import assign_perm, get_perms_for_model, remove_perm
 
 
@@ -208,9 +207,9 @@ class Proyecto(models.Model):
         msg = {'errores': [], 'advertencias': []}
 
         # verifica que ya sea la fecha de inicio
-        if now().date() < self.fecha_inicio:
+        if timezone.localdate() < self.fecha_inicio:
             msg['advertencias'].append('Todavía no ha llegado la fecha de inicio.')
-        elif self.fecha_inicio < now().date():
+        elif self.fecha_inicio < timezone.localdate():
             msg['advertencias'].append('Ya ha pasado la fecha de inicio.')
 
         # verifica que haya tiempo para al menos un sprint
@@ -239,9 +238,9 @@ class Proyecto(models.Model):
         msg = {'errores': [], 'advertencias': []}
 
         # verifica que ya sea la fecha de fin
-        if now().date() < self.fecha_fin:
+        if timezone.localdate() < self.fecha_fin:
             msg['advertencias'].append('Todavía no ha llegado la fecha de fin.')
-        elif self.fecha_fin < now().date():
+        elif self.fecha_fin < timezone.localdate():
             msg['advertencias'].append('Ya ha pasado la fecha de fin.')
 
         # verifica que todos los sprints hayan terminado
@@ -394,17 +393,25 @@ class Sprint(models.Model):
         """
         msg = {'errores': [], 'advertencias': []}
 
-        # verifica que ya sea la fecha de inicio
-        if now().date() < self.fecha_inicio:
-            msg['advertencias'].append('Todavía no ha llegado la fecha de inicio.')
-        elif self.fecha_inicio < now().date():
-            msg['advertencias'].append('Ya ha pasado la fecha de inicio.')
-
-        # verifica que no haya otro sprint en curso
-        if self.proyecto.sprint_activo:
+        # verifica que el proyecto ya haya iniciado y no haya otro sprint en curso
+        if self.proyecto.estado == Proyecto.Estado.PENDIENTE:
+            msg['errores'].append('El proyecto aún no ha iniciado.')
+        elif self.proyecto.sprint_activo:
             msg['errores'].append('Ya existe un sprint en curso.')
             if self.fecha_inicio < self.proyecto.sprint_activo.fecha_fin:
                 msg['advertencias'].append('El inicio de este sprint se solapa con el fin del sprint activo.')
+
+        # verifica que ya sea la fecha de inicio
+        if timezone.localdate() < self.fecha_inicio:
+            msg['advertencias'].append('Todavía no ha llegado la fecha de inicio.')
+        elif self.fecha_inicio < timezone.localdate():
+            msg['advertencias'].append('Ya ha pasado la fecha de inicio.')
+
+        # verifica que las fechas de inicio y de fin entren en el proyecto
+        if self.fecha_inicio < self.proyecto.fecha_inicio:
+            msg['advertencias'].append('El sprint no puede iniciar antes que el proyecto.')
+        elif self.fecha_fin > self.proyecto.fecha_fin:
+            msg['advertencias'].append('El sprint no puede terminar después que el proyecto.')
 
         # verifica que haya al menos un desarrollador
         if not self.equipo.first():
@@ -440,10 +447,18 @@ class Sprint(models.Model):
         msg = {'errores': [], 'advertencias': []}
 
         # verifica que ya sea la fecha de fin
-        if now().date() < self.fecha_fin:
+        if timezone.localdate() < self.fecha_fin:
             msg['advertencias'].append('Todavía no ha llegado la fecha de fin.')
-        elif self.fecha_fin < now().date():
+        elif self.fecha_fin < timezone.localdate():
             msg['advertencias'].append('Ya ha pasado la fecha de fin.')
+
+        # verifica que la fecha de fin sea válida
+        if self.fecha_fin > self.proyecto.fecha_fin:
+            msg['advertencias'].append('El sprint no puede terminar después que el proyecto.')
+
+        for user_story in self.sprint_backlog.all():
+            if user_story.estado != UserStory.Estado.FINALIZADO:
+                msg['advertencias'].append('El sprint tiene user stories sin terminar.')
 
         return msg
 

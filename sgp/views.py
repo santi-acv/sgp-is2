@@ -660,3 +660,42 @@ def sprint_backlog(request, proyecto_id, sprint_id):
 
     context = {'proyecto': proyecto, 'sprint': sprint, 'form': form, 'formset': formset}
     return render(request, 'sgp/sprint-backlog.html', context)
+
+
+def planificacion(request, proyecto_id):
+    """
+    **Fecha:** 21/10/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    eventos = [{
+        'tipo': 'proyecto',
+        'fecha': proyecto.fecha_inicio,
+        'evento': 'Inicio',
+        'done': proyecto.estado != Proyecto.Estado.PENDIENTE,
+    }, {
+        'tipo': 'proyecto',
+        'fecha': proyecto.fecha_fin,
+        'evento': 'Fin',
+        'done': proyecto.estado == Proyecto.Estado.FINALIZADO,
+    }]
+
+    for sprint in proyecto.sprint_set.all():
+        eventos.append({
+            'fecha': sprint.fecha_inicio,
+            'evento': 'Inicio',
+            'sprint': sprint,
+            'done': sprint.estado != Sprint.Estado.PENDIENTE,
+        })
+        eventos.append({
+            'fecha': sprint.fecha_fin,
+            'evento': 'Fin',
+            'sprint': sprint,
+            'done': sprint.estado == Sprint.Estado.FINALIZADO,
+        })
+
+    context = {'proyecto': proyecto, 'eventos': eventos}
+    return render(request, 'sgp/proyecto-planificacion.html', context)

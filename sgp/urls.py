@@ -23,4 +23,5 @@ urlpatterns = [
     path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>/editar', views.editar_sprint, name='editar_sprint'),
     path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>/equipo', views.equipo_sprint, name='equipo_sprint'),
     path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>/backlog', views.sprint_backlog, name='sprint_backlog'),
+    path('proyecto-<int:proyecto_id>/planificacion', views.planificacion, name='planificacion'),
 ]

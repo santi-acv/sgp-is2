@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        td { padding: 0 20px; }
+    </style>
+</head>
+<body>
+{% include 'sgp/proyecto-menu.html' with pos="Planificación" %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+<p> Los circulos vacíos (&#9675;) representan actividades pendientes,
+    mientras que los llenos (&#9679;) representan actividades completadas.</p>
+<table>
+    <tr>
+        <th>Fecha</th>
+        <th>Evento</th>
+        <th>Hoy</th>
+    </tr>
+    {% now "d/m/Y" as hoy %}
+    {% for e in eventos|dictsort:"fecha" %}
+        <tr>
+            <td>{{ e.fecha|date:"d/m/Y" }}</td>
+            {% if e.tipo == 'proyecto' %}
+                <td>{{ e.evento }} del proyecto.</td>
+            {% else %}
+                <td>&emsp; {{ e.evento }} del sprint: <a href="{% url 'sgp:mostrar_sprint' proyecto.id e.sprint.id %}">
+                    {{ e.sprint.nombre }}</a>.</td>
+            {% endif %}
+            <td>
+                {% if e.fecha|date:"d/m/Y" == hoy %}
+                    {% if e.done %}
+                        &#9679;
+                    {% else %}
+                        &#9675;
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+</body>
+</html>
