@@ -34,5 +34,11 @@
     {% else %}
         &#183; <a href="{% url 'sgp:planificacion' proyecto.id %}">Planificación</a>
     {% endif %}
-    &#183; Kanban
+    {% if proyecto.sprint_activo %}
+        {% if pos == "Kanban" %}
+            &#183; <strong>Kanban</strong>
+        {% else %}
+            &#183; <a href="{% url 'sgp:kanban' proyecto.id %}">Kanban</a>
+        {% endif %}
+    {% endif %}
 </p>

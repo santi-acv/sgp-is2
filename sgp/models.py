@@ -506,6 +506,7 @@ class UserStory(models.Model):
     class Estado(models.TextChoices):
         PENDIENTE = 'P', 'Pendiente'
         INICIADO = 'I', 'Iniciado'
+        FASE_DE_QA = 'Q', 'Q&A'
         FINALIZADO = 'F', 'Finalizado'
         CANCELADO = 'C', 'Cancelado'
     """Contiene los estados posibles del user story."""
@@ -596,3 +597,24 @@ class ParticipaSprint(models.Model):
     """Indica que user stories tiene asignado el usuario
     
     |"""
+
+
+class Incremento(models.Model):
+    """
+    **Fecha:** 23/10/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    user_story = models.ForeignKey(UserStory, on_delete=models.CASCADE)
+    """User Story cuyo incremento es registrado"""
+
+    usuario = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    """Usuario que registró el incremento"""
+
+    fecha = models.DateField(auto_now_add=True)
+    """Fecha en la que se registró el incremento"""
+
+    horas = models.IntegerField(default=0)
+    """Horas que se trabajaron ese día"""

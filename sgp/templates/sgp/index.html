@@ -77,7 +77,7 @@
         xhr.setRequestHeader('X-CSRFToken', csrftoken);
         xhr.onload = function() {
             if (xhr.status === 200) {
-                    window.location.href = '{% url 'sgp:index' %}';
+                    location.reload();
             }
         };
         xhr.send('idtoken=' + id_token);

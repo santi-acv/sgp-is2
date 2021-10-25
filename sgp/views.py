@@ -14,10 +14,10 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
-from django.utils.timezone import now
+from django.utils import timezone
 from guardian.shortcuts import get_objects_for_user
 
-from .models import User, Proyecto, Role, Sprint, UserStory
+from .models import User, Proyecto, Role, Sprint, UserStory, Incremento
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
     UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm, UserSprintForm, BacklogForm
 
@@ -63,9 +63,9 @@ def login_view(request):
     user = authenticate(request, token=request.POST['idtoken'])
     if user is not None:
         login(request, user)
-        return HttpResponse("User logged in")
+        return HttpResponse(status=200)
     else:
-        return HttpResponse("Login error!!!", status=401)
+        return HttpResponse(status=403)
 
 
 def logout_view(request):
@@ -168,10 +168,10 @@ def mostrar_proyecto(request, proyecto_id):
     if request.method == 'POST' and not mensajes['errores']:
         if proyecto.estado == pendiente:
             proyecto.estado = iniciado
-            proyecto.fecha_inicio = now()
+            proyecto.fecha_inicio = timezone.now()
         elif proyecto.estado == iniciado:
             proyecto.estado = finalizado
-            proyecto.fecha_fin = now()
+            proyecto.fecha_fin = timezone.now()
         proyecto.save()
         return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
     context = {'proyecto': proyecto, 'mensajes': mensajes}
@@ -534,13 +534,10 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
     if request.method == 'POST' and not mensajes['errores']:
         if sprint.estado == pendiente:
             sprint.estado = iniciado
-            for us in sprint.sprint_backlog.all():
-                us.estado = UserStory.Estado.INICIADO
-                us.save()
-            sprint.fecha_inicio = now()
+            sprint.fecha_inicio = timezone.now()
         elif sprint.estado == iniciado:
             sprint.estado = finalizado
-            sprint.fecha_fin = now()
+            sprint.fecha_fin = timezone.now()
         sprint.save()
         return HttpResponseRedirect(
             reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto.id, 'sprint_id': sprint.id}))
@@ -701,3 +698,116 @@ def planificacion(request, proyecto_id):
 
     context = {'proyecto': proyecto, 'eventos': eventos}
     return render(request, 'sgp/proyecto-planificacion.html', context)
+
+
+def kanban(request, proyecto_id):
+    """
+    **Fecha:** 23/10/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    sprint = proyecto.sprint_activo
+    if request.method == 'POST':
+        user_story = UserStory.objects.get(proyecto=proyecto, numero=request.POST['us'])
+
+        pendiente = UserStory.Estado.PENDIENTE
+        iniciado = UserStory.Estado.INICIADO
+        fase_de_qa = UserStory.Estado.FASE_DE_QA
+        finalizado = UserStory.Estado.FINALIZADO
+        cancelado = UserStory.Estado.CANCELADO
+
+        # si se han actualizado las horas
+        if request.POST['accion'] == 'trabajar' and user_story.estado in [pendiente, iniciado]:
+            horas = int(request.POST['horas'])
+            if not horas:
+                return HttpResponse(status=400)
+
+            # registra el incremento
+            try:
+                incremento = Incremento.objects.get(user_story=user_story, usuario=request.user,
+                                                    fecha=timezone.localdate())
+                incremento.horas = incremento.horas + horas
+                incremento.save()
+            except Incremento.DoesNotExist:
+                Incremento.objects.create(user_story=user_story, usuario=request.user, horas=horas)
+
+            # actualiza la información del user story
+            user_story.horas_trabajadas += horas
+            if user_story.estado == pendiente:
+                user_story.estado = iniciado
+
+        # marca el user story como iniciado
+        elif request.POST['accion'] == 'iniciar' and user_story.estado == pendiente:
+            user_story.estado = iniciado
+
+        # envía el user story a la fase de qa
+        elif request.POST['accion'] == 'enviar_qa' and user_story.estado == iniciado:
+            user_story.estado = fase_de_qa
+
+        # marca el user story como finalizado
+        elif request.POST['accion'] == 'aprobar' and user_story.estado == fase_de_qa:
+            user_story.estado = finalizado
+
+        # retorna el user story a la fase de trabajo
+        elif request.POST['accion'] == 'rechazar' and user_story.estado == fase_de_qa:
+            if user_story.horas_trabajadas == 0:
+                user_story.estado = pendiente
+            else:
+                user_story.estado = iniciado
+
+        # cancela el user story
+        elif request.POST['accion'] == 'cancelar' and user_story.estado != finalizado:
+            user_story.estado = cancelado
+
+        # restaura el user story a la fase de trabajo
+        elif request.POST['accion'] == 'restaurar' and user_story.estado == cancelado:
+            if user_story.horas_trabajadas == 0:
+                user_story.estado = pendiente
+            else:
+                user_story.estado = iniciado
+        else:
+            return HttpResponse(status=405)
+
+        user_story.save()
+
+        return HttpResponseRedirect(reverse('sgp:kanban', kwargs={'proyecto_id': proyecto.id}))
+
+    # calcula las horas trabajadas y disponibles.
+    participasprint = sprint.participasprint_set.get(usuario=request.user)
+    horas = {
+        'trabajadas': 0,
+        'disponibles': participasprint.horas_diarias,
+    }
+    for incremento in Incremento.objects.filter(user_story__in=participasprint.user_stories.all(),
+                                                usuario=request.user, fecha=timezone.localdate()):
+        horas['trabajadas'] += incremento.horas
+
+    # obtiene matriz de user stories
+    tablero = dict()
+    for estado in UserStory.Estado.values:
+        tablero[estado] = []
+
+    # si el usuario tiene permisos de gestion, muestra todas las user stories
+    if request.user.has_perm('gestionar_proyecto', proyecto):
+        for user_story in sprint.sprint_backlog.all():
+            if user_story in sprint.participasprint_set.get(usuario=request.user).user_stories.all():
+                user_story.asignado = True
+            tablero[str(user_story.estado)].append(user_story)
+
+    # si no, muestra los user stories que tiene asignado
+    else:
+        for user_story in sprint.participasprint_set.get(usuario=request.user).user_stories.all():
+            tablero[str(user_story.estado)].append(user_story)
+
+    # agrega ordena las user stories en filas
+    count = len(tablero[max(tablero, key=lambda e: len(tablero[e]))])
+    for estado, lista in tablero.items():
+        lista.extend([None for i in range(count-len(lista))])
+    tablero = [*zip(*tablero.values())]
+
+    context = {'proyecto': proyecto, 'sprint': sprint, 'horas': horas,
+               'estados': UserStory.Estado.labels, 'tablero': tablero}
+    return render(request, 'sgp/kanban.html', context)

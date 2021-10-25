@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        td {
+            text-align: center;
+            padding: 0 20px;
+            height: 100px;
+            width: 120px;
+        }
+    </style>
+</head>
+<body>
+{% include 'sgp/proyecto-menu.html' with pos="Kanban" %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+{% csrf_token %}
+
+<p><strong>Sprint actual:</strong> <a href="{% url 'sgp:mostrar_sprint' proyecto.id proyecto.sprint_activo.id %}">
+    {{ proyecto.sprint_activo }}</a></p>
+
+<p>Usted ha trabajado {{ horas.trabajadas }} horas de las {{ horas.disponibles }} que tiene
+    asignadas para el día de hoy ({% widthratio horas.trabajadas horas.disponibles 100 %}%).</p>
+
+<table>
+    <tr>
+        {% for estado in estados %}
+            <th>{{ estado }}</th>
+        {% endfor %}
+    </tr>
+    {% for fila in tablero %}
+        <tr>
+            {% for user_story in fila %}
+                {% if user_story %}
+                    <td style="border: 1px solid black">
+                        <p><a href="{% url 'sgp:mostrar_user_story' proyecto.id user_story.numero %}">
+                            <strong>{{ user_story }}</strong></a></p>
+                        <p>{{ user_story.horas_trabajadas }}/{{ user_story.horas_estimadas }} horas
+                            ({% widthratio user_story.horas_trabajadas user_story.horas_estimadas 100 %}%)</p>
+
+                        {% with e=user_story.estado %}
+                            {% if "gestionar_proyecto" not in proyecto_perms or user_story.asignado %}
+                                {# agregar horas a un user story #}
+                                {% if e == user_story.Estado.PENDIENTE or e == user_story.Estado.INICIADO %}
+                                    <p><a href="javascript:" onclick="trabajar({{ user_story.numero }})">
+                                        trabajar horas</a>
+
+                                    {# marcar user story como completado #}
+                                    {% if e == user_story.Estado.PENDIENTE %}
+                                        <a href="javascript:" onclick="iniciar({{ user_story.numero }})">
+                                        iniciar</a>
+                                    {% else %}
+                                        <a href="javascript:" onclick="enviar_qa({{ user_story.numero }})">
+                                        enviar a Q&A</a>
+                                    {% endif %}</p>
+                                {% endif %}
+                            {% endif %}
+
+                            {# si el usuario tiene permisos de gestion #}
+                            {% if "gestionar_proyecto" in proyecto_perms %}
+
+                                {# aprobar o denegar user stories en fase de q&a #}
+                                {% if e == user_story.Estado.FASE_DE_QA %}
+                                    <p><a href="javascript:" onclick="aprobar({{ user_story.numero }})">
+                                        aprobar</a> &#183;
+                                    <a href="javascript:" onclick="rechazar({{ user_story.numero }})">
+                                        rechazar</a></p>
+                                {% endif %}
+
+                                {# cancelar o restaurar user stories #}
+                                {% if e != user_story.Estado.FINALIZADO and e != user_story.Estado.CANCELADO %}
+                                    <p><a href="javascript:" onclick="cancelar({{ user_story.numero }})">
+                                        abortar</a></p>
+                                {% elif e == user_story.Estado.CANCELADO %}
+                                    <p><a href="javascript:" onclick="restaurar({{ user_story.numero }})">
+                                        restaurar</a></p>
+                                {% endif %}
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+    {% endfor %}
+</table>
+<script>
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    function trabajar(us) {
+        let horas = parseInt(prompt("¿Cuántas horas ha trabajado en el user story?"));
+        if (horas) {
+            enviar("us="+us+"&accion=trabajar&horas="+horas)
+        }
+    }
+
+    function iniciar(us) {
+        if (confirm("¿Desea marcar el user story como iniciado?")) {
+            enviar("us="+us+"&accion=iniciar")
+        }
+    }
+
+    function enviar_qa(us) {
+        if (confirm("¿Desea enviar el user story a la fase de Q&A?")) {
+            enviar("us="+us+"&accion=enviar_qa")
+        }
+    }
+
+    function aprobar(us) {
+        if (confirm("¿Desea marcar el user story como finalizado?")) {
+            enviar("us="+us+"&accion=aprobar")
+        }
+    }
+
+    function rechazar(us) {
+        if (confirm("¿Desea enviar el user story a la fase de trabajo?")) {
+            enviar("us="+us+"&accion=rechazar")
+        }
+    }
+
+    function cancelar(us) {
+        if (confirm("¿Desea abortar el user story?")) {
+            enviar("us="+us+"&accion=cancelar")
+        }
+    }
+
+    function restaurar(us) {
+        if (confirm("¿Desea restaurar el user story?")) {
+            enviar("us="+us+"&accion=restaurar")
+        }
+    }
+    
+    function enviar(mensaje) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '{% url 'sgp:kanban' proyecto.id %}');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-CSRFToken', csrftoken);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                    location.reload();
+            } else {
+                console.log(xhr.response)
+            }
+        };
+        xhr.send(mensaje);
+    }
+</script>
+</body>
+</html>

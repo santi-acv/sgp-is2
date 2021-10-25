@@ -35,14 +35,16 @@
 </table>
 
 {% if "gestionar_proyecto" in proyecto_perms or "pila_producto" in proyecto_perms %}
-    {% if user_story.estado == 'P' %}
-    <p>Si desea editar el user story, haga click
-        <a href="{% url 'sgp:editar_user_story' proyecto.id user_story.numero %}">aquí</a>.</p>
-    {% elif user_story.estado == 'C' %}
-        <form method=POST action="{% url 'sgp:editar_user_story' proyecto.id user_story.numero %}">
-            {% csrf_token %}
-            <p><input type="submit" name="restaurar" value="Restaurar User Story" onclick="confirmar(event)"></p>
-        </form>
+    {% if not user_story.sprint or user_story.sprint.estado == user_story.sprint.Estado.PENDIENTE %}
+        {% if user_story.estado == 'P' %}
+            <p>Si desea editar el user story, haga click
+                <a href="{% url 'sgp:editar_user_story' proyecto.id user_story.numero %}">aquí</a>.</p>
+        {% elif user_story.estado == 'C' %}
+            <form method=POST action="{% url 'sgp:editar_user_story' proyecto.id user_story.numero %}">
+                {% csrf_token %}
+                <p><input type="submit" name="restaurar" value="Restaurar User Story" onclick="confirmar(event)"></p>
+            </form>
+        {% endif %}
     {% endif %}
 {% endif %}
 
