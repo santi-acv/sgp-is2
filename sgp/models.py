@@ -607,11 +607,8 @@ class Incremento(models.Model):
 
     |
     """
-    user_story = models.ForeignKey(UserStory, on_delete=models.CASCADE)
-    """User Story cuyo incremento es registrado"""
-
-    usuario = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
-    """Usuario que registró el incremento"""
+    participasprint = models.ForeignKey(ParticipaSprint, null=True, on_delete=models.SET_NULL)
+    """Indica que usuario realizó el incremento en qué sprint"""
 
     fecha = models.DateField(auto_now_add=True)
     """Fecha en la que se registró el incremento"""

@@ -7,6 +7,7 @@ archivo ``urls.py``.
 
 A continuación se documentan todas las vistas de la aplicación SGP.
 """
+import datetime
 import json
 
 from django.forms import modelformset_factory
@@ -726,13 +727,13 @@ def kanban(request, proyecto_id):
                 return HttpResponse(status=400)
 
             # registra el incremento
+            participasprint = sprint.participasprint_set.get(usuario=request.user)
             try:
-                incremento = Incremento.objects.get(user_story=user_story, usuario=request.user,
-                                                    fecha=timezone.localdate())
+                incremento = participasprint.incremento_set.get(fecha=timezone.localdate())
                 incremento.horas = incremento.horas + horas
                 incremento.save()
             except Incremento.DoesNotExist:
-                Incremento.objects.create(user_story=user_story, usuario=request.user, horas=horas)
+                Incremento.objects.create(participasprint=participasprint, horas=horas)
 
             # actualiza la información del user story
             user_story.horas_trabajadas += horas
@@ -781,8 +782,7 @@ def kanban(request, proyecto_id):
         'trabajadas': 0,
         'disponibles': participasprint.horas_diarias,
     }
-    for incremento in Incremento.objects.filter(user_story__in=participasprint.user_stories.all(),
-                                                usuario=request.user, fecha=timezone.localdate()):
+    for incremento in Incremento.objects.filter(participasprint=participasprint, fecha=timezone.localdate()):
         horas['trabajadas'] += incremento.horas
 
     # obtiene matriz de user stories
@@ -811,3 +811,26 @@ def kanban(request, proyecto_id):
     context = {'proyecto': proyecto, 'sprint': sprint, 'horas': horas,
                'estados': UserStory.Estado.labels, 'tablero': tablero}
     return render(request, 'sgp/kanban.html', context)
+
+
+def burndown(request, proyecto_id, sprint_id):
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    sprint = Sprint.objects.get(id=sprint_id)
+
+    chart = {'fechas': [], 'ideal': []}
+
+    # agrega las fechas planeadas del sprint
+    duracion = (sprint.fecha_fin - sprint.fecha_inicio).days
+    for dias in range(duracion + 1):
+        fecha = sprint.fecha_inicio + datetime.timedelta(days=dias)
+        chart['fechas'].append(str(fecha))
+        chart['ideal'].append(sprint.costo_backlog * (1 - dias / duracion))
+
+    if sprint.estado == Sprint.Estado.INICIADO:
+        # agrega las fechas luego del final planeado del sprint
+        for dias in range((timezone.localdate() - sprint.fecha_fin).days):
+            fecha = sprint.fecha_fin + datetime.timedelta(days=dias + 1)
+            chart['fechas'].append(str(fecha))
+
+    context = {'proyecto': proyecto, 'sprint': sprint, 'chart': chart}
+    return render(request, 'sgp/proyecto-burndown.html', context=context)
