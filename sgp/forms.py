@@ -214,8 +214,13 @@ class UserRoleForm(ModelForm):
         if self.instance == usuario_actual:
             perm = get_perms_for_model(Proyecto).get(codename='administrar_equipo')
             queryset = Role.objects.filter(proyecto=proyecto_actual, permisos__in=[perm])
+            self.fields['borrar'].disabled = True
+            self.borrar_string = 'Usuario actual'
         else:
             queryset = Role.objects.filter(proyecto=proyecto_actual)
+            if proyecto_actual.sprint_activo and self.instance in proyecto_actual.sprint_activo.equipo.all():
+                self.fields['borrar'].disabled = True
+                self.borrar_string = 'Ocupado en sprint'
 
         initial = self.instance.participa_set.get(proyecto=proyecto_actual).rol
         self.nombre_rol = str(initial)

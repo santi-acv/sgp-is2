@@ -355,7 +355,7 @@ def administrar_equipo(request, proyecto_id):
 
     # Enviar una lista de miembros
     formset = UserRoleFormSet(
-        queryset=User.objects.filter(participa__proyecto=proyecto_id).order_by('fecha_registro'),
+        queryset=User.objects.filter(participa__proyecto=proyecto_id).order_by('participa__rol'),
         form_kwargs={'usuario_actual': usuario, 'proyecto_actual': proyecto})
 
     return render(request, 'sgp/proyecto-equipo.html',
@@ -610,7 +610,7 @@ def equipo_sprint(request, proyecto_id, sprint_id):
                 reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
 
     else:
-        formset = UserSprintFormSet(queryset=sprint.equipo.all().order_by('fecha_registro'),
+        formset = UserSprintFormSet(queryset=sprint.equipo.all().order_by('participa__rol'),
                                     form_kwargs={'sprint': sprint})
 
     return render(request, 'sgp/sprint-equipo.html',

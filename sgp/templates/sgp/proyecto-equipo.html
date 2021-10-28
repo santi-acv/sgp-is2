@@ -22,6 +22,7 @@
             <th>Apellido</th>
             <th>E-Mail</th>
             <th>Rol</th>
+            <th>Remover del proyecto</th>
         </tr>
         {{ formset.management_form }}
         {% for form in formset %}
@@ -34,11 +35,11 @@
                 <td class="str" id="id_form-{{ forloop.counter|add:"-1" }}-email">{{ form.email.value }}</td>
                 <td class="str">{{ form.rol }}</td>
                 <td class="hidden">{{ form.borrar }}</td>
-                {% if form.instance != usuario %}
+                {% if not form.borrar_string %}
                     <td class="chk"><input onclick="borrar({{ forloop.counter|add:"-1" }}, this)"
                                            type="button" value="Remover"></td>
                 {% else %}
-                    <td class="chk">Usuario actual</td>
+                    <td class="chk">{{ form.borrar_string }}</td>
                 {% endif %}
             </tr>
         {% endfor %}
