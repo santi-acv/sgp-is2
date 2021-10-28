@@ -773,14 +773,14 @@ def kanban(request, proyecto_id):
         return HttpResponseRedirect(reverse('sgp:kanban', kwargs={'proyecto_id': proyecto.id}))
 
     # calcula las horas trabajadas y disponibles.
-    participasprint = sprint.participasprint_set.get(usuario=request.user)
-    horas = {
-        'trabajadas': 0,
-        'disponibles': participasprint.horas_diarias,
-    }
-    for incremento in Incremento.objects.filter(user_story__in=participasprint.user_stories.all(),
-                                                usuario=request.user, fecha=timezone.localdate()):
-        horas['trabajadas'] += incremento.horas
+    participasprint = sprint.participasprint_set.filter(usuario=request.user).first()
+    horas = {}
+    if participasprint:
+        horas['trabajadas'] = 0
+        horas['disponibles'] = participasprint.horas_diarias
+        for incremento in Incremento.objects.filter(user_story__in=participasprint.user_stories.all(),
+                                                    usuario=request.user, fecha=timezone.localdate()):
+            horas['trabajadas'] += incremento.horas
 
     # obtiene matriz de user stories
     tablero = dict()
@@ -790,7 +790,7 @@ def kanban(request, proyecto_id):
     # si el usuario tiene permisos de gestion, muestra todas las user stories
     if request.user.has_perm('gestionar_proyecto', proyecto):
         for user_story in sprint.sprint_backlog.all():
-            if user_story in sprint.participasprint_set.get(usuario=request.user).user_stories.all():
+            if participasprint and user_story in participasprint.user_stories.all():
                 user_story.asignado = True
             tablero[str(user_story.estado)].append(user_story)
 

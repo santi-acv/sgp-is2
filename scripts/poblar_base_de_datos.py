@@ -100,17 +100,17 @@ us = [UserStory.objects.create(numero=1, nombre='Lunes',
                                estado=UserStory.Estado.FINALIZADO,
                                prioridad=3, horas_estimadas=20,
                                horas_trabajadas=20,
-                               proyecto=proyecto, sprint=sprint1),
+                               proyecto=proyecto, sprint=sprint2),
       UserStory.objects.create(numero=2, nombre='Martes',
                                estado=UserStory.Estado.FASE_DE_QA,
                                prioridad=3, horas_estimadas=20,
                                horas_trabajadas=30,
-                               proyecto=proyecto, sprint=sprint1),
+                               proyecto=proyecto, sprint=sprint2),
       UserStory.objects.create(numero=3, nombre='Miercoles',
                                estado=UserStory.Estado.FASE_DE_QA,
                                prioridad=3, horas_estimadas=20,
-                               horas_trabajadas=25,
-                               proyecto=proyecto, sprint=sprint1),
+                               horas_trabajadas=15,
+                               proyecto=proyecto, sprint=sprint2),
       UserStory.objects.create(numero=4, nombre='Jueves',
                                estado=UserStory.Estado.INICIADO,
                                prioridad=3, horas_estimadas=30,
@@ -119,7 +119,7 @@ us = [UserStory.objects.create(numero=1, nombre='Lunes',
       UserStory.objects.create(numero=5, nombre='Viernes',
                                estado=UserStory.Estado.INICIADO,
                                prioridad=2, horas_estimadas=30,
-                               horas_trabajadas=15,
+                               horas_trabajadas=35,
                                proyecto=proyecto, sprint=sprint2),
       UserStory.objects.create(numero=6, nombre='Sabado',
                                estado=UserStory.Estado.INICIADO,
@@ -129,15 +129,15 @@ us = [UserStory.objects.create(numero=1, nombre='Lunes',
       UserStory.objects.create(numero=7, nombre='Domingo',
                                estado=UserStory.Estado.PENDIENTE,
                                prioridad=2, horas_estimadas=50,
-                               proyecto=proyecto, sprint=sprint3),
+                               proyecto=proyecto, sprint=sprint2),
       UserStory.objects.create(numero=8, nombre='Asueto',
                                estado=UserStory.Estado.PENDIENTE,
                                prioridad=4, horas_estimadas=40,
-                               proyecto=proyecto, sprint=sprint3),
+                               proyecto=proyecto, sprint=sprint2),
       UserStory.objects.create(numero=9, nombre='Feriado',
                                estado=UserStory.Estado.PENDIENTE,
                                prioridad=4, horas_estimadas=40,
-                               proyecto=proyecto, sprint=sprint3)]
+                               proyecto=proyecto, sprint=sprint2)]
 proyecto.asignar_rol(s1, 'Desarrollador')
 proyecto.asignar_rol(s2, 'Scrum master')
 proyecto.asignar_rol(u3, 'Product owner')
@@ -174,11 +174,12 @@ us = []
 for i in range(24):
     s = i // 24
     us.append(UserStory.objects.create(numero=i, nombre=nombres[i],
-                                       estado=UserStory.Estado.FINALIZADO
-                                       if i < 18 else UserStory.Estado.FASE_DE_QA,
+                                       estado=UserStory.Estado.FINALIZADO if i < 18
+                                       else UserStory.Estado.FASE_DE_QA,
                                        prioridad=3, horas_estimadas=20 + i**2 % 10,
                                        horas_trabajadas=20 + i**2 % 10,
-                                       proyecto=proyecto, sprint=sprint1))
+                                       proyecto=proyecto, sprint=sprint1 if i < 8
+                                       else sprint2 if i < 16 else sprint3))
 proyecto.asignar_rol(s1, 'Scrum master')
 proyecto.asignar_rol(s2, 'Desarrollador')
 proyecto.asignar_rol(s3, 'Desarrollador')
