@@ -1,30 +1,45 @@
 #!/bin/bash
 
+# Muestra la información del script
+cat << EOF
+Uso: $0 <tag> <ambiente>
+
+Tags disponibles:
+$(git tag -l)
+
+Entornos disponibles:
+desarrollo
+produccion
+
+EOF
+
 # Valida los argumentos del programa
-if [[ "$#" != 2 || "$EUID" -ne 0 ]]; then 
-	echo "Uso: $0 <tag> (desarrollo | produccion)"
+ERROR=false
+if [[ "$EUID" -ne 0 ]]; then 
 	echo "El script se debe ejecutar como administrador"
-	exit 1
+	ERROR=true
 fi
-if [ -z "$1" ]; then
-    echo "El primer argumento debe ser el tag de la iteración deseada."
-	exit 1
+if [ -z $1 ]; then
+	echo "El primer argumento debe ser el tag deseado."
+	ERROR=true
 elif ! git tag -l | grep -w "$1" > /dev/null; then
 	echo "$1 no representa un tag válido."
-	exit 1
+	ERROR=true
 fi
-if [ -z "$1" ]; then
-    echo "El segundo argumento debe indicar el ambiente a ser utilizado."
-	exit 1
+if [ -z $2 ]; then
+	echo "El segundo argumento debe ser el entorno deseado."
+	ERROR=true
 elif [[ "$2" != "desarrollo" && "$2" != "produccion" ]]; then
 	echo "El segundo argumento debe ser desarrollo o producción."
+	ERROR=true
+fi
+if [ "$ERROR" = true ]; then
+	echo
 	exit 1
 fi
 
-# Obtiene el directorio del proyecto y el usuario dueño de la carpeta
-cd -- "$(dirname "$0")/.." >/dev/null 2>&1
-PR_DIR="$(pwd -P )"
-OWNER=$(stat -c '%U' $PR_DIR)
+# Define script para poblar la base de datos
+DATABASE_SCRIPT="scripts/poblar_base_de_datos.sh"
 
 # Obtiene el nombre del ambiente a utilizar
 if [[ "$2" == "desarrollo" ]]; then
@@ -33,15 +48,33 @@ elif [[ "$2" == "produccion" ]]; then
 	AMBIENTE="production"
 fi
 
+# Obtiene el directorio del proyecto y el usuario dueño de la carpeta
+cd "$(git rev-parse --show-toplevel)"
+PR_DIR="$(pwd -P)"
+OWNER=$(stat -c '%U' $PR_DIR)
+
 # Instala las dependencias necesarias
 apt install -y python3-virtualenv postgresql libpq-dev
 if [[ "$AMBIENTE" == "production" ]]; then	
 	apt install -y nginx uwsgi uwsgi-plugin-python3
 fi
 
-# Clona el respositorio y crea un ambiente virtual para el servidor
+# Clona el tag manteniendo el script actual
+BRANCH=$(git branch --show-current)
+if git diff --name-only "$0"; then
+	git stash push -u "$0"
+	STASH=true
+fi
+git checkout $1
+git restore --source $BRANCH -- "$0"
+if [ "$STASH" = true ]; then
+	git add "$0"
+	git stash pop
+	git restore --staged "$0"
+fi
+
+# Crea un ambiente virtual para el servidor
 rm -rf venv
-git checkout $1 &> /dev/null
 virtualenv venv
 source venv/bin/activate
 if [[ -f "$PR_DIR/requirements.txt" ]]; then
@@ -71,7 +104,7 @@ python3 manage.py makemigrations --settings=is2.settings.$AMBIENTE
 python3 manage.py migrate --settings=is2.settings.$AMBIENTE
 
 # Puebla la base de datos
-if [[ -f "$PR_DIR/scripts/poblar_base_de_datos.sh" ]]; then
+if [[ -f "$PR_DIR/$DATABASE_SCRIPT" ]]; then
 	python3 manage.py shell --settings=is2.settings.$AMBIENTE << EOF
 	exec(open("$PR_DIR/scripts/poblar_base_de_datos.sh").read())
 EOF
