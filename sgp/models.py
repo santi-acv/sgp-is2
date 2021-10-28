@@ -454,13 +454,31 @@ class Sprint(models.Model):
 
         # verifica que la fecha de fin sea válida
         if self.fecha_fin > self.proyecto.fecha_fin:
-            msg['advertencias'].append('El sprint no puede terminar después que el proyecto.')
+            msg['advertencias'].append('El proyecto tiene una fecha de fin planeada anterior al final del sprint.')
 
-        for user_story in self.sprint_backlog.all():
-            if user_story.estado != UserStory.Estado.FINALIZADO:
-                msg['advertencias'].append('El sprint tiene user stories sin terminar.')
+        # verifica que no queden user stories pendientes
+        pendientes = False
+        for us in self.sprint_backlog.all():
+            if us.estado not in [UserStory.Estado.FINALIZADO, UserStory.Estado.CANCELADO]:
+                pendientes = True
+                break
+        if pendientes:
+            msg['advertencias'].append('El sprint tiene user stories sin terminar. Estas volverán al product backlog.')
 
         return msg
+
+    def concluir_user_stories(self):
+        for us in self.sprint_backlog.exclude(
+                estado__in=[UserStory.Estado.FINALIZADO, UserStory.Estado.CANCELADO]):
+            us.estado = UserStory.Estado.CANCELADO
+            us.save()
+            us_nuevo = UserStory.objects.create(numero=UserStory.objects.filter(proyecto=self.proyecto).count() + 1,
+                                                nombre=us.nombre + '*', descripcion=us.descripcion, prioridad=1,
+                                                estado=UserStory.Estado.PENDIENTE, proyecto=self.proyecto,
+                                                horas_estimadas=us.horas_estimadas - us.horas_trabajadas)
+            for c in Comentario.objects.filter(user_story=us):
+                Comentario.objects.create(texto=c.texto, autor=c.autor, fecha=c.fecha, user_story=us_nuevo)
+        return
 
     @property
     def capacidad_diaria(self):

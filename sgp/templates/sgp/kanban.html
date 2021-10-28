@@ -21,8 +21,10 @@
 <p><strong>Sprint actual:</strong> <a href="{% url 'sgp:mostrar_sprint' proyecto.id proyecto.sprint_activo.id %}">
     {{ proyecto.sprint_activo }}</a></p>
 
-<p>Usted ha trabajado {{ horas.trabajadas }} horas de las {{ horas.disponibles }} que tiene
-    asignadas para el día de hoy ({% widthratio horas.trabajadas horas.disponibles 100 %}%).</p>
+{% if horas %}
+    <p>Usted ha trabajado {{ horas.trabajadas }} horas de las {{ horas.disponibles }} que tiene
+        asignadas para el día de hoy ({{ horas.porcentaje }}%).</p>
+{% endif %}
 
 <table>
     <tr>
@@ -67,10 +69,9 @@
                                         aprobar</a> &#183;
                                     <a href="javascript:" onclick="rechazar({{ user_story.numero }})">
                                         rechazar</a></p>
-                                {% endif %}
 
                                 {# cancelar o restaurar user stories #}
-                                {% if e != user_story.Estado.FINALIZADO and e != user_story.Estado.CANCELADO %}
+                                {% elif e != user_story.Estado.FINALIZADO and e != user_story.Estado.CANCELADO %}
                                     <p><a href="javascript:" onclick="cancelar({{ user_story.numero }})">
                                         abortar</a></p>
                                 {% elif e == user_story.Estado.CANCELADO %}

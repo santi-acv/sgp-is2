@@ -138,6 +138,9 @@
                 </tr>
             {% endfor %}
         </table>
+        {% if "gestionar_proyecto" in proyecto_perms %}
+            <p>Reasignar desarrollador.</p>
+        {% endif %}
     {% else %}
         <p>El sprint aún no tiene ningún user story.</p>
     {% endif %}

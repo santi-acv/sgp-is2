@@ -533,6 +533,7 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
             sprint.estado = iniciado
             sprint.fecha_inicio = timezone.now()
         elif sprint.estado == iniciado:
+            sprint.concluir_user_stories()
             sprint.estado = finalizado
             sprint.fecha_fin = timezone.now()
         sprint.save()
@@ -781,6 +782,7 @@ def kanban(request, proyecto_id):
         for incremento in Incremento.objects.filter(user_story__in=participasprint.user_stories.all(),
                                                     usuario=request.user, fecha=timezone.localdate()):
             horas['trabajadas'] += incremento.horas
+        horas['porcentaje'] = horas['trabajadas'] / horas['disponibles']
 
     # obtiene matriz de user stories
     tablero = dict()
