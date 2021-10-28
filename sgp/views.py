@@ -380,10 +380,7 @@ def product_backlog(request, proyecto_id):
 
     backlog = dict()
 
-    backlog['activo'] = list(proyecto.product_backlog.exclude(
-        estado__in=[UserStory.Estado.PENDIENTE, UserStory.Estado.CANCELADO]).order_by('prioridad'))
-    backlog['activo'] = backlog.get('activo') + list(proyecto.product_backlog.filter(
-        estado=UserStory.Estado.PENDIENTE).order_by('prioridad'))
+    backlog['activo'] = proyecto.product_backlog.exclude(estado=[UserStory.Estado.CANCELADO]).order_by('prioridad')
     if request.user.has_perm('gestionar_proyecto', proyecto) or request.user.has_perm('pila_producto', proyecto):
         backlog['cancelado'] = proyecto.product_backlog.filter(estado=UserStory.Estado.CANCELADO)
 
