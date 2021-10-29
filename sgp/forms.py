@@ -464,7 +464,8 @@ class BacklogForm(ModelForm):
         self.fields['nombre'].disabled = True
         self.fields['prioridad'].required = False
         self.fields['horas_estimadas'].required = False
-        queryset = sprint.equipo.filter(participa__rol__permisos__codename__in=['desarrollo'])
+        queryset = sprint.equipo.filter(participa__proyecto=proyecto,
+                                        participa__rol__permisos__codename__in=['desarrollo'])
         initial = sprint.equipo.filter(participasprint__user_stories__in=[self.instance]).first()
         self.nombre_desarrollador = str(initial)
         self.fields['desarrollador'] = forms.ModelChoiceField(queryset=queryset, initial=initial, required=False)
@@ -631,7 +632,7 @@ class AgregarDesarrolladorForm(forms.Form):
         self.sprint = sprint
         super().__init__(*args, **kwargs)
         queryset = proyecto.equipo \
-            .filter(participa__rol__permisos__codename__in=['desarrollo']) \
+            .filter(participa__proyecto=proyecto, participa__rol__permisos__codename__in=['desarrollo']) \
             .exclude(user_id__in=sprint.equipo.all())
         self.fields['usuario'] = forms.ModelChoiceField(queryset=queryset, required=True)
         self.fields['horas'] = forms.IntegerField(min_value=1, required=True)

@@ -642,6 +642,9 @@ def sprint_backlog(request, proyecto_id, sprint_id):
         formset = BacklogFormSet(request.POST, form_kwargs={'proyecto': proyecto, 'sprint': sprint})
         if formset.is_valid():
             formset.save()
+            if sprint.estado == Sprint.Estado.INICIADO:
+                return HttpResponseRedirect(
+                    reverse('sgp:sprint_backlog', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
             for form in formset:
                 if form.cleaned_data.get('borrar'):
                     return HttpResponseRedirect(

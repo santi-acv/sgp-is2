@@ -113,6 +113,10 @@
     </script>
 {% else %}
     {% if sprint.sprint_backlog.all %}
+        {% if "gestionar_proyecto" in proyecto_perms %}
+            <form method=POST>
+            {% csrf_token %}
+        {% endif %}
         <table>
             <tr>
                 <th class="str">&#8470;</th>
@@ -123,8 +127,12 @@
                 <th class="str">Comentarios</th>
                 <th class="str">Desarrollador</th>
             </tr>
+            {{ formset.management_form }}
             {% for form in formset %}
                 <tr>
+                    {% for field in form.hidden_fields %}
+                        {{ field }}
+                    {% endfor %}
                     <td class="str">{{ form.n.value }}</td>
                     <td class="str">
                         <a href="{% url 'sgp:mostrar_user_story' proyecto.id form.instance.numero %}">
@@ -133,13 +141,24 @@
                     <td class="chk">{{ form.horas_estimadas.value }}</td>
                     <td class="chk">{{ form.instance.get_estado_display }}</td>
                     <td class="chk">{{ form.instance.comentario_set.count }}</td>
-                    <td class="chk">{{ form.nombre_desarrollador|default_if_none:"--" }}</td>
+                    <td class="str hidden dev">{{ form.desarrollador }}</td>
+                    <td class="chk dev">{{ form.nombre_desarrollador|default_if_none:"--" }}</td>
                     <td>{{ form.errors }}</td>
                 </tr>
             {% endfor %}
         </table>
         {% if "gestionar_proyecto" in proyecto_perms %}
-            <p>Reasignar desarrollador.</p>
+            <p class="hidden dev"><input type="submit" value="Guardar cambios" name="editar_user_stories"></p>
+            </form>
+            <p><a href="javascript:" onclick="reasignar()">Reasignar desarrolladores.</a></p>
+            <script>
+                function reasignar() {
+                    let items = document.querySelectorAll('.dev');
+                    for (let fila of items) {
+                        fila.classList.toggle('hidden');
+                    }
+                }
+            </script>
         {% endif %}
     {% else %}
         <p>El sprint aún no tiene ningún user story.</p>
