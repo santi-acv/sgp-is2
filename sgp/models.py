@@ -468,6 +468,8 @@ class Sprint(models.Model):
         return msg
 
     def concluir_user_stories(self):
+        """Por cada user story sin finalizar, crea otra user story con
+        prioridad muy alta y una estimación de horas actualizada"""
         for us in self.sprint_backlog.exclude(
                 estado__in=[UserStory.Estado.FINALIZADO, UserStory.Estado.CANCELADO]):
             us.estado = UserStory.Estado.CANCELADO
@@ -619,6 +621,8 @@ class ParticipaSprint(models.Model):
 
 class Incremento(models.Model):
     """
+    Representa horas trabajadas en un user story.
+
     **Fecha:** 23/10/21
 
     **Artefacto:** módulo de desarrollo

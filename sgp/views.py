@@ -577,6 +577,16 @@ def editar_sprint(request, proyecto_id, sprint_id):
 
 def equipo_sprint(request, proyecto_id, sprint_id):
     """
+    Permite modificar el equipo asociado a un sprint.
+
+    Muestra una lista de los miembros actuales del proyecto junto con sus
+    respectivas horas disponibles diarias. El usuario agregar miembros al
+    equipo, removerlos, o asignarles una cantidad diferente de horas.
+
+    Utiliza un formset con instancias de UserSprintForm para la lista de
+    usuarios que pertenecen al sprint y una instancia de
+    AgregarDesarrolladorForm para los usuarios que no pertenecen.
+
     **Fecha:** 30/09/21
 
     **Artefacto:** módulo de desarrollo
@@ -619,6 +629,13 @@ def equipo_sprint(request, proyecto_id, sprint_id):
 
 def sprint_backlog(request, proyecto_id, sprint_id):
     """
+    Muestra el backlog asociado a ese sprint.
+
+    Permite asiginar una prioridad, una estimación de horas, y un desarrollador
+    a cada sprint mediante un formset con instancias de BacklogForm. También
+    permite quitar sprints o agregarlos al backlog mediante una instancia de
+    AgregarUserStoryForm.
+
     **Fecha:** 30/09/21
 
     **Artefacto:** módulo de desarrollo
@@ -662,6 +679,10 @@ def sprint_backlog(request, proyecto_id, sprint_id):
 
 def planificacion(request, proyecto_id):
     """
+    Muestra una lista de eventos pendientes con sus respectivas fechas. Incluye
+    una columna indicando qué eventos se deben realizar el día de hoy y cuales
+    fueron completados.
+
     **Fecha:** 21/10/21
 
     **Artefacto:** módulo de desarrollo
@@ -703,6 +724,14 @@ def planificacion(request, proyecto_id):
 
 def kanban(request, proyecto_id):
     """
+    Muestra un tablero kanban.
+
+    Si el usuario tiene permisos de gestión de proyecto, muestra una entrada
+    para cada user story y permite cancelarlos o aprobar aquellos que se
+    encuentren en fase de QA. Si el usuario es un desarrollador, muestra los
+    user stories que se le asignaron y permite trabajar horas o avanzar a la
+    siguiente fase de desarrollo.
+
     **Fecha:** 23/10/21
 
     **Artefacto:** módulo de desarrollo
