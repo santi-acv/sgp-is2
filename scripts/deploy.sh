@@ -106,7 +106,7 @@ python3 manage.py migrate --settings=is2.settings.$AMBIENTE
 # Puebla la base de datos
 if [[ -f "$PR_DIR/$DATABASE_SCRIPT" ]]; then
 	python3 manage.py shell --settings=is2.settings.$AMBIENTE << EOF
-	exec(open("$PR_DIR/$DATABASE_SCRIPT").read())
+exec(open("$PR_DIR/$DATABASE_SCRIPT").read())
 EOF
 fi
 deactivate
