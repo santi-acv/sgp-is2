@@ -756,13 +756,7 @@ def kanban(request, proyecto_id):
                 return HttpResponse(status=400)
 
             # registra el incremento
-            try:
-                incremento = Incremento.objects.get(user_story=user_story, usuario=request.user,
-                                                    fecha=timezone.localdate())
-                incremento.horas = incremento.horas + horas
-                incremento.save()
-            except Incremento.DoesNotExist:
-                Incremento.objects.create(user_story=user_story, usuario=request.user, horas=horas)
+            Incremento.objects.create(user_story=user_story, usuario=request.user, horas=horas)
 
             # actualiza la información del user story
             user_story.horas_trabajadas += horas
@@ -770,36 +764,38 @@ def kanban(request, proyecto_id):
                 user_story.estado = iniciado
 
         # marca el user story como iniciado
-        elif request.POST['accion'] == 'iniciar' and user_story.estado == pendiente:
-            user_story.estado = iniciado
-
-        # envía el user story a la fase de qa
-        elif request.POST['accion'] == 'enviar_qa' and user_story.estado == iniciado:
-            user_story.estado = fase_de_qa
-
-        # marca el user story como finalizado
-        elif request.POST['accion'] == 'aprobar' and user_story.estado == fase_de_qa:
-            user_story.estado = finalizado
-
-        # retorna el user story a la fase de trabajo
-        elif request.POST['accion'] == 'rechazar' and user_story.estado == fase_de_qa:
-            if user_story.horas_trabajadas == 0:
-                user_story.estado = pendiente
-            else:
-                user_story.estado = iniciado
-
-        # cancela el user story
-        elif request.POST['accion'] == 'cancelar' and user_story.estado != finalizado:
-            user_story.estado = cancelado
-
-        # restaura el user story a la fase de trabajo
-        elif request.POST['accion'] == 'restaurar' and user_story.estado == cancelado:
-            if user_story.horas_trabajadas == 0:
-                user_story.estado = pendiente
-            else:
-                user_story.estado = iniciado
         else:
-            return HttpResponse(status=405)
+            if request.POST['accion'] == 'iniciar' and user_story.estado == pendiente:
+                user_story.estado = iniciado
+
+            # envía el user story a la fase de qa
+            elif request.POST['accion'] == 'enviar_qa' and user_story.estado == iniciado:
+                user_story.estado = fase_de_qa
+
+            # marca el user story como finalizado
+            elif request.POST['accion'] == 'aprobar' and user_story.estado == fase_de_qa:
+                user_story.estado = finalizado
+
+            # retorna el user story a la fase de trabajo
+            elif request.POST['accion'] == 'rechazar' and user_story.estado == fase_de_qa:
+                if user_story.horas_trabajadas == 0:
+                    user_story.estado = pendiente
+                else:
+                    user_story.estado = iniciado
+
+            # cancela el user story
+            elif request.POST['accion'] == 'cancelar' and user_story.estado != finalizado:
+                user_story.estado = cancelado
+
+            # restaura el user story a la fase de trabajo
+            elif request.POST['accion'] == 'restaurar' and user_story.estado == cancelado:
+                if user_story.horas_trabajadas == 0:
+                    user_story.estado = pendiente
+                else:
+                    user_story.estado = iniciado
+            else:
+                return HttpResponse(status=405)
+            Incremento.objects.create(user_story=user_story, usuario=request.user, estado=user_story.estado)
 
         user_story.save()
 
@@ -842,3 +838,23 @@ def kanban(request, proyecto_id):
     context = {'proyecto': proyecto, 'sprint': sprint, 'horas': horas,
                'estados': UserStory.Estado.labels, 'tablero': tablero}
     return render(request, 'sgp/kanban.html', context)
+
+
+def registro_kanban(request, proyecto_id):
+    """
+    Muestra el registro de actividad del flujo kanban.
+
+    Obtiene cada instancia de la clase Incremento que pertenezca a un user
+    story en el sprint backlog del sprint activo.
+
+    **Fecha:** 19/11/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    sprint = proyecto.sprint_activo
+    registro = Incremento.objects.filter(user_story__sprint=sprint).order_by('fecha')
+    context = {'proyecto': proyecto, 'sprint': sprint, 'registro': registro}
+    return render(request, 'sgp/kanban-registro.html', context)

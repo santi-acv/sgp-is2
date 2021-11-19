@@ -88,6 +88,9 @@
         </tr>
     {% endfor %}
 </table>
+{% if "gestionar_proyecto" in proyecto_perms %}
+    <p><a href="{% url 'sgp:registro_kanban' proyecto.id %}">Ver registro de actividad</a></p>
+{% endif %}
 <script>
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 

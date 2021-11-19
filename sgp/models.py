@@ -526,7 +526,7 @@ class UserStory(models.Model):
     class Estado(models.TextChoices):
         PENDIENTE = 'P', 'Pendiente'
         INICIADO = 'I', 'Iniciado'
-        FASE_DE_QA = 'Q', 'Q&A'
+        FASE_DE_QA = 'Q', 'Quality Assurance'
         FINALIZADO = 'F', 'Finalizado'
         CANCELADO = 'C', 'Cancelado'
     """Contiene los estados posibles del user story."""
@@ -640,3 +640,6 @@ class Incremento(models.Model):
 
     horas = models.IntegerField(default=0)
     """Horas que se trabajaron ese día"""
+
+    estado = models.CharField(max_length=50, choices=UserStory.Estado.choices, null=True)
+    """Estado que se asignó al user story"""

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        td {
+            text-align: center;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+{% include 'sgp/proyecto-menu.html' with pos="Kanban" %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+{% if registro %}
+    <table>
+        <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>User Story</th>
+            <th>Actividad</th>
+        </tr>
+    {% for incremento in registro %}
+        <tr>
+            <td>{{ incremento.fecha|date:"d/m/Y" }}</td>
+            <td>{{ incremento.usuario.nombre_completo }}</td>
+            <td>{{ incremento.user_story }}</td>
+            {% if incremento.estado %}
+                <td>Cambió el estado a {{ incremento.get_estado_display }}.</td>
+            {% else %}
+                <td>Registró {{ incremento.horas }} horas trabajadas.</td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>Aún no se registró actividad en este sprint.</p>
+{% endif %}
+<p><a href="{% url 'sgp:kanban' proyecto.id %}">&#8592; Volver</a></p>
+</body>
+</html>

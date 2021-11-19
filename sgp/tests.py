@@ -565,3 +565,25 @@ class FlujoKanbanTest(TestCase):
                          {'us': 1, 'accion': 'restaurar'})
         us = UserStory.objects.get()
         self.assertEquals(us.estado, UserStory.Estado.PENDIENTE, "El user story no ha sido restaurado")
+
+    def test_inicio_automatico(self):
+        """Verifica que un user story pendiente al que se le agreguen horas
+        inicie automáticamente."""
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'trabajar', 'horas': 5})
+        us = UserStory.objects.get()
+        self.assertEquals(us.estado, UserStory.Estado.INICIADO, "El user story no ha iniciado automáticamente")
+
+    def test_registro_horas_trabajadas(self):
+        """Verifica que las horas trabajadas aparezcan en el registro."""
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'trabajar', 'horas': 5})
+        response = self.client.get(reverse('sgp:registro_kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}))
+        self.assertContains(response, "5 horas", msg_prefix="Las horas trabajadas no aparecen en el registro")
+
+    def test_registro_cambio_de_estado(self):
+        """Verifica que el cambio de estado aparezca en el registro."""
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'iniciar'})
+        response = self.client.get(reverse('sgp:registro_kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}))
+        self.assertContains(response, "Iniciado", msg_prefix="El nuevo estado no aparece en el registro")
