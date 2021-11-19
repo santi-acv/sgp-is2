@@ -24,7 +24,7 @@ class OAuth2Backend(ModelBackend):
     Artefacto: Usuario
     """
 
-    def authenticate(self, request, token=None, **kwargs):
+    def authenticate(self, request, token=None, test=False, **kwargs):
         """
         Verifica la validez del token de ID y autentica al usuario.
 
@@ -32,15 +32,23 @@ class OAuth2Backend(ModelBackend):
         base de datos. Si no, también extrae sus datos personales y crea una
         instancia del modelo User. Si el token es inválido, el procso falla.
 
+        Si el parámetro test es falso, ignora el proceso de validación y acepta
+        el parámetro token como la id del usuario, iniciando su sesión. Esto se
+        utiliza al realizar las pruebas unitarias.
+
         :param request: Sesión que será autenticada si el token es válido.
         :param token: Token a ser validado.
+        :param test: Indica si se está probando el software.
         :type request: request
         :type token: string
+        :type test: bool
 
         Fecha: 21/08/21
 
         Artefacto: módulo de seguridad
         """
+        if test:
+            return User.objects.get(user_id=token)
         try:
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
             userid = idinfo['sub']

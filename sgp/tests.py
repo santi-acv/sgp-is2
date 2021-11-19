@@ -12,7 +12,7 @@ import datetime
 
 from django.test import TestCase
 from django.urls import reverse
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, get_perms_for_model
 
 from .forms import ProyectoForm, UserStoryForm, ComentarioForm, SprintForm, \
     AgregarDesarrolladorForm, AgregarUserStoryForm
@@ -197,6 +197,7 @@ class PermissionTest(TestCase):
 
 
 class CrearProyectoTest(TestCase):
+
     def test_campo_requerido(self):
         """
         Verifica los campos nombre, duración de sprint, fecha de inicio, y
@@ -305,6 +306,7 @@ class CrearProyectoTest(TestCase):
 
 
 class FormulariosDesarrolloTest(TestCase):
+
     def setUp(self):
         self.proj = Proyecto.objects.create(nombre='Proyecto de prueba')
         self.proj.crear_roles_predeterminados()
@@ -450,3 +452,116 @@ class FormulariosDesarrolloTest(TestCase):
         self.assertEquals(ParticipaSprint.objects.get(usuario=self.user, sprint=sprint).horas_diarias, 10,
                           "El desarrollador no fue agregado al equipo con las horas disponibles indicadas")
         self.assertEquals(sprint.capacidad_diaria, 10, "La capacidad del equipo difiere de la del desarrollador")
+
+
+class ScriptPoblarTest(TestCase):
+
+    def setUp(self):
+        import scripts.poblar_base_de_datos
+
+    def test_script_poblar_base_datos(self):
+        """Verifica que el script para poblar la base de datos se ejecute
+        adecuadamente."""
+        self.assertEquals(Proyecto.objects.filter().count(), 3, "El script no pobló la base de datos")
+
+
+class FlujoKanbanTest(TestCase):
+    def setUp(self):
+        user = User.objects.create(user_id=1, email='correo@test.com.py',
+                                   nombre='Nombre', apellido='Apellido')
+        self.client.login(token=1, test=True)
+        proyecto = Proyecto.objects.create(nombre='Proyecto de prueba', fecha_inicio=datetime.date(2021, 12, 30),
+                                           fecha_fin=datetime.date(2021, 12, 31), duracion_sprint=1)
+        proyecto.crear_roles_predeterminados()
+        rol = proyecto.role_set.get(nombre='Scrum master')
+        perms = get_perms_for_model(Proyecto)
+        rol.asignar_permiso(perms.get(codename='pila_producto'))
+        rol.asignar_permiso(perms.get(codename='desarrollo'))
+        proyecto.asignar_rol(user, 'Scrum master')
+        sprint = Sprint.objects.create(nombre='Sprint de prueba', proyecto=proyecto, estado=Sprint.Estado.INICIADO,
+                                       fecha_inicio=datetime.date(2021, 12, 30), fecha_fin=datetime.date(2021, 12, 31))
+        us = UserStory.objects.create(numero=1, nombre='US de prueba', proyecto=proyecto, sprint=sprint,
+                                      horas_estimadas=10)
+        ParticipaSprint.objects.create(sprint=sprint, usuario=user, horas_diarias=10).user_stories.add(us)
+
+    def test_iniciar_proyecto(self):
+        """Verifica que el proyecto inicie sin errores."""
+        proyecto = Proyecto.objects.get()
+        self.client.post(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
+        proyecto = Proyecto.objects.get()
+        self.assertEquals(proyecto.estado, Proyecto.Estado.INICIADO,
+                          "El proyecto no ha iniciado: " + str(proyecto.validar_inicio()['errores']))
+
+    def test_iniciar_sprint(self):
+        """Verifica que el sprint inicie sin errores."""
+        proyecto = Proyecto.objects.get()
+        proyecto.estado = Proyecto.Estado.INICIADO
+        proyecto.save()
+        sprint = Sprint.objects.get()
+        sprint.estado = Sprint.Estado.PENDIENTE
+        sprint.save()
+        self.client.post(reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto.id, 'sprint_id': sprint.id}))
+        sprint = proyecto.sprint_activo
+        self.assertEquals(sprint.estado, Sprint.Estado.INICIADO,
+                          "El sprint no ha iniciado: " + str(sprint.validar_inicio()['errores']))
+
+    def test_registrar_horas(self):
+        """Verifica que el tablero kanban registre las horas trabajadas."""
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'trabajar', 'horas': 5})
+        us = UserStory.objects.get()
+        self.assertEquals(us.horas_trabajadas, 5, "Las horas trabajadas no se han registrado")
+
+    def test_iniciar_user_story(self):
+        """Verifica que el tablero kanban pueda iniciar un user story."""
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'iniciar'})
+        us = UserStory.objects.get()
+        self.assertEquals(us.estado, UserStory.Estado.INICIADO, "El user story no ha podido iniciar")
+
+    def test_mandar_user_story_a_qa(self):
+        """Verifica que el tablero kanban pueda enviar un user story a QA."""
+        us = UserStory.objects.get()
+        us.estado = UserStory.Estado.INICIADO
+        us.save()
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'enviar_qa'})
+        us = UserStory.objects.get()
+        self.assertEquals(us.estado, UserStory.Estado.FASE_DE_QA, "El user story no ha llegado a QA")
+
+    def test_aprobar_user_story(self):
+        """Verifica que el tablero kanban pueda aprobar un user story en QA."""
+        us = UserStory.objects.get()
+        us.estado = UserStory.Estado.FASE_DE_QA
+        us.save()
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'aprobar'})
+        us = UserStory.objects.get()
+        self.assertEquals(us.estado, UserStory.Estado.FINALIZADO, "El user story no ha sido aprobado")
+
+    def test_rechazar_user_story(self):
+        """Verifica que el tablero kanban pueda rechazar un user story en QA."""
+        us = UserStory.objects.get()
+        us.estado = UserStory.Estado.FASE_DE_QA
+        us.save()
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'rechazar'})
+        us = UserStory.objects.get()
+        self.assertEquals(us.estado, UserStory.Estado.PENDIENTE, "El user story no ha sido rechazado")
+
+    def test_cancelar_user_story(self):
+        """Verifica que el tablero kanban cancele un user story."""
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'cancelar'})
+        us = UserStory.objects.get()
+        self.assertEquals(us.estado, UserStory.Estado.CANCELADO, "El user story no ha sido cancelado")
+
+    def test_restaurar_user_story(self):
+        """Verifica que el tablero kanban restaure un user story cancelado."""
+        us = UserStory.objects.get()
+        us.estado = UserStory.Estado.CANCELADO
+        us.save()
+        self.client.post(reverse('sgp:kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}),
+                         {'us': 1, 'accion': 'restaurar'})
+        us = UserStory.objects.get()
+        self.assertEquals(us.estado, UserStory.Estado.PENDIENTE, "El user story no ha sido restaurado")
