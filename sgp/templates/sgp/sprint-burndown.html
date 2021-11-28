@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        td { padding: 0 20px; }
+    </style>
+</head>
+<body>
+{% include 'sgp/sprint-menu.html' with pos="Burndown Chart" %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for proyecto as "proyecto_perms" %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div style="width: 700px">
+    <canvas id="myChart"></canvas>
+</div>
+
+<p>{{ chart.fechas }}</p>
+
+<p>{{ chart.ideal }}</p>
+
+<p>{{ chart.restante }}</p>
+
+<script>
+    const labels = [
+        {% for fecha in chart.fechas %}
+            '{{ fecha }}',
+        {% endfor %}
+    ];
+    const data = {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Burndown ideal',
+                data: {{ chart.ideal }},
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgb(255, 99, 132)',
+            },
+            {
+                label: 'Horas restantes',
+                data: {{ chart.restante }},
+                borderColor: 'rgb(132, 99, 255)',
+                backgroundColor: 'rgb(132, 99, 255)',
+            }
+        ]
+    };
+
+    const config = {
+        type: 'line',
+        data: data,
+        options: {
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Chart.js Line Chart'
+                }
+            }
+        },
+    };
+
+    const myChart = new Chart(
+        document.getElementById('myChart'),
+        config
+    );
+</script>
+</body>
+</html>

@@ -26,4 +26,5 @@ urlpatterns = [
     path('proyecto-<int:proyecto_id>/planificacion', views.planificacion, name='planificacion'),
     path('proyecto-<int:proyecto_id>/kanban', views.kanban, name='kanban'),
     path('proyecto-<int:proyecto_id>/kanban/registro', views.registro_kanban, name='registro_kanban'),
+    path('proyecto-<int:proyecto_id>/sprint-<int:sprint_id>/burndown-chart', views.burndown, name='burndown_chart'),
 ]

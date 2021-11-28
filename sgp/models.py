@@ -374,6 +374,10 @@ class Sprint(models.Model):
     se planea terminarlo. Una vez que este acabe, almacena la hora en la que 
     acabó."""
 
+    fecha_fin_original = models.DateField(null=True)
+    """Almacena la fecha en la que se originalmente se planeó terminar el
+    sprint. Esta información es necesaria para generar el burndown chart."""
+
     estado = models.CharField(max_length=50, choices=Estado.choices, default=Estado.PENDIENTE)
     """Indica en qué estado se encuentra el sprint. Cuando este se crea, el
     estado predeterminado es pendiente."""
