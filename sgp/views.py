@@ -10,6 +10,7 @@ A continuación se documentan todas las vistas de la aplicación SGP.
 import datetime
 import json
 
+from django.db.models import Sum
 from django.forms import modelformset_factory
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
@@ -536,6 +537,7 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
         if sprint.estado == pendiente:
             sprint.estado = iniciado
             sprint.fecha_inicio = timezone.now()
+            sprint.fecha_fin_original = sprint.fecha_fin
         elif sprint.estado == iniciado:
             sprint.estado = finalizado
             sprint.fecha_fin = timezone.now()
@@ -814,23 +816,56 @@ def kanban(request, proyecto_id):
 
 
 def burndown(request, proyecto_id, sprint_id):
+    """
+    Muestra el burndown chart del sprint.
+
+    Calcula las horas que deben ser trabajadas cada día para cubrir el costo
+    total del sprint backlog durante la duración original del sprint. Si este
+    se extendie más allá de la fecha de fin originalmente planeada, la
+    estimación permanece igual pero el gráfico se exitende hasta la fecha
+    actual si el sprint se encuentra activo, o hasta la fecha real de fin si
+    este ya terminó.
+
+    También calcula las horas que se trabajaron en el sprint cada día contando
+    instancias del modelo Incremento. Si se trabajaron más horas en el sprint
+    que el costo estimado del backlog, la línea de horas restantes solamente
+    disminuye hasta cero.
+
+    |
+    """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
 
-    chart = {'fechas': [], 'ideal': []}
+    chart = {'fechas': [], 'ideal': [], 'restante': []}
 
     # agrega las fechas planeadas del sprint
-    duracion = (sprint.fecha_fin - sprint.fecha_inicio).days
+    duracion = ((sprint.fecha_fin_original if sprint.fecha_fin_original else sprint.fecha_fin)
+                - sprint.fecha_inicio).days
     for dias in range(duracion + 1):
         fecha = sprint.fecha_inicio + datetime.timedelta(days=dias)
         chart['fechas'].append(str(fecha))
         chart['ideal'].append(sprint.costo_backlog * (1 - dias / duracion))
 
-    if sprint.estado == Sprint.Estado.INICIADO:
-        # agrega las fechas luego del final planeado del sprint
-        for dias in range((timezone.localdate() - sprint.fecha_fin).days):
+    # agrega las fechas luego del final planeado del sprint
+    if sprint.estado != Sprint.Estado.PENDIENTE:
+        fecha_fin = timezone.localdate() if sprint.estado == Sprint.Estado.INICIADO else sprint.fecha_fin
+        for dias in range((fecha_fin - sprint.fecha_fin).days):
             fecha = sprint.fecha_fin + datetime.timedelta(days=dias + 1)
             chart['fechas'].append(str(fecha))
 
+    # calcula las horas trabajadas en cada día
+    anterior = sprint.costo_backlog
+    for dias in range(len(chart['fechas'])):
+        incremento = Incremento.objects.filter(fecha=sprint.fecha_inicio + datetime.timedelta(days=dias),
+                                               participasprint__sprint=sprint).aggregate(Sum('horas'))['horas__sum']
+
+        print(chart['fechas'][dias])
+        print(incremento)
+        anterior = anterior - (int(incremento) if incremento else 0)
+        if anterior <= 0:
+            chart['restante'].append(0)
+            break
+        chart['restante'].append(anterior)
+
     context = {'proyecto': proyecto, 'sprint': sprint, 'chart': chart}
-    return render(request, 'sgp/proyecto-burndown.html', context=context)
+    return render(request, 'sgp/sprint-burndown.html', context=context)

@@ -374,6 +374,10 @@ class Sprint(models.Model):
     se planea terminarlo. Una vez que este acabe, almacena la hora en la que 
     acabó."""
 
+    fecha_fin_original = models.DateField(null=True)
+    """Almacena la fecha en la que se originalmente se planeó terminar el
+    sprint. Esta información es necesaria para generar el burndown chart."""
+
     estado = models.CharField(max_length=50, choices=Estado.choices, default=Estado.PENDIENTE)
     """Indica en qué estado se encuentra el sprint. Cuando este se crea, el
     estado predeterminado es pendiente."""
@@ -610,7 +614,7 @@ class Incremento(models.Model):
     participasprint = models.ForeignKey(ParticipaSprint, null=True, on_delete=models.SET_NULL)
     """Indica que usuario realizó el incremento en qué sprint"""
 
-    fecha = models.DateField(auto_now_add=True)
+    fecha = models.DateField(default=datetime.date.today)
     """Fecha en la que se registró el incremento"""
 
     horas = models.IntegerField(default=0)
