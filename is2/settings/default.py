@@ -130,7 +130,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Custom user model and backend
-# https://docs.djangoproject.com/en/dev/topics/auth/customizing/#substituting-a-custom-user-model
+# https://docs.djangoproject.com/en/3.2/topics/auth/customizing/#substituting-a-custom-user-model
 AUTH_USER_MODEL = 'sgp.User'
 AUTHENTICATION_BACKENDS = (
     'sgp.backends.OAuth2Backend',
@@ -139,6 +139,16 @@ AUTHENTICATION_BACKENDS = (
 
 # Migration modules
 # These need to be inside the project folder, otherwise django-guardian places
-# them in the virtual environment and cause dependency issues.
+# them in the virtual environment and causes dependency issues.
 MIGRATION_MODULES = {'guardian': 'sgp.migrations.guardian',
                      'sgp': 'sgp.migrations'}
+
+# Email server
+# https://docs.djangoproject.com/en/3.2/topics/email/
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'sgp.is2.fpuna'
+EMAIL_HOST_PASSWORD = 'agkqwnhcntlizdwx'
+DEFAULT_FROM_EMAIL = 'Sistema Gestor de Proyectos'

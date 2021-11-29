@@ -426,7 +426,10 @@ class SprintForm(ModelForm):
             self.add_error('fecha_inicio', 'La fecha de inicio no puede ser en el pasado.')
             fecha_inicio = None
         if fecha_inicio and duracion:
-            cleaned_data['fecha_fin'] = fecha_inicio + datetime.timedelta(days=duracion)
+            fecha_fin = fecha_inicio + datetime.timedelta(days=duracion)
+            cleaned_data['fecha_fin'] = fecha_fin
+            if fecha_fin > self.proyecto.fecha_fin:
+                self.add_error('fecha_fin', 'El sprint no puede terminar después que el proyecto.')
 
         return cleaned_data
 
