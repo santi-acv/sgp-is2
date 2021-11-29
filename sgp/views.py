@@ -904,14 +904,14 @@ def burndown(request, proyecto_id, sprint_id):
     # calcula las horas trabajadas en cada día
     anterior = sprint.costo_backlog
     for dias in range(len(chart['fechas'])):
-        incremento = Incremento.objects.filter(fecha=sprint.fecha_inicio + datetime.timedelta(days=dias),
-                                               participasprint__sprint=sprint).aggregate(Sum('horas'))['horas__sum']
+        fecha = sprint.fecha_inicio + datetime.timedelta(days=dias)
+        incremento = Incremento.objects.filter(user_story__sprint=sprint,
+                                               fecha=fecha).aggregate(Sum('horas'))['horas__sum']
 
-        print(chart['fechas'][dias])
-        print(incremento)
         anterior = anterior - (int(incremento) if incremento else 0)
-        if anterior <= 0:
-            chart['restante'].append(0)
+        if anterior <= 0 or fecha > timezone.localdate():
+            if anterior <= 0:
+                chart['restante'].append(0)
             break
         chart['restante'].append(anterior)
 
