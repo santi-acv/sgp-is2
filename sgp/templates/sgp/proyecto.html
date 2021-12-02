@@ -55,6 +55,12 @@
             {% endfor %}
         </ul></td></tr>
     {% endif %}
+    <tr><th>Informes:</th><td><ul>
+        <li><a href="{% url 'sgp:reporte_proyecto' proyecto.id %}">Product Backlog</a></li>
+        {% if proyecto.sprint_activo %}
+            <li><a href="{% url 'sgp:reporte_us_prioridad' proyecto.id %}">US - Prioridad</a></li>
+        {% endif %}
+    </ul></td></tr>
 </table>
 {% if "gestionar_proyecto" in proyecto_perms %}
     {% if mensajes.errores %}

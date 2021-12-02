@@ -1,0 +1,14 @@
+<style>
+    .str { text-align: left }
+</style>
+<h2>Sistema Gestor de Proyectos - Reporte</h2>
+<table>
+    <tr>
+        <td class="str"><strong>Reporte:</strong> {{ tipo }}</td>
+        <td class="str"><strong>Proyecto:</strong> {{ proyecto.nombre }}</td>
+    </tr>
+    <tr>
+        <td class="str"><strong>Fecha:</strong> {% now "SHORT_DATETIME_FORMAT" %}</td>
+        <td class="str"><strong>Usuario:</strong> {{ request.user }}</td>
+    </tr>
+</table>

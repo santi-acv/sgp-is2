@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ filename }} - SGP</title>
+    <style>
+        td { text-align: center }
+    </style>
+</head>
+<body>
+{% include 'sgp/reporte-encabezado.html' with tipo='US - Prioridad' %}
+<h3>Listado de User Stories</h3>
+<table>
+    <tr>
+        <th>Nº</th>
+        <th>User Story</th>
+        <th>Prioridad</th>
+        <th>Horas trabajadas</th>
+        <th>Usuario asignado</th>
+        <th>Estado</th>
+    </tr>
+    {% for us in backlog %}
+        <tr>
+            <td>US-{{ us.numero }}</td>
+            <td>{{ us.nombre }}</td>
+            <td>{{ us.get_prioridad_display }}</td>
+            <td>{{ us.horas_trabajadas }}</td>
+            <td>{{ us.desarrollador|default_if_none:"--" }}</td>
+            <td>{{ us.get_estado_display }}</td>
+        </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

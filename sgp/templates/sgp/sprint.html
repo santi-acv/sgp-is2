@@ -24,6 +24,12 @@
             {{ sprint.capacidad_equipo }} hora{{ sprint.capacidad_equipo|pluralize:",s" }} en total</td></tr>
     <tr><th>Costo total del backlog:</th>
         <td>{{ sprint.costo_backlog }} hora{{ sprint.costo_backlog|pluralize:",s" }}</td></tr>
+    <tr><th>Informes:</th><td><ul>
+        <li><a href="{% url 'sgp:reporte_sprint' proyecto.id sprint.id %}">Sprint Backlog</a></li>
+        {% if sprint == proyecto.sprint_activo %}
+            <li><a href="{% url 'sgp:reporte_us_prioridad' proyecto.id %}">US - Prioridad</a></li>
+        {% endif %}
+    </ul></td></tr>
 </table>
 {% if "gestionar_proyecto" in proyecto_perms %}
     {% if mensajes.errores %}

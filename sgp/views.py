@@ -22,6 +22,7 @@ from guardian.shortcuts import get_objects_for_user
 from .models import User, Proyecto, Role, Sprint, UserStory, Incremento
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
     UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm, UserSprintForm, BacklogForm
+from .utils import render_to_pdf
 
 
 def index(request):
@@ -917,3 +918,35 @@ def burndown(request, proyecto_id, sprint_id):
 
     context = {'proyecto': proyecto, 'sprint': sprint, 'chart': chart}
     return render(request, 'sgp/sprint-burndown.html', context=context)
+
+
+def reporte_proyecto(request, proyecto_id):
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    context = {'proyecto': proyecto,
+               'filename': 'Reporte - Product Backlog'}
+    return render_to_pdf(request, 'sgp/reporte-product-backlog.html', context=context)
+
+
+def reporte_sprint(request, proyecto_id, sprint_id):
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    sprint = Sprint.objects.get(id=sprint_id)
+
+    backlog = {'terminados': sprint.sprint_backlog.filter(estado=UserStory.Estado.FINALIZADO),
+               'pendientes': sprint.sprint_backlog.filter(estado=UserStory.Estado.PENDIENTE),
+               'cancelados': sprint.sprint_backlog.filter(estado=UserStory.Estado.CANCELADO),
+               'por terminar': sprint.sprint_backlog.filter(
+                   estado__in=[UserStory.Estado.INICIADO, UserStory.Estado.FASE_DE_QA])}
+    context = {'proyecto': proyecto, 'sprint': sprint, 'backlog': backlog,
+               'filename': 'Reporte - Sprint Backlog'}
+    return render_to_pdf(request, 'sgp/reporte-sprint-backlog.html', context=context)
+
+
+def reporte_us_prioridad(request, proyecto_id):
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    backlog = proyecto.sprint_activo.sprint_backlog.all().order_by('prioridad')
+    for user_story in backlog:
+        user_story.desarrollador = proyecto.sprint_activo.equipo.filter(
+            participasprint__user_stories__in=[user_story]).first().nombre_completo
+    context = {'proyecto': proyecto, 'backlog': backlog,
+               'filename': 'Reporte - US - Prioridad'}
+    return render_to_pdf(request, 'sgp/reporte-us-prioridad.html', context=context)
