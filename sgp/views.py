@@ -883,6 +883,10 @@ def burndown(request, proyecto_id, sprint_id):
     que el costo estimado del backlog, la línea de horas restantes solamente
     disminuye hasta cero.
 
+    **Fecha:** 27/11/21
+
+    **Artefacto:** módulo de desarrollo
+
     |
     """
     proyecto = Proyecto.objects.get(id=proyecto_id)
@@ -924,6 +928,18 @@ def burndown(request, proyecto_id, sprint_id):
 
 
 def reporte_proyecto(request, proyecto_id):
+    """
+    Genera un PDF con el reporte del product backlog.
+
+    Muestra todos los user stories del product backlog con sus respectivos
+    estados y el sprint al que pertenecen.
+
+    **Fecha:** 2/12/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     context = {'proyecto': proyecto,
                'filename': 'Reporte - Product Backlog'}
@@ -931,6 +947,19 @@ def reporte_proyecto(request, proyecto_id):
 
 
 def reporte_sprint(request, proyecto_id, sprint_id):
+    """
+    Genera un PDF con el reporte del sprint backlog.
+
+    Muestra todos los user stories del sprint backlog agrupados en secciones
+    según su estado e incluye las horas trabajadas, las horas planificadas, y
+    el usuario asginado a cada uno.
+
+    **Fecha:** 2/12/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
 
@@ -945,6 +974,19 @@ def reporte_sprint(request, proyecto_id, sprint_id):
 
 
 def reporte_us_prioridad(request, proyecto_id):
+    """
+    Genera un PDF con el reporte de user stories y prioridad.
+
+    Muestra todos los user stories del sprint backlog del sprint actual
+    ordenados por prioridad e incluye las horas trabajadas, el usuario
+    asignado, y el estado de cada uno.
+
+    **Fecha:** 2/12/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
     proyecto = Proyecto.objects.get(id=proyecto_id)
     backlog = proyecto.sprint_activo.sprint_backlog.all().order_by('prioridad')
     for user_story in backlog:

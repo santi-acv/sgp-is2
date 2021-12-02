@@ -8,6 +8,23 @@ from xhtml2pdf import pisa
 
 
 def enviar_recordatorio(actividad, tipo, accion):
+    """
+    Envía un correo al equipo correspondiente a una actividad de cierto tipo
+    recordándoles de una acción agendada para el día de hoy.
+
+    **Fecha:** 2/12/21
+
+    **Artefacto:** módulo de desarrollo
+
+    :param actividad: El proyecto o sprint cuyo recordatorio se va a enviar
+    :param tipo: Indica si la actividad es un proyecto o un sprint
+    :param accion: Indica si se notificará acerca del inicio o el fin de la actividad
+    :type actividad: Proyecto | Sprint
+    :type tipo: string
+    :type accion: string
+
+    |
+    """
     asunto = 'SGP: '+accion+' del '+tipo+' '+actividad.nombre
     cuerpo = '¡Buenos días!\n\n' \
              'Le recordamos que el %s del %s %s se encuentra agendado para hoy.\n\n' \
@@ -25,6 +42,23 @@ def enviar_recordatorio(actividad, tipo, accion):
 
 
 def enviar_notificacion(actividad, tipo, estado):
+    """
+    Envía un correo al equipo correspondiente a una actividad de cierto tipo
+    notificandoles de una acción que se ha realizado.
+
+    **Fecha:** 2/12/21
+
+    **Artefacto:** módulo de desarrollo
+
+    :param actividad: El proyecto o sprint cuya notificación se va a enviar
+    :param tipo: Indica si la actividad es un proyecto o un sprint
+    :param estado: Indica si la actividad ha iniciado o finalizado
+    :type actividad: Proyecto | Sprint
+    :type tipo: string
+    :type estado: string
+
+    |
+    """
     asunto = 'SGP: El '+tipo+' '+actividad.nombre+' ha '+estado
     fecha_fin = (' Su fecha de fin se encuentra agendada para el %s.'
                  % actividad.fecha_fin) if estado == 'iniciado' else ''
@@ -44,6 +78,23 @@ def enviar_notificacion(actividad, tipo, estado):
 
 
 def render_to_pdf(request, template_src, context=None):
+    """
+    Envía un correo al equipo correspondiente a una actividad de cierto tipo
+    notificandoles de una acción que se ha realizado.
+
+    **Fecha:** 2/12/21
+
+    **Artefacto:** módulo de desarrollo
+
+    :param request: La solicitud para la cual se generará una respuesta
+    :param template_src: El nombre de la plantilla que será renderizada
+    :param context: El contexto que será pasado a la plantilla
+    :type request: Request
+    :type template_src: string
+    :type context: dict
+
+    |
+    """
     if context is None:
         context = {}
     else:
