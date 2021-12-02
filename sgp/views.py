@@ -22,7 +22,7 @@ from guardian.shortcuts import get_objects_for_user
 from .models import User, Proyecto, Role, Sprint, UserStory, Incremento
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
     UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm, UserSprintForm, BacklogForm
-from .utils import render_to_pdf
+from .utils import render_to_pdf, enviar_notificacion
 
 
 def index(request):
@@ -45,7 +45,7 @@ def index(request):
     """
     context = None
     if request.user.is_authenticated:
-        context = {'proyectos': get_objects_for_user(request.user, 'sgp.vista')}
+        context = {'proyectos': get_objects_for_user(request.user, 'sgp.vista').order_by('fecha_creacion')}
     return render(request, 'sgp/index.html', context)
 
 
@@ -172,9 +172,11 @@ def mostrar_proyecto(request, proyecto_id):
         if proyecto.estado == pendiente:
             proyecto.estado = iniciado
             proyecto.fecha_inicio = timezone.now()
+            enviar_notificacion(proyecto, 'proyecto', 'iniciado')
         elif proyecto.estado == iniciado:
             proyecto.estado = finalizado
             proyecto.fecha_fin = timezone.now()
+            enviar_notificacion(proyecto, 'proyecto', 'finalizado')
         proyecto.save()
         return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
     context = {'proyecto': proyecto, 'mensajes': mensajes}
@@ -536,10 +538,12 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
             sprint.estado = iniciado
             sprint.fecha_inicio = timezone.now()
             sprint.fecha_fin_original = sprint.fecha_fin
+            enviar_notificacion(sprint, 'sprint', 'iniciado')
         elif sprint.estado == iniciado:
             sprint.concluir_user_stories()
             sprint.estado = finalizado
             sprint.fecha_fin = timezone.now()
+            enviar_notificacion(sprint, 'sprint', 'finalizado')
         sprint.save()
         return HttpResponseRedirect(
             reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto.id, 'sprint_id': sprint.id}))
@@ -624,8 +628,7 @@ def equipo_sprint(request, proyecto_id, sprint_id):
                 reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
 
     else:
-        formset = UserSprintFormSet(queryset=sprint.equipo.all().order_by('participa__rol'),
-                                    form_kwargs={'sprint': sprint})
+        formset = UserSprintFormSet(queryset=sprint.equipo.all(), form_kwargs={'sprint': sprint})
 
     return render(request, 'sgp/sprint-equipo.html',
                   {'proyecto': proyecto, 'sprint': sprint, 'formset': formset, 'form': form})
