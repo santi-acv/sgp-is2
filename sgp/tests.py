@@ -308,7 +308,7 @@ class CrearProyectoTest(TestCase):
 class FormulariosDesarrolloTest(TestCase):
 
     def setUp(self):
-        self.proj = Proyecto.objects.create(nombre='Proyecto de prueba')
+        self.proj = Proyecto.objects.create(nombre='Proyecto de prueba', fecha_fin=datetime.date(2022, 1, 1))
         self.proj.crear_roles_predeterminados()
         self.user = User.objects.create(
             nombre='Nombre', apellido='Apellido', email='test@test.com', is_superuser=True)

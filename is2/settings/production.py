@@ -16,6 +16,14 @@ DATABASES = {
     }
 }
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'sgp.is2.fpuna'
+EMAIL_HOST_PASSWORD = 'agkqwnhcntlizdwx'
+DEFAULT_FROM_EMAIL = 'Sistema Gestor de Proyectos'
+
 STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_ROOT = BASE_DIR / 'media'
