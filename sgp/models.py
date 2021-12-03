@@ -113,7 +113,7 @@ class Proyecto(models.Model):
      campo queda nulo."""
 
     duracion_sprint = models.IntegerField("Duración de los sprints", blank=True, null=True)
-    """Indica la duración en días de cada sprint dentro del proyecto. Opcional."""
+    """Indica la duración en días de cada sprint dentro del proyecto."""
 
     fecha_creacion = models.DateTimeField("Fecha de creación", auto_now_add=True)
     """Almacena la hora a la que se creó el proyecto."""
@@ -387,6 +387,9 @@ class Sprint(models.Model):
 
     proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
     """Indica a qué proyecto pertenece el sprint."""
+
+    review = models.TextField(null=True)
+    """Almacena el contenido del sprint review una vez que este termine."""
 
     def validar_inicio(self):
         """

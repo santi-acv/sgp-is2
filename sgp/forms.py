@@ -645,3 +645,22 @@ class AgregarDesarrolladorForm(forms.Form):
             self.cleaned_data['horas'] = 0
         ParticipaSprint.objects.create(sprint=self.sprint, usuario=self.cleaned_data['usuario'],
                                        horas_diarias=self.cleaned_data['horas'])
+
+
+class SprintReviewForm(ModelForm):
+    """
+    Permite agregar el resumen de un sprint review a un sprint.
+
+    **Fecha:** 03/09/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+
+    # def __init__(self, *args, **kwargs):
+    #     super(ModelForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = Sprint
+        fields = ('review', )

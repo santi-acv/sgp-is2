@@ -21,7 +21,8 @@ from guardian.shortcuts import get_objects_for_user
 
 from .models import User, Proyecto, Role, Sprint, UserStory, Incremento
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
-    UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm, UserSprintForm, BacklogForm
+    UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm, UserSprintForm, BacklogForm, \
+    SprintReviewForm
 from .utils import render_to_pdf, enviar_notificacion
 
 
@@ -523,6 +524,7 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
     proyecto = Proyecto.objects.get(pk=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
     mensajes = None
+    form = None
 
     pendiente = Sprint.Estado.PENDIENTE
     iniciado = Sprint.Estado.INICIADO
@@ -532,23 +534,30 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
         mensajes = sprint.validar_inicio()
     elif sprint.estado == iniciado:
         mensajes = sprint.validar_fin()
+    elif sprint.estado == finalizado:
+        form = SprintReviewForm(instance=sprint)
 
-    if request.method == 'POST' and not mensajes['errores']:
+    if request.method == 'POST' and (not mensajes or not mensajes['errores']):
         if sprint.estado == pendiente:
             sprint.estado = iniciado
             sprint.fecha_inicio = timezone.now()
             sprint.fecha_fin_original = sprint.fecha_fin
             enviar_notificacion(sprint, 'sprint', 'iniciado')
+            sprint.save()
         elif sprint.estado == iniciado:
             sprint.concluir_user_stories()
             sprint.estado = finalizado
             sprint.fecha_fin = timezone.now()
             enviar_notificacion(sprint, 'sprint', 'finalizado')
-        sprint.save()
+            sprint.save()
+        elif sprint.estado == finalizado:
+            form = SprintReviewForm(request.POST, instance=sprint)
+            if form.is_valid():
+                form.save()
         return HttpResponseRedirect(
             reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto.id, 'sprint_id': sprint.id}))
 
-    context = {'proyecto': proyecto, 'sprint': sprint, 'mensajes': mensajes}
+    context = {'proyecto': proyecto, 'sprint': sprint, 'mensajes': mensajes, 'form': form}
     return render(request, 'sgp/sprint.html', context)
 
 
@@ -936,7 +945,7 @@ def reporte_proyecto(request, proyecto_id):
     Muestra todos los user stories del product backlog con sus respectivos
     estados y el sprint al que pertenecen.
 
-    **Fecha:** 2/12/21
+    **Fecha:** 02/12/21
 
     **Artefacto:** módulo de desarrollo
 
@@ -956,7 +965,7 @@ def reporte_sprint(request, proyecto_id, sprint_id):
     según su estado e incluye las horas trabajadas, las horas planificadas, y
     el usuario asginado a cada uno.
 
-    **Fecha:** 2/12/21
+    **Fecha:** 02/12/21
 
     **Artefacto:** módulo de desarrollo
 
@@ -983,7 +992,7 @@ def reporte_us_prioridad(request, proyecto_id):
     ordenados por prioridad e incluye las horas trabajadas, el usuario
     asignado, y el estado de cada uno.
 
-    **Fecha:** 2/12/21
+    **Fecha:** 02/12/21
 
     **Artefacto:** módulo de desarrollo
 

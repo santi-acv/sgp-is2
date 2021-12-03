@@ -62,6 +62,20 @@
             {% endfor %}
         </ul>
     {% endif %}
+
+    {% if sprint.estado == sprint.Estado.FINALIZADO %}
+        {% if sprint.review %}
+            <h4>Resumen del sprint review</h4>
+            <p>{{ sprint.review }}</p>
+        {% else %}
+            <p>Aún no se ha registrado el sprint review. Por favor, ingrese el resumen a continuación.</p>
+            <form method=POST>
+                {% csrf_token %}
+                {{ form.review }}
+                <p><input type="submit" value="Guardar"></p>
+            </form>
+        {% endif %}
+    {% endif %}
 {% endif %}
 <script type="text/javascript">
     function confirmar(e) {
