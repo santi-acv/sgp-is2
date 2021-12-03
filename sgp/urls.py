@@ -30,4 +30,5 @@ urlpatterns = [
     path('proyecto-<int:proyecto_id>/reportes/product-backlog', views.reporte_proyecto, name='reporte_proyecto'),
     path('proyecto-<int:proyecto_id>/reportes/sprint-<int:sprint_id>', views.reporte_sprint, name='reporte_sprint'),
     path('proyecto-<int:proyecto_id>/reportes/us-prioridad', views.reporte_us_prioridad, name='reporte_us_prioridad'),
+    path('proyecto-<int:proyecto_id>/historial', views.historial_modificaciones, name='historial_modificaciones'),
 ]

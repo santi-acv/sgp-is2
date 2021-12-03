@@ -93,6 +93,8 @@
             {% endfor %}
         </ul>
     {% endif %}
+
+    <p><a href="{% url 'sgp:historial_modificaciones' proyecto.id %}">Historial de modificaciones</a></p>
 {% endif %}
 <script type="text/javascript">
     function confirmar(e) {

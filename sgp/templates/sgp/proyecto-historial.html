@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ proyecto.nombre }} - SGP</title>
+    <style>
+        td {
+            text-align: center;
+            padding: 0 20px;
+        }
+    </style>
+</head>
+<body>
+{% include 'sgp/proyecto-menu.html' %}
+{% if historial %}
+    <table>
+        <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+        </tr>
+    {% for cambio in historial %}
+        <tr>
+            <td>{{ cambio.fecha|date:"d/m/Y" }}</td>
+            <td>{{ cambio.fecha|date:"G:i" }}</td>
+            <td>{{ cambio.usuario.nombre_completo }}</td>
+            <td>{{ cambio.accion }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No se registraron modificacions para este proyecto.</p>
+{% endif %}
+<p><a href="{% url 'sgp:mostrar_proyecto' proyecto.id %}">&#8592; Volver</a></p>
+</body>
+</html>

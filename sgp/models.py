@@ -650,3 +650,26 @@ class Incremento(models.Model):
 
     estado = models.CharField(max_length=50, choices=UserStory.Estado.choices, null=True)
     """Estado que se asignó al user story"""
+
+
+class Modificacion(models.Model):
+    """
+    Representa una modificación hecha a un proyecto.
+
+    **Fecha:** 03/12/21
+
+    **Artefacto:** módulo de proyecto
+
+    |
+    """
+    fecha = models.DateTimeField(auto_now_add=True)
+    """Fecha en la que ocurrió el cambio"""
+
+    usuario = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    """Usuario que realizó el cambio"""
+
+    proyecto = models.ForeignKey(Proyecto, on_delete=models.CASCADE)
+    """Proyecto que fue modificado"""
+
+    accion = models.TextField()
+    """Descripción del cambio"""

@@ -19,7 +19,7 @@ from django.urls import reverse
 from django.utils import timezone
 from guardian.shortcuts import get_objects_for_user
 
-from .models import User, Proyecto, Role, Sprint, UserStory, Incremento
+from .models import User, Proyecto, Role, Sprint, UserStory, Incremento, Modificacion
 from .forms import ProyectoForm, UserForm, RoleForm, UserRoleForm, AgregarMiembroForm, UploadFileForm, SprintForm, \
     UserStoryForm, ComentarioForm, AgregarUserStoryForm, AgregarDesarrolladorForm, UserSprintForm, BacklogForm, \
     SprintReviewForm
@@ -135,6 +135,7 @@ def crear_proyecto(request):
             proyecto = form.instance
             proyecto.crear_roles_predeterminados()
             proyecto.asignar_rol(request.user, 'Scrum master')
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Crear proyecto')
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
     else:
         form = ProyectoForm()
@@ -174,10 +175,12 @@ def mostrar_proyecto(request, proyecto_id):
             proyecto.estado = iniciado
             proyecto.fecha_inicio = timezone.now()
             enviar_notificacion(proyecto, 'proyecto', 'iniciado')
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Iniciar proyecto')
         elif proyecto.estado == iniciado:
             proyecto.estado = finalizado
             proyecto.fecha_fin = timezone.now()
             enviar_notificacion(proyecto, 'proyecto', 'finalizado')
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Finalizar proyecto')
         proyecto.save()
         return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto.id}))
     context = {'proyecto': proyecto, 'mensajes': mensajes}
@@ -206,6 +209,7 @@ def editar_proyecto(request, proyecto_id):
             form = ProyectoForm(request.POST, instance=proyecto)
             if form.is_valid():
                 form.save()
+                Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Editar proyecto')
                 return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
     else:
         form = ProyectoForm(instance=proyecto)
@@ -248,6 +252,7 @@ def administrar_roles(request, proyecto_id):
         # Guardar los roles
         if formset.is_valid():
             formset.save()
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Editar roles')
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
 
     # Si el request es de tipo GET, enviar una lista de roles
@@ -278,8 +283,7 @@ def importar_roles(request, proyecto_id):
         roles = json.load(request.FILES['archivo'])
         for rol in roles:
             proyecto.crear_rol(rol['nombre'], rol['permisos'])
-    else:
-        print(form)
+        Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Importar roles')
     return HttpResponseRedirect(reverse('sgp:administrar_roles', kwargs={'proyecto_id': proyecto_id}))
 
 
@@ -337,6 +341,7 @@ def administrar_equipo(request, proyecto_id):
         lista = AgregarMiembroForm(request.POST, proyecto=proyecto)
         if lista.is_valid():
             lista.save()
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Agregar miembro al equipo')
             return HttpResponseRedirect(reverse('sgp:administrar_equipo',
                                                 kwargs={'proyecto_id': proyecto_id}))
     else:
@@ -352,10 +357,13 @@ def administrar_equipo(request, proyecto_id):
             # Si se eliminó a un usuario del equipo, mostrar de nuevo la pagina
             for form in formset:
                 if form.cleaned_data.get('borrar'):
+                    Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                                accion='Eliminar miembro del equipo')
                     return HttpResponseRedirect(reverse('sgp:administrar_equipo',
                                                         kwargs={'proyecto_id': proyecto.id}))
 
             # Si solo se cambiaron los roles, volver a la pagina de proyecto
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto, accion='Modificar roles del equipo')
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto',
                                                 kwargs={'proyecto_id': proyecto_id}))
 
@@ -412,6 +420,8 @@ def crear_user_story(request, proyecto_id):
         form = UserStoryForm(request.POST, usuario=request.user, proyecto=proyecto)
         if form.is_valid():
             form.save()
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                        accion='Crear user story ' + form.instance.nombre)
             return HttpResponseRedirect(reverse('sgp:product_backlog', kwargs={'proyecto_id': proyecto_id}))
     else:
         form = UserStoryForm(usuario=request.user, proyecto=proyecto)
@@ -466,6 +476,8 @@ def editar_user_story(request, proyecto_id, us_numero):
             form = UserStoryForm(request.POST, instance=user_story, usuario=request.user, proyecto=proyecto)
             if form.is_valid():
                 form.save()
+                Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                            accion='Editar user story ' + form.instance.nombre)
                 return HttpResponseRedirect(reverse('sgp:mostrar_user_story',
                                                     kwargs={'proyecto_id': proyecto_id, 'us_numero': us_numero}))
         else:
@@ -500,6 +512,8 @@ def crear_sprint(request, proyecto_id):
         form = SprintForm(request.POST, proyecto=proyecto)
         if form.is_valid():
             form.save()
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                        accion='Crear sprint ' + form.instance.nombre)
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
     else:
         form = SprintForm(proyecto=proyecto)
@@ -543,12 +557,16 @@ def mostrar_sprint(request, proyecto_id, sprint_id):
             sprint.fecha_inicio = timezone.now()
             sprint.fecha_fin_original = sprint.fecha_fin
             enviar_notificacion(sprint, 'sprint', 'iniciado')
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                        accion='Iniciar sprint ' + sprint.nombre)
             sprint.save()
         elif sprint.estado == iniciado:
             sprint.concluir_user_stories()
             sprint.estado = finalizado
             sprint.fecha_fin = timezone.now()
             enviar_notificacion(sprint, 'sprint', 'finalizado')
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                        accion='Finalizar sprint ' + sprint.nombre)
             sprint.save()
         elif sprint.estado == finalizado:
             form = SprintReviewForm(request.POST, instance=sprint)
@@ -579,11 +597,15 @@ def editar_sprint(request, proyecto_id, sprint_id):
     if request.method == 'POST':
         if 'eliminar' in request.POST:
             sprint.delete()
+            Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                        accion='Eliminar sprint ' + sprint.nombre)
             return HttpResponseRedirect(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': proyecto_id}))
         else:
             form = SprintForm(request.POST, proyecto=proyecto, instance=sprint)
             if form.is_valid():
                 form.save()
+                Modificacion.objects.create(usuario=request.user, proyecto=proyecto,
+                                            accion='Editar sprint ' + sprint.nombre)
                 return HttpResponseRedirect(
                     reverse('sgp:mostrar_sprint', kwargs={'proyecto_id': proyecto_id, 'sprint_id': sprint_id}))
     else:
@@ -1006,3 +1028,19 @@ def reporte_us_prioridad(request, proyecto_id):
     context = {'proyecto': proyecto, 'backlog': backlog,
                'filename': 'Reporte - US - Prioridad'}
     return render_to_pdf(request, 'sgp/reporte-us-prioridad.html', context=context)
+
+
+def historial_modificaciones(request, proyecto_id):
+    """
+    Muestra el historial de modificaciones del proyecto
+
+    **Fecha:** 03/12/21
+
+    **Artefacto:** módulo de desarrollo
+
+    |
+    """
+    proyecto = Proyecto.objects.get(id=proyecto_id)
+    historial = Modificacion.objects.filter(proyecto=proyecto).order_by('fecha')
+    context = {'proyecto': proyecto, 'historial': historial}
+    return render(request, 'sgp/proyecto-historial.html', context)
