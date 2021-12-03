@@ -17,13 +17,6 @@
 <div style="width: 700px">
     <canvas id="myChart"></canvas>
 </div>
-
-<p>{{ chart.fechas }}</p>
-
-<p>{{ chart.ideal }}</p>
-
-<p>{{ chart.restante }}</p>
-
 <script>
     const labels = [
         {% for fecha in chart.fechas %}

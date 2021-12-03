@@ -3,7 +3,7 @@ Los modelos corresponden a tablas en la base de datos, y cada instancia
 representa una entrada. A continuación se documentan los campos principales y
 los métodos adicionales de los modelos en uso por la aplicación.
 """
-import datetime
+from datetime import date, timedelta
 
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission
@@ -215,7 +215,7 @@ class Proyecto(models.Model):
         # verifica que haya tiempo para al menos un sprint
         if self.fecha_fin < timezone.localdate():
             msg['errores'].append('La fecha de fin se encuentra en el pasado.')
-        elif timezone.localdate()+datetime.timedelta(days=self.duracion_sprint) > self.fecha_fin:
+        elif timezone.localdate()+timedelta(days=self.duracion_sprint) > self.fecha_fin:
             msg['errores'].append('No hay suficiente tiempo para realizar al menos un sprint.')
 
         # verifica que existe al menos un usuario con cada permiso
@@ -639,7 +639,7 @@ class Incremento(models.Model):
     usuario = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     """Usuario que registró el incremento"""
 
-    fecha = models.DateField(auto_now_add=True)
+    fecha = models.DateField(default=date.today)
     """Fecha en la que se registró el incremento"""
 
     horas = models.IntegerField(default=0)

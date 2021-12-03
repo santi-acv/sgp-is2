@@ -19,12 +19,13 @@
         <th rowspan="2">Nombre</th>
         <th rowspan="2">Apellido</th>
         <th rowspan="2">E-Mail</th>
-        <th colspan="3">Permisos</th>
+        <!-- <th colspan="3">Permisos</th> -->
+        <th colspan="2">Permisos</th>
     </tr>
     <tr>
         <th class="prm">Crear Proyecto</th>
         <th class="prm">Administrar</th>
-        <th class="prm">Auditar sistema</th>
+        <!-- <th class="prm">Auditar sistema</th> -->
     </tr>
     {{ formset.management_form }}
     {% for form in formset %}
@@ -37,7 +38,7 @@
             <td class="str">{{ form.email.value }}</td>
             <td class="chk">{{ form.crear_proyecto }}</td>
             <td class="chk">{{ form.administrar }}</td>
-            <td class="chk">{{ form.auditar }}</td>
+            <!-- <td class="chk">{{ form.auditar }}</td> -->
             <td class="str"><input onclick="borrar(event, {{ forloop.counter }})"
                                    type="submit" value="Borrar"></td>
             <td class="del">{{ form.DELETE }}</td>
