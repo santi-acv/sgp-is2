@@ -27,16 +27,25 @@
         labels: labels,
         datasets: [
             {
+                type: 'line',
                 label: 'Burndown ideal',
                 data: {{ chart.ideal }},
-                borderColor: 'rgb(255, 99, 132)',
-                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(250, 100, 100)',
+                backgroundColor: 'rgb(250, 100, 100)',
             },
             {
+                type: 'line',
                 label: 'Horas restantes',
                 data: {{ chart.restante }},
-                borderColor: 'rgb(132, 99, 255)',
-                backgroundColor: 'rgb(132, 99, 255)',
+                borderColor: 'rgb(100, 100, 250)',
+                backgroundColor: 'rgb(100, 100, 250)',
+            },
+            {
+                type: 'bar',
+                label: 'Horas trabajadas',
+                data: {{ chart.incremento }},
+                borderColor: 'rgb(100, 200, 100)',
+                backgroundColor: 'rgb(100, 200, 100)',
             }
         ]
     };

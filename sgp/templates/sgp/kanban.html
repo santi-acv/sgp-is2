@@ -18,8 +18,11 @@
 {% get_obj_perms request.user for proyecto as "proyecto_perms" %}
 {% csrf_token %}
 
-<p><strong>Sprint actual:</strong> <a href="{% url 'sgp:mostrar_sprint' proyecto.id proyecto.sprint_activo.id %}">
-    {{ proyecto.sprint_activo }}</a></p>
+<p><strong>Sprint actual:</strong>
+    <a href="{% url 'sgp:mostrar_sprint' proyecto.id proyecto.sprint_activo.id %}">
+    {{ proyecto.sprint_activo }}</a>
+    &#183; <a href="{% url 'sgp:burndown_chart' proyecto.id proyecto.sprint_activo.id %}">
+    Burndown Chart</a></p>
 
 {% if horas %}
     <p>Usted ha trabajado {{ horas.trabajadas }} horas de las {{ horas.disponibles }} que tiene

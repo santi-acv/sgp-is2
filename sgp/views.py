@@ -880,8 +880,8 @@ def burndown(request, proyecto_id, sprint_id):
 
     También calcula las horas que se trabajaron en el sprint cada día contando
     instancias del modelo Incremento. Si se trabajaron más horas en el sprint
-    que el costo estimado del backlog, la línea de horas restantes solamente
-    disminuye hasta cero.
+    que el costo estimado del backlog, las horas restantes solamente disminuyen
+    hasta cero.
 
     **Fecha:** 27/11/21
 
@@ -892,13 +892,13 @@ def burndown(request, proyecto_id, sprint_id):
     proyecto = Proyecto.objects.get(id=proyecto_id)
     sprint = Sprint.objects.get(id=sprint_id)
 
-    chart = {'fechas': [], 'ideal': [], 'restante': []}
+    chart = {'fechas': [], 'ideal': [], 'incremento': [0], 'restante': [sprint.costo_backlog]}
 
     # agrega las fechas planeadas del sprint
     duracion = ((sprint.fecha_fin_original if sprint.fecha_fin_original else sprint.fecha_fin)
-                - sprint.fecha_inicio).days
+                - sprint.fecha_inicio).days + 1
     for dias in range(duracion + 1):
-        fecha = sprint.fecha_inicio + datetime.timedelta(days=dias)
+        fecha = sprint.fecha_inicio + datetime.timedelta(days=dias-1)
         chart['fechas'].append(str(fecha))
         chart['ideal'].append(sprint.costo_backlog * (1 - dias / duracion))
 
@@ -915,13 +915,15 @@ def burndown(request, proyecto_id, sprint_id):
         fecha = sprint.fecha_inicio + datetime.timedelta(days=dias)
         incremento = Incremento.objects.filter(user_story__sprint=sprint,
                                                fecha=fecha).aggregate(Sum('horas'))['horas__sum']
-
-        anterior = anterior - (int(incremento) if incremento else 0)
-        if anterior <= 0 or fecha > timezone.localdate():
-            if anterior <= 0:
-                chart['restante'].append(0)
+        incremento = (int(incremento) if incremento else 0)
+        chart['incremento'].append(incremento)
+        anterior = anterior - incremento
+        if fecha > timezone.localdate():
             break
-        chart['restante'].append(anterior)
+        if anterior <= 0:
+            chart['restante'].append(0)
+        else:
+            chart['restante'].append(anterior)
 
     context = {'proyecto': proyecto, 'sprint': sprint, 'chart': chart}
     return render(request, 'sgp/sprint-burndown.html', context=context)
