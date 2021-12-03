@@ -10,13 +10,14 @@ Las pruebas se encuentran agrupadas en clases según que componente evalúan.
 """
 import datetime
 
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 from guardian.shortcuts import assign_perm, get_perms_for_model
 
 from .forms import ProyectoForm, UserStoryForm, ComentarioForm, SprintForm, \
-    AgregarDesarrolladorForm, AgregarUserStoryForm
-from .models import Proyecto, User, UserStory, Comentario, Sprint, ParticipaSprint, Role
+    AgregarDesarrolladorForm, AgregarUserStoryForm, SprintReviewForm
+from .models import Proyecto, User, UserStory, Comentario, Sprint, ParticipaSprint, Role, Incremento
 
 
 class NavigationTest(TestCase):
@@ -587,3 +588,85 @@ class FlujoKanbanTest(TestCase):
                          {'us': 1, 'accion': 'iniciar'})
         response = self.client.get(reverse('sgp:registro_kanban', kwargs={'proyecto_id': Proyecto.objects.get().id}))
         self.assertContains(response, "Iniciado", msg_prefix="El nuevo estado no aparece en el registro")
+
+
+class CierreProyectoTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(user_id=1, email='correo@test.com.py',
+                                        nombre='Nombre', apellido='Apellido')
+        self.client.login(token=1, test=True)
+        self.proyecto = Proyecto.objects.create(nombre='Proyecto de prueba', fecha_inicio=datetime.date(2021, 10, 30),
+                                                fecha_fin=datetime.date(2021, 12, 31), duracion_sprint=1,
+                                                estado=Proyecto.Estado.INICIADO)
+        self.sprint = Sprint.objects.create(nombre='Sprint de prueba', proyecto=self.proyecto,
+                                            estado=Sprint.Estado.FINALIZADO, fecha_inicio=datetime.date(2021, 11, 1),
+                                            fecha_fin=datetime.date(2021, 11, 7))
+        self.us = UserStory.objects.create(numero=1, nombre='US de prueba', proyecto=self.proyecto, sprint=self.sprint,
+                                           horas_estimadas=10, horas_trabajadas=10, estado=UserStory.Estado.FINALIZADO)
+        self.proyecto.crear_roles_predeterminados()
+        self.proyecto.asignar_rol(self.user, 'Scrum master')
+        ParticipaSprint.objects.create(sprint=self.sprint, usuario=self.user,
+                                       horas_diarias=10).user_stories.add(self.us)
+
+    def test_registrar_review(self):
+        """Verifica que el sprint review sea registrado correctamente."""
+        form = SprintReviewForm(instance=self.sprint, data={'review': 'El sprint ha finalizado sin inconvenientes.'})
+        self.assertTrue(form.is_valid(), "El formulario no es válido")
+        form.save()
+        self.assertEquals(Sprint.objects.first().review, 'El sprint ha finalizado sin inconvenientes.',
+                          "El sprint review no fue registrado correctamente.")
+
+    def test_burndown_chart(self):
+        """Verifica que el burndown chart se genere correctamente."""
+        for i in range(8):
+            Incremento.objects.create(user_story=self.us, usuario=self.user,
+                                      fecha=datetime.date(2021, 11, 1+i), horas=i+1)
+        response = self.client.get(reverse('sgp:burndown_chart',
+                                           kwargs={'proyecto_id': self.proyecto.id, 'sprint_id': self.sprint.id}))
+        self.assertContains(response, str(list(range(9))),
+                            msg_prefix="El burndown chart no contiene los datos de los incrementos")
+
+    def test_cerrar_sprint(self):
+        """Verifica que el sprint finalice sin errores."""
+        sprint = Sprint.objects.get()
+        sprint.estado = Sprint.Estado.INICIADO
+        sprint.save()
+        self.client.post(reverse('sgp:mostrar_sprint',
+                                 kwargs={'proyecto_id': self.proyecto.id, 'sprint_id': self.sprint.id}))
+        sprint = Sprint.objects.get()
+        self.assertEquals(sprint.estado, Sprint.Estado.FINALIZADO,
+                          "El sprint no ha finalizado: " + str(sprint.validar_inicio()['errores']))
+
+    def test_cerrar_proyecto(self):
+        """Verifica que el proyecto finalice sin errores."""
+        self.client.post(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': self.proyecto.id}))
+        proyecto = Proyecto.objects.get()
+        self.assertEquals(proyecto.estado, Proyecto.Estado.FINALIZADO,
+                          "El proyecto no ha finalizado: " + str(proyecto.validar_inicio()['errores']))
+
+    def test_enviar_notificaciones(self):
+        """Verifica que se coloquen las notificaciones por correo en la bandeja
+        de salida del sistema."""
+        self.client.post(reverse('sgp:mostrar_proyecto', kwargs={'proyecto_id': self.proyecto.id}))
+        self.assertTrue(len(mail.outbox) > 0, "No se ha generado ningún correo")
+        self.assertEquals(mail.outbox[0].subject, 'SGP: El proyecto Proyecto de prueba ha finalizado',
+                          "La notificación por correo no se ha generado correctamente")
+
+    def test_generar_reporte_proyecto(self):
+        """Verifica que se genere el informe del product backlog."""
+        response = self.client.get(reverse('sgp:reporte_proyecto', kwargs={'proyecto_id': self.proyecto.id}))
+        self.assertEquals(response.get('Content-Disposition'), "filename=Reporte - Product Backlog")
+
+    def test_generar_reporte_sprint(self):
+        """Verifica que se genere el informe del sprint backlog."""
+        response = self.client.get(reverse('sgp:reporte_sprint',
+                                           kwargs={'proyecto_id': self.proyecto.id, 'sprint_id': self.sprint.id}))
+        self.assertEquals(response.get('Content-Disposition'), "filename=Reporte - Sprint Backlog")
+
+    def test_generar_reporte_us_prioridad(self):
+        """Verifica que se genere el informe de los user stories con prioridad."""
+        sprint = Sprint.objects.get()
+        sprint.estado = Sprint.Estado.INICIADO
+        sprint.save()
+        response = self.client.get(reverse('sgp:reporte_us_prioridad', kwargs={'proyecto_id': self.proyecto.id}))
+        self.assertEquals(response.get('Content-Disposition'), "filename=Reporte - US - Prioridad")
